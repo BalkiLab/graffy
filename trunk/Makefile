@@ -1,12 +1,9 @@
-OBJS = label_propagation.o random_graph.o divisive_algorithms.o disjoint_set.o centrality.o community_tools.o graph_operations.o paths_and_components.o graphio.o graph.o binary_heap.o double_adjacency_map.o bidirectional_label_map.o graph_properties.o matrix.o
-OBJS_D = label_propagation_d.o random_graph_d.o divisive_algorithms_d.o disjoint_set_d.o centrality_d.o community_tools_d.o graph_operations_d.o paths_and_components_d.o graphio_d.o graph_d.o binary_heap_d.o double_adjacency_map_d.o bidirectional_label_map_d.o graph_properties_d.o matrix_d.o
+OBJS = label_propagation.o random_graph.o divisive_algorithms.o disjoint_set.o centrality.o community_tools.o graph_operations.o paths_and_components.o graphio.o graph.o binary_heap.o double_adjacency_map.o bidirectional_label_map.o graph_properties.o
+OBJS_D = label_propagation_d.o random_graph_d.o divisive_algorithms_d.o disjoint_set_d.o centrality_d.o community_tools_d.o graph_operations_d.o paths_and_components_d.o graphio_d.o graph_d.o binary_heap_d.o double_adjacency_map_d.o bidirectional_label_map_d.o graph_properties_d.o
 
 CC = g++
-#MKLROOT = /opt/intel/Compiler/11.1/069/mkl
-#CFLAGS_MKL = -DMKL_ILP64  -m64 -I$(MKLROOT)/include
 CFLAGS = -O3 -fPIC -fopenmp -std=c++0x -DNDEBUG
 CFLAGS_D = -g -fPIC -fopenmp -std=c++0x -Wall
-#LIBS_MKL =  $(MKLROOT)/lib/em64t/libmkl_intel_ilp64.so $(MKLROOT)/lib/em64t/libmkl_gnu_thread.so $(MKLROOT)/lib/em64t/libmkl_core.so
 LIBS = -lm -lgomp -lrt -lpthread
 
 libcdlib.so : $(OBJS)
@@ -73,9 +70,7 @@ bidirectional_label_map.o :
 	$(CC) $(CFLAGS) -o bidirectional_label_map.o -c bidirectional_label_map.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o bidirectional_label_map_d.o -c bidirectional_label_map.cpp $(LIBS)
 
-matrix.o  : graph.o
-	$(CC) $(CFLAGS) $(CFLAGS_MKL) -o matrix.o  -c matrix.cpp $(LIBS) $(LIBS_MKL)
-	$(CC) $(CFLAGS_D) $(CFLAGS_MKL) -o matrix_d.o  -c matrix.cpp $(LIBS) $(LIBS_MKL)
+
 
 clean:
 	rm *.o *.so

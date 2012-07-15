@@ -495,37 +495,7 @@ double CDLib::efficiency_sw_global_monte_carlo(graph& g)
     return efficiency;
 }
 
-double CDLib::efficiency_conductance(graph& g)
-{
-    /* Returns the efficiency of the graph using pairwise node conductance.
-     * Conductance is defined as the inverse of resistance. In graph theoretic sense,
-     * the resistance between a pair of node is calculated as the effective resistance
-     * in electrical network theory between the pair, when edge weights represents the 
-     * resistance between two nodes. Conductance Efficiency = sum of all pairwise 
-     * conductance of the graph/ sum of all pairwise conductance of a complete graph
-     * of equivalent size. */
-    graph complete(0,0);
-    double complete_conduct = 0, g_conduct = 0;
-    generate_clique_graph(complete,g.get_num_nodes());
-    vector< vector<double> > conductance;
-    conductance_distance(complete,conductance);
-    for (unsigned long i = 0 ; i < g.get_num_nodes(); i++){
-        for (unsigned long j = 0 ; j < g.get_num_nodes(); j++){
-            if (i != j)
-                complete_conduct += conductance[i][j];
-        }
-    }
-    conductance.clear();
-//    conductance_distance(g,conductance);
-    resistance_distance(g,conductance);
-    for (unsigned long i = 0 ; i < g.get_num_nodes(); i++){
-        for (unsigned long j = 0 ; j < g.get_num_nodes(); j++){
-            if (i != j)
-                g_conduct += conductance[i][j];
-        }
-    }
-    return (g_conduct / complete_conduct);
-}
+
 
 double CDLib::connectivity_entropy(graph& g)
 {
