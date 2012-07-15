@@ -10,9 +10,9 @@
 
 #include "graph.h"
 #include "disjoint_set.h"
-#include "matrix.h"
 #include "binary_heap.h"
 #include "random_graph.h"
+
 using namespace std;
 
 namespace CDLib
@@ -48,7 +48,7 @@ namespace CDLib
     void generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max_failure_allowed,double degree_dist_controling_parameter,double probability_to_alter_edge,double initial_probability_of_edge);
     double efficiency_sw_global(graph& g, bool type);
     double efficiency_sw_global_monte_carlo(graph& g);
-    double efficiency_conductance(graph& g);
+    
     double connectivity_entropy(graph& g);
     double path_entropy(graph& g);
 
