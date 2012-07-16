@@ -528,18 +528,24 @@ double CDLib::degree_homogenity_test(graph& g, node_set & ns)
 
 double CDLib::kl_divergence(vector<double>& p,vector<double>& q)
 {
-    double kl_div = 0;
-    for(id_type i=0;i<p.size();i++)
-        if(p[i] && q[i]) 
-            kl_div += p[i]*log(p[i]/q[i]);
-    return kl_div;
+    if(p.size() == q.size())
+    {
+        double kl_div = 0;
+        for(id_type i=0;i<p.size();i++)
+            if(p[i] && q[i]) 
+                kl_div += p[i]*log(p[i]/q[i]);
+        return kl_div;
+    }
+    return 1;
 }
 
-double CDLib::entropy_comparision_test(const graph& g)
+double CDLib::entropy_comparision_test(const graph& g,node_set& ns)
 {
-    vector<double> qinit(g.get_num_nodes(),1/static_cast<double>(g.get_num_nodes())),outvec;
-    id_type t = static_cast<id_type>(log(g.get_num_nodes())/log(2));
-    random_walk(g,qinit,t,transform_func_row_stochastic,outvec);
+    graph subg(g.is_directed(),g.is_weighted());
+    extract_subgraph(g,ns,subg);
+    vector<double> qinit(subg.get_num_nodes(),1/static_cast<double>(subg.get_num_nodes())),outvec;
+    id_type t = static_cast<id_type>(log(subg.get_num_nodes())/log(2));
+    random_walk(subg,qinit,t,transform_func_row_stochastic,outvec);
     return kl_divergence(qinit,outvec);
 }
 

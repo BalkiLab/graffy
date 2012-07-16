@@ -42,6 +42,7 @@ void CDLib::sample_graph(const graph&g,node_set& seeds,id_type hop_dist,graph& s
         while(!bfs_queue.empty())
         {
             id_type curr = bfs_queue.front();
+            bfs_queue.pop();
             for(adjacent_edges_iterator aeit = g.out_edges_begin(curr);aeit != g.out_edges_end(curr);aeit++)
             {
                 if(distances[aeit->first] == numeric_limits<double>::infinity() && distances[curr] <hop_dist) 
