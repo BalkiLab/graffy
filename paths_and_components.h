@@ -36,8 +36,10 @@ namespace CDLib
 
     bool has_negative_edge_weights(const graph& g);
 
-    void single_source_shortest_paths_bfs(const graph& g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds);
-    void single_source_shortest_paths_djikstra(const graph&g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds);
+    double single_source_shortest_paths_bfs(const graph& g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds);
+    double single_source_shortest_paths_djikstra(const graph&g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds);
+    double diameter(const graph& g);
+    void all_pairs_shortest_paths(const graph& g, vector< vector<double> >& path_matrix);
     void single_source_shortest_paths_djikstra_with_paths(const graph&g,id_type source,vector<double>& distances,vector< vector<id_type> >& paths);
     bool get_topological_ordering(const graph& g,vector<id_type>& ordering);
     
@@ -51,6 +53,8 @@ namespace CDLib
     
     double connectivity_entropy(graph& g);
     double path_entropy(graph& g);
+    
+
 
 };
 

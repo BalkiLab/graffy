@@ -37,16 +37,18 @@ void CDLib::bfs_visitor(const graph& g, node_set& visited, id_type source)
     }
 }
 
-void CDLib::single_source_shortest_paths_bfs(const graph& g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds)
+double CDLib::single_source_shortest_paths_bfs(const graph& g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds)
 {
     distances.assign(g.get_num_nodes(),numeric_limits<double>::infinity());
     preds.assign(g.get_num_nodes(),vector<id_type>());
     queue<id_type> q_bfs;
     q_bfs.push(source);
     distances[source] = 0;
+    id_type last_node = source;
     while(!q_bfs.empty())
     {
         id_type current  = q_bfs.front();
+        last_node = current;
         q_bfs.pop();
         for(adjacent_edges_iterator aeit = g.out_edges_begin(current);aeit != g.out_edges_end(current);aeit++)
         {
@@ -60,6 +62,7 @@ void CDLib::single_source_shortest_paths_bfs(const graph& g,id_type source,vecto
                 preds[aeit->first].push_back(current);
         }
     }
+    return distances[last_node];
 }
 
 bool CDLib::is_path_present(const graph& g, id_type source, id_type dest)
@@ -218,7 +221,7 @@ bool CDLib::get_topological_ordering(const graph& g,vector<id_type>& ordering)
     return true;
 }
 
-void CDLib::single_source_shortest_paths_djikstra(const graph&g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds)
+double CDLib::single_source_shortest_paths_djikstra(const graph&g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds)
 {
     if(!g.is_weighted()) single_source_shortest_paths_bfs(g,source,distances,preds);
     else if(!has_negative_edge_weights(g))
@@ -227,9 +230,11 @@ void CDLib::single_source_shortest_paths_djikstra(const graph&g,id_type source,v
         preds.assign(g.get_num_nodes(),vector<id_type>());
         distances[source] = 0;
         binary_heap p_queue(distances,false);
+        id_type last_node = source;
         while(!p_queue.empty())
         {
             id_type curr = p_queue.top().first;
+            last_node = curr;
             p_queue.pop();
             if(distances[curr] == numeric_limits<double>::infinity()) break;
             for(adjacent_edges_iterator aeit = g.out_edges_begin(curr); aeit != g.out_edges_end(curr);aeit++)
@@ -243,6 +248,34 @@ void CDLib::single_source_shortest_paths_djikstra(const graph&g,id_type source,v
                 }
             }
         }
+        return distances[last_node];
+    }
+    return 0;
+}
+
+double CDLib::diameter(const graph& g)
+{
+    double max =0;
+    for(id_type i=0;i<g.get_num_nodes();i++)
+    {
+        vector<double> distances;
+        vector< vector<id_type> > preds;
+        double test_diameter;
+        if(!g.is_weighted()) test_diameter = single_source_shortest_paths_bfs(g,i,distances,preds);
+        else test_diameter = single_source_shortest_paths_djikstra(g,i,distances,preds);
+        if(max < test_diameter) max = test_diameter;
+    }
+    return max;
+}
+
+void CDLib::all_pairs_shortest_paths(const graph& g, vector< vector<double> >& path_matrix)
+{
+    path_matrix.assign(g.get_num_nodes(),vector<double>());
+    for(id_type i=0;i<g.get_num_nodes();i++)
+    {
+        vector< vector<id_type> > preds;
+        if(!g.is_weighted()) single_source_shortest_paths_bfs(g,i,path_matrix[i],preds);
+        else single_source_shortest_paths_djikstra(g,i,path_matrix[i],preds);
     }
 }
 
