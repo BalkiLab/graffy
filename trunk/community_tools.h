@@ -102,7 +102,7 @@ namespace CDLib
     id_type in_comm(id_type i, vector<node_set>& comms);
     double degree_homogenity_test(graph& g, node_set & ns);
     double kl_divergence(vector<double>& p,vector<double>& q);
-    double entropy_comparision_test(const graph& g);
+    double entropy_comparision_test(const graph& g,node_set& ns);
     
     void get_community_graph(const graph&g, vector<node_set>& comms,graph& comm_graph);
     
