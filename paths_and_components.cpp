@@ -667,3 +667,21 @@ double energy(graph& g,double degree_dist_controlling_parameter,id_type nC2,doub
     
     return Energy;
 }
+
+id_type CDLib::hop_distance_matrix(const graph& g, vector< vector<id_type> > & path_matrix)
+{
+    id_type max_dist = 0;
+    path_matrix.assign(g.get_num_nodes(),vector<id_type>(g.get_num_nodes(),numeric_limits<id_type>::max()));
+    for(id_type i=0;i<g.get_num_nodes();i++)
+    {
+        vector<double> dist;
+        vector< vector<id_type> > preds;
+        single_source_shortest_paths_bfs(g,i,dist,preds);
+        for(id_type j=0;j<dist.size();j++)
+        {
+            path_matrix[i][j] = dist[j];
+            if(dist[j]>max_dist) max_dist = dist[j];
+        }
+    }
+    return max_dist;
+}
