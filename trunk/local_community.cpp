@@ -6,7 +6,7 @@
  */
 
 #include "local_community.h"
-#include "utitlity.h"
+#include "utility.h"
 using namespace CDLib;
 
 /*
@@ -563,7 +563,7 @@ void delete_from_deque(id_type u, deque<id_type>& Q)
 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
-void CDLib::VD_2011(const graph& g, id_type src, node_set& output)
+void CDLib::VD_2011(const graph& g, id_type src, node_set& output,id_type k)
 {
     deque<id_type> Q;
     node_set C;
@@ -685,7 +685,7 @@ void CDLib::VD_2011(const graph& g, id_type src, node_set& output)
         //for(size_t i=0; i<Q.size(); i++)
             //cout<<g.get_node_label(Q[i])<<"  ";
     
-    } while (N_at_start != C.size()); //go to next iteration if community size changes, else exit
+    } while(C.size() < k);//while (N_at_start != C.size()); //go to next iteration if community size changes, else exit
     
     //cout<<"\n\nNo. of iterations: "<<iter_count<<endl<<endl;
     
