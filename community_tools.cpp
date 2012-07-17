@@ -121,7 +121,7 @@ double CDLib::normalized_cut_comm(const graph& g, node_set& comm)
 double CDLib::internal_density_comm(const graph& g, node_set& comm)
 {
     cluster_edges ce(g,comm);
-    return ((g.is_directed()? 1 : 2))*ce.num_inter_cluster_edges/(double)(comm.size()*(comm.size()+((g.get_num_self_edges())?-1:1)));
+    return ((g.is_directed()? 1 : 2))*ce.num_intra_cluster_edges/(double)(comm.size()*(comm.size()+((g.get_num_self_edges())?-1:1)));
 }
 
 double CDLib::max_odf_comm(const graph& g, node_set& comm)
@@ -152,7 +152,7 @@ bool CDLib::radicchi_community(const graph& g, node_set& comm,bool strong)
 double CDLib::modularity_comm(const graph& g, node_set& comm)
 {
     cluster_edges ce(g,comm);
-    return (1/(4*g.get_total_weight()))*(ce.wt_intra_cluster_edges - ce.wt_expected_intra_cluster_edges);
+    return (1/(2*g.get_total_weight()))*(ce.wt_intra_cluster_edges - ce.wt_expected_intra_cluster_edges);
 }
 
 double CDLib::modularity_density_comm(const graph& g, node_set& comm)
@@ -177,7 +177,7 @@ double CDLib::modularity(const graph& g, vector<node_set>& comms)
         cluster_edges ce(g,comms[i]);
         mod_val += (ce.wt_intra_cluster_edges - ce.wt_expected_intra_cluster_edges);
     }
-    return mod_val/(4*g.get_total_weight());      
+    return mod_val/(2*g.get_total_weight());      
 }
 
 double CDLib::modularity_density(const graph& g, vector<node_set>& comms)

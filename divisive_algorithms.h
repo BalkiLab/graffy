@@ -26,8 +26,6 @@ namespace CDLib
     };
     void girvan_newman_2002(const graph& g, dendrogram& dendro);
     void radicchi_et_al_2004(const graph& g, dendrogram & dendro);
-    void vragovic_et_al_2006(const graph& g, dendrogram & dendro);
-    void rattigan_et_al_2007(const graph& g, dendrogram & dendro);
 };
 
 #endif	/* DIVISIVE_ALGORITHMS_H */

@@ -1,5 +1,5 @@
-OBJS = label_propagation.o random_graph.o divisive_algorithms.o disjoint_set.o centrality.o community_tools.o graph_operations.o paths_and_components.o graphio.o graph.o binary_heap.o double_adjacency_map.o bidirectional_label_map.o graph_properties.o
-OBJS_D = label_propagation_d.o random_graph_d.o divisive_algorithms_d.o disjoint_set_d.o centrality_d.o community_tools_d.o graph_operations_d.o paths_and_components_d.o graphio_d.o graph_d.o binary_heap_d.o double_adjacency_map_d.o bidirectional_label_map_d.o graph_properties_d.o
+OBJS = label_propagation.o random_graph.o divisive_algorithms.o disjoint_set.o centrality.o community_tools.o graph_operations.o paths_and_components.o graphio.o graph.o binary_heap.o double_adjacency_map.o bidirectional_label_map.o graph_properties.o local_community.o
+OBJS_D = label_propagation_d.o random_graph_d.o divisive_algorithms_d.o disjoint_set_d.o centrality_d.o community_tools_d.o graph_operations_d.o paths_and_components_d.o graphio_d.o graph_d.o binary_heap_d.o double_adjacency_map_d.o bidirectional_label_map_d.o graph_properties_d.o local_community_d.o
 
 CC = g++
 CFLAGS = -O3 -fPIC -fopenmp -std=c++0x -DNDEBUG
@@ -53,6 +53,11 @@ paths_and_components.o  : graph.o binary_heap.o random_graph.o
 graphio.o : graph.o
 	$(CC) $(CFLAGS) -o graphio.o -c graphio.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o graphio_d.o -c graphio.cpp $(LIBS)
+
+
+local_community.o : graph.o
+	$(CC) $(CFLAGS) -o local_community.o -c local_community.cpp $(LIBS)
+	$(CC) $(CFLAGS_D) -o local_community_d.o -c local_community.cpp $(LIBS)
 
 graph.o : double_adjacency_map.o bidirectional_label_map.o
 	$(CC) $(CFLAGS) -o graph.o -c graph.cpp $(LIBS)

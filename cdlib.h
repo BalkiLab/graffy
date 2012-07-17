@@ -28,6 +28,7 @@
 #include "label_propagation.h"
 #include "dynamic_communities.h"
 #include "graph_properties.h"
+#include "local_community.h"
 
 
 #endif	/* CDLIB_H */
