@@ -674,6 +674,7 @@ id_type CDLib::hop_distance_matrix(const graph& g, vector< vector<id_type> > & p
     path_matrix.assign(g.get_num_nodes(),vector<id_type>(g.get_num_nodes(),numeric_limits<id_type>::max()));
     for(id_type i=0;i<g.get_num_nodes();i++)
     {
+        path_matrix[i][i] = 0;
         vector<double> dist;
         vector< vector<id_type> > preds;
         single_source_shortest_paths_bfs(g,i,dist,preds);
