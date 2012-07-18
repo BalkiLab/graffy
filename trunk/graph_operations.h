@@ -45,6 +45,41 @@ namespace CDLib {
                 cont.push_back(aeit->first);
         }
     }
+    
+    template<typename AssociativeContainer>
+    void get_degrees_assoc_cont(const graph&g,bool out,bool weights, AssociativeContainer& cont) {
+        for(id_type i=0;i<g.get_num_nodes();i++)
+        {
+            if(out)
+            {
+                if(weights)cont.insert(make_pair(i,g.get_node_out_weight(i)));
+                else cont.insert(make_pair(i,g.get_node_out_degree(i)));
+            }
+            else
+            {
+                if(weights)cont.insert(make_pair(i,g.get_node_in_weight(i)));
+                else cont.insert(make_pair(i,g.get_node_in_degree(i)));
+            }
+        }
+    }
+    
+    
+    template<typename SequentialContainer>
+    void get_degrees_seq_cont(const graph&g,bool out,bool weights,SequentialContainer& cont) {
+        for(id_type i=0;i<g.get_num_nodes();i++)
+        {
+            if(out)
+            {
+                if(weights)cont.push_back(make_pair(i,g.get_node_out_weight(i)));
+                else cont.push_back(make_pair(i,g.get_node_out_degree(i)));
+            }
+            else
+            {
+                if(weights)cont.push_back(make_pair(i,g.get_node_in_weight(i)));
+                else cont.push_back(make_pair(i,g.get_node_in_degree(i)));
+            }
+        }
+    }
 };
 
 
