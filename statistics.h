@@ -40,7 +40,7 @@ namespace CDLib
         res.mean_val/=(double)vec.size();
         res.variance /= (double)vec.size();
         res.variance -= (res.mean_val*res.mean_val);
-        //res.variance /= (double)vec.size();
+        res.variance /= (double)vec.size();
         vector<T> bleh(vec);
         sort(bleh.begin(),bleh.end());
         res.median_val = (bleh.size()%2) ? (bleh[bleh.size()/2]) :  (bleh[(bleh.size()-1)/2] +  bleh[(bleh.size()+1)/2])/2;
