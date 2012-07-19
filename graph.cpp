@@ -38,13 +38,13 @@ wt_t graph::get_density() const
 }
 
 string graph::get_node_label(id_type id) const { return blm_labels.get_label(id); }
-id_t graph::get_node_id(const string& label) const { return blm_labels.get_id(label); }
+id_type graph::get_node_id(const string& label) const { return blm_labels.get_id(label); }
 
-id_t graph::get_node_in_degree(id_type id) const { return dam_backend.in_degree(id);}
-id_t graph::get_node_in_degree(const string& label) const { return dam_backend.in_degree(blm_labels.get_id(label));}   
+id_type graph::get_node_in_degree(id_type id) const { return dam_backend.in_degree(id);}
+id_type graph::get_node_in_degree(const string& label) const { return dam_backend.in_degree(blm_labels.get_id(label));}   
 
-id_t graph::get_node_out_degree(id_type id) const { return dam_backend.out_degree(id);}
-id_t graph::get_node_out_degree(const string& label) const { return dam_backend.out_degree(blm_labels.get_id(label));}    
+id_type graph::get_node_out_degree(id_type id) const { return dam_backend.out_degree(id);}
+id_type graph::get_node_out_degree(const string& label) const { return dam_backend.out_degree(blm_labels.get_id(label));}    
 
 wt_t graph::get_node_in_weight(id_type id) const { return dam_backend.in_degree_wt(id);}
 wt_t graph::get_node_in_weight(const string& label) const { return dam_backend.in_degree_wt(blm_labels.get_id(label));}   

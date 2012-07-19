@@ -571,7 +571,7 @@ void CDLib::VD_2011(const graph& g, id_type src, node_set& output,id_type k)
     id_type u = src;
     C.insert(u);
     double I=0, E=g.get_node_out_degree(u), N=1, f, x, y, I2, E2, N2, f2;
-    size_t iter_count = 0, N_at_start;
+    size_t iter_count = 0;// N_at_start;
     
     //Initialize C with the source vertex and its neighbors AND update I, E and N
     for(adjacent_edges_iterator aeit = g.out_edges_begin(u); aeit != g.out_edges_end(u); aeit++)
