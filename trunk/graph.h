@@ -39,13 +39,13 @@ namespace CDLib
         wt_t get_density() const;
          
         string get_node_label(id_type id) const;
-        id_t get_node_id(const string& label) const;
+        id_type get_node_id(const string& label) const;
         
-        id_t get_node_in_degree(id_type id) const;
-        id_t get_node_in_degree(const string& label) const; 
+        id_type get_node_in_degree(id_type id) const;
+        id_type get_node_in_degree(const string& label) const; 
         
-        id_t get_node_out_degree(id_type id) const;
-        id_t get_node_out_degree(const string& label) const; 
+        id_type get_node_out_degree(id_type id) const;
+        id_type get_node_out_degree(const string& label) const; 
         
         wt_t get_node_in_weight(id_type) const;
         wt_t get_node_in_weight(const string& label) const;
