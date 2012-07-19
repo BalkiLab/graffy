@@ -605,7 +605,7 @@ void CDLib::VD_2011(const graph& g, id_type src, node_set& output,id_type k)
         
         //cout<<"\n\nITERATION NO. "<<iter_count<<endl<<endl;
         
-        N_at_start = C.size(); //size of C at the start of the iteration
+        //N_at_start = C.size(); //size of C at the start of the iteration
         
         //ADDITION PHASE
         if(iter_count!=1 && !Q.empty())
