@@ -34,6 +34,24 @@ namespace CDLib
         double f_score;
     };
     
+    struct community_metrics
+    {
+        id_type size;
+        double intercluster_edges;
+        double intracluster_edges;
+        double internal_density;
+        double conductance;
+        double nassoc;
+        double cohesion;
+        double expansion;
+        double modularity;
+        double modularity_density;
+        double community_score;
+        double degree_homogenity;
+        double degree_entropy;
+        double rwalk_entropy;
+    };
+    
     struct cluster_edges
     {
         id_type num_inter_cluster_edges;
@@ -78,7 +96,7 @@ namespace CDLib
     double modularity_density(const graph& g, vector<node_set>& comms);
     double community_score(const graph& g, vector<node_set>& comms);
     double description_length(const graph& g, vector<node_set>& comms);
-    
+    void compute_community_metrics(const graph& g, node_set& comm,community_metrics& metrics);
     void compute_all_metrics_partition(const graph& g, vector<node_set>& comms,vector<double>& metrics);
     
     double rand_index(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2);

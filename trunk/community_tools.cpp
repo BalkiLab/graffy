@@ -263,6 +263,56 @@ void CDLib::compute_all_metrics_partition(const graph& g, vector<node_set>& comm
     metrics[11]/=(4*g.get_total_weight());  
 }
 
+void CDLib::compute_community_metrics(const graph& g, node_set& comm,community_metrics& metrics)
+{
+    metrics.size = comm.size();
+    metrics.intracluster_edges = 0;
+    metrics.intercluster_edges = 0;
+    metrics.modularity = 0;
+    metrics.modularity_density = 0;
+    for(node_set::iterator nit = comm.begin();nit != comm.end();nit++)
+    {
+        for(adjacent_edges_iterator aeit = g.out_edges_begin(*nit);aeit != g.out_edges_end(*nit);aeit++)
+        {
+            if(is_member_of(aeit->first,comm))
+            {
+                metrics.intracluster_edges+=aeit->second;
+                metrics.modularity += aeit->second - ((g.get_node_out_weight(*nit)*g.get_node_in_weight(aeit->first))/2*g.get_total_weight());
+                metrics.modularity_density += (2*g.get_total_weight()*aeit->second)/(g.get_node_out_weight(*nit)*g.get_node_in_weight(aeit->first));
+            }
+            else metrics.intercluster_edges+=aeit->second;
+        }
+    }
+    double volume = 2*metrics.intracluster_edges + metrics.intercluster_edges;
+    metrics.expansion = metrics.intercluster_edges/static_cast<double>(metrics.size);
+    metrics.conductance = metrics.intercluster_edges/volume;
+    metrics.modularity /= g.get_total_weight();
+    metrics.nassoc = metrics.intracluster_edges/volume;
+    metrics.cohesion = metrics.intracluster_edges/static_cast<double>(metrics.size);
+    metrics.internal_density = ((g.is_directed() ? 2 : 1)* metrics.intracluster_edges)/static_cast<double>(metrics.size*metrics.size-1);
+    metrics.community_score = pow(metrics.intracluster_edges,2)/static_cast<double>(metrics.size);
+    graph cg(0,0);
+    extract_subgraph(g,comm,cg);
+    vector<id_type> out_degrees;
+    statistics<id_type> out_degree_stats;
+    out_degrees.reserve(cg.get_num_nodes());
+    for(id_type i=0;i<cg.get_num_nodes();i++) out_degrees.push_back(g.get_node_out_degree(i))   ;
+    compute_statistics(out_degrees,out_degree_stats);
+    metrics.degree_homogenity = out_degree_stats.variance/out_degree_stats.mean_val;
+    double denom = out_degree_stats.mean_val*comm.size();
+    metrics.degree_entropy = 0;
+    for(id_type i=0;i<out_degrees.size();i++) if(out_degrees[i])metrics.degree_entropy +=(out_degrees[i]/denom)*log(out_degrees[i]/denom);
+    vector<double> qinit(cg.get_num_nodes(),1/static_cast<double>(cg.get_num_nodes())),qfinal;
+    for(id_type i=0;i<static_cast<id_type>(log(cg.get_num_nodes())/log(2));i++)
+    {
+        multiply_vector_transform(cg,qinit,transform_func_row_stochastic,qfinal);
+        qinit = qfinal;
+    }
+    qinit.assign(cg.get_num_nodes(),1/static_cast<double>(cg.get_num_nodes()));
+    metrics.rwalk_entropy = 0;
+    for(id_type i=0;i<cg.get_num_nodes();i++) if(qfinal[i] && qinit[i]) metrics.rwalk_entropy += qinit[i]*log(qinit[i]/qfinal[i]);
+}
+
 bool comm_find_pair(vector<node_set>& comms,id_type x,id_type y)
 {
     for(id_type i=0; i< comms.size();i++)
@@ -355,6 +405,7 @@ double CDLib::variation_of_information(id_type num_nodes,vector<node_set>& comms
 
 void CDLib::convert_labels_to_communities(vector<id_type>& labels,vector<node_set>& communities)
 {
+    communities.clear();
     unordered_map<id_type,node_set> seen;
     for(id_type i=0;i<labels.size();i++)
     {
@@ -366,6 +417,7 @@ void CDLib::convert_labels_to_communities(vector<id_type>& labels,vector<node_se
 
 void CDLib::convert_communities_to_labels(const vector<node_set>& communities,vector<id_type>& labels)
 {
+    labels.clear();
     unordered_map<id_type,id_type> label_map;
     for(id_type i=0;i<communities.size();i++)
         for(node_set::const_iterator nit = communities[i].begin(); nit!= communities[i].end();nit++)
@@ -551,18 +603,22 @@ double CDLib::entropy_comparision_test(const graph& g,node_set& ns)
 
 void CDLib::get_community_graph(const graph&g, vector<node_set>& comms,graph& comm_graph)
 {
+    comm_graph.clear();
     vector<id_type> labels;
     convert_communities_to_labels(comms,labels);
     for(id_type i=0;i<comms.size();i++)comm_graph.add_node();   
     for(id_type i=0;i<comms.size();i++)
         for(node_set::iterator nit = comms[i].begin();nit!=comms[i].end();nit++)
             for(adjacent_edges_iterator aeit = g.out_edges_begin(*nit); aeit != g.out_edges_end(*nit); aeit++)
-                if(labels[*nit] != labels[aeit->first]) 
                     comm_graph.set_edge_weight(labels[*nit],labels[aeit->first],comm_graph.get_edge_weight(labels[*nit],labels[aeit->first]) + aeit->second);
 }
 
 void CDLib::compute_confusion_matrix_local(const graph& g,node_set& observed, node_set& truth, confusion_matrix_local& res)
 {
+    res.true_negatives = 0;
+    res.true_positives = 0;
+    res.false_negatives = 0;
+    res.false_positives = 0;
     for(id_type i=0;i<g.get_num_nodes();i++)
     {
         if(is_member_of(i,observed) && is_member_of(i,truth)) res.true_positives++;
