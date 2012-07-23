@@ -11,6 +11,7 @@ using namespace CDLib;
 
 id_type CDLib::extract_subgraph(const graph& g, node_set& nodes, graph& sg)
 {
+    sg.clear();
     if(sg.is_directed()!=g.is_directed() && sg.is_weighted()!=g.is_weighted()) return 0;
     for(node_set::iterator nit = nodes.begin(); nit != nodes.end(); nit++)
     {
