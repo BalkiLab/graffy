@@ -26,6 +26,7 @@ namespace CDLib
         const graph* g;
         id_type current_id;
         adjacent_edges_iterator current_edge;
+    public:
         edge_iterator(const graph* gp) : g(gp)
         {
             current_id = 0;
@@ -80,7 +81,7 @@ edge_iterator graph_edges_begin(const graph& g)
     return edge_iterator(&g,0,g.out_edges_begin(0));
 }
 
-edge_iterator graph_edges_begin(const graph& g)
+edge_iterator graph_edges_end(const graph& g)
 {
     return edge_iterator(&g,g.get_num_nodes()-1,g.out_edges_end(g.get_num_nodes()-1));
 }
