@@ -29,6 +29,7 @@
 #include "dynamic_communities.h"
 #include "graph_properties.h"
 #include "local_community.h"
+#include "iterators.hpp"
 
 
 #endif	/* CDLIB_H */
