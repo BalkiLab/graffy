@@ -73,6 +73,7 @@ namespace CDLib
         {
             return edge(current_id,current_edge->first,current_edge->second);
         }
+        bool operator !=(edge_iterator rhs){ return current_id !=rhs.current_id && current_edge != rhs.current_edge; }
     };
 }
 
