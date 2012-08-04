@@ -638,3 +638,14 @@ void CDLib::compute_confusion_matrix_local(const graph& g,node_set& observed, no
     res.recall = res.TPR;
     res.f_score = (2*res.precision*res.recall)/(res.precision + res.recall);
 }
+
+void CDLib::compute_confusion_matrix_global(const graph&g, vector<node_set>& observed,vector<node_set>& truth,vector< vector<id_type> >& cmat)
+{
+    cmat.assign(observed.size(),vector<id_type>(truth.size(),0));
+    for(id_type i=0;i<observed.size();i++)
+        for(node_set::iterator nit = observed[i].begin(); nit != observed[i].end();nit++)
+            for(id_type j=0;j<truth.size();j++)
+                if(is_member_of(*nit,truth[j]))
+                    cmat[i][j]++;
+ 
+}
