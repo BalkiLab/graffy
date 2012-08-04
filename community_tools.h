@@ -125,6 +125,8 @@ namespace CDLib
     void get_community_graph(const graph&g, vector<node_set>& comms,graph& comm_graph);
     
     void compute_confusion_matrix_local(const graph& g,node_set& observed, node_set& truth,confusion_matrix_local& res);
+    
+    void compute_confusion_matrix_global(const graph&g, vector<node_set>& observed,vector<node_set>& truth,vector< vector<id_type> >& cmat);
 };
 
 #endif	/* COMMUNITY_TOOLS_H */
