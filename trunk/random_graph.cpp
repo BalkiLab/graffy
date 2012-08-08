@@ -127,26 +127,26 @@ void CDLib::generate_chord_graph(graph& g,id_type num_nodes)
 
 void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes, id_type bucket_length)
 {
-    srand(time(NULL));
     init_empty_graph(g,num_nodes);
-    id_type bit_lmt = 0, edg,i,j,l;
-    for (i = 0; i<g.get_num_nodes();i++)
+    for(id_type i=0;i<num_nodes;i++)
     {
-        for(j= 1,l=0; j<= g.get_num_nodes()/2; j*=2,l++ )
+        unordered_map<id_type,vector<id_type> > tree_partition;
+        for(id_type j=0;j<num_nodes;j++)
         {
-            bit_lmt = i >> l;
-            bit_lmt = (bit_lmt % 2 == 0) ? bit_lmt + 1 : bit_lmt -1;
-            bit_lmt <<=  l;
-            for(id_type  k = 0; k < j && k < bucket_length && k < (num_nodes - (1 << l)); k++)
-            {
-                edg = bit_lmt + (rand() % (1 << l));
-                while (g.get_edge_weight(i,edg))
-                    edg = bit_lmt + (rand() % (1 << l));
-                g.add_edge(i, edg,1);
-            }
+            id_type distance = i ^ j;
+            pair<unordered_map<id_type,vector<id_type> >::iterator,bool> ret = tree_partition.insert(make_pair(distance,vector<id_type>()));
+            ret.first->second.push_back(j);
+        }
+        for(unordered_map<id_type,vector<id_type> >::iterator umit = tree_partition.begin();umit != tree_partition.end();umit++)
+        {
+            random_shuffle(umit->second.begin(),umit->second.end());
+            for(id_type j = 0; j<bucket_length && j<umit->second.size();j++)
+                g.add_edge(i,umit->second[j],1);
         }
     }
 }
+
+
 //
 //long CDLib::generate_lfr_graph(graph& g,id_type num_nodes,id_type num_edges, id_type max_degree,double tau, double tau2,double mixing_parameter,vector<node_set>& comms)
 //{
