@@ -128,33 +128,42 @@ void CDLib::generate_chord_graph(graph& g,id_type num_nodes)
 void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes, id_type bucket_length)
 {
     init_empty_graph(g,num_nodes);
-    for(id_type i=0;i<num_nodes;i++)
+    unordered_map<id_type,id_type> nodeid_map;
+    RandomGenerator<id_type> rgen(0,numeric_limits<id_type>::max(),0);
+    for(id_type i=0;i<num_nodes;)
+    {
+        pair<unordered_map<id_type,id_type>::iterator,bool> ret = nodeid_map.insert(make_pair(rgen.next(),i));
+        if(ret.second) i++;
+    }
+    for(unordered_map<id_type,id_type>::iterator it_i = nodeid_map.begin();it_i != nodeid_map.end();it_i++)
     {
         unordered_map<id_type,vector<id_type> > tree_partition;
-        for(id_type j=0;j<num_nodes;j++)
+        id_type i = it_i->first;
+        for(unordered_map<id_type,id_type>::iterator it_j = nodeid_map.begin();it_j != nodeid_map.end();it_j++)
         {
+            id_type j = it_j->first;
             if(j != i)
             {
                 id_type ander = i & j;
-                id_type bucket_id;
+                id_type bucket_id = 0;
                 for(id_type k=0;k<8*sizeof(id_type);k++)
                 {
-                    id_type shifter = numeric_limits<id_type>::max() << (8*sizeof(id_type)-k);
-                    if(ander & shifter == shifter)
+                    id_type shifter = (~((unsigned long)0)) << (8*sizeof(id_type)-k);
+                    if((ander & shifter) == shifter)
                     {
                         bucket_id = k;
                         break;
                     }
                 }
                 pair<unordered_map<id_type,vector<id_type> >::iterator,bool> ret = tree_partition.insert(make_pair(bucket_id,vector<id_type>()));
-                ret.first->second.push_back(j);
+                ret.first->second.push_back(it_j->second);
             }
         }
         for(unordered_map<id_type,vector<id_type> >::iterator umit = tree_partition.begin();umit != tree_partition.end();umit++)
         {
             random_shuffle(umit->second.begin(),umit->second.end());
             for(id_type j = 0; j<bucket_length && j<umit->second.size();j++)
-                g.add_edge(i,umit->second[j],1);
+                g.add_edge(it_i->second,umit->second[j],1);
         }
     }
 }
