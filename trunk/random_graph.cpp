@@ -133,9 +133,22 @@ void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes, id_type bucket_l
         unordered_map<id_type,vector<id_type> > tree_partition;
         for(id_type j=0;j<num_nodes;j++)
         {
-            id_type distance = i ^ j;
-            pair<unordered_map<id_type,vector<id_type> >::iterator,bool> ret = tree_partition.insert(make_pair(distance,vector<id_type>()));
-            ret.first->second.push_back(j);
+            if(j != i)
+            {
+                id_type ander = i & j;
+                id_type bucket_id;
+                for(id_type k=0;k<8*sizeof(id_type);k++)
+                {
+                    id_type shifter = numeric_limits<id_type>::max() << (8*sizeof(id_type)-k);
+                    if(ander & shifter == shifter)
+                    {
+                        bucket_id = k;
+                        break;
+                    }
+                }
+                pair<unordered_map<id_type,vector<id_type> >::iterator,bool> ret = tree_partition.insert(make_pair(bucket_id,vector<id_type>()));
+                ret.first->second.push_back(j);
+            }
         }
         for(unordered_map<id_type,vector<id_type> >::iterator umit = tree_partition.begin();umit != tree_partition.end();umit++)
         {
