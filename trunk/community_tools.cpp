@@ -432,13 +432,10 @@ bool CDLib::write_partition(const graph& g,const string& filepath,vector<node_se
 {
     ofstream ofs(filepath.c_str());
     if(!ofs.is_open()) return false;
-    unordered_map<id_type,id_type> label_map;
+    vector<id_type> labels(g.get_num_nodes(),0);
     for(id_type i=0;i<communities.size();i++)
         for(node_set::const_iterator nit = communities[i].begin(); nit!= communities[i].end();nit++)
-            label_map.insert(make_pair(*nit,i));
-    vector<id_type> labels(g.get_num_nodes(),0);
-    for(unordered_map<id_type,id_type>::iterator lmit = label_map.begin(); lmit != label_map.end();lmit++)
-        labels[lmit->first] = lmit->second;
+            labels[*nit] = i;
     for(id_type i=0;i<labels.size();i++)
         ofs << g.get_node_label(i) << " " << labels[i] << endl;
     return true;
