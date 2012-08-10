@@ -127,7 +127,12 @@ void CDLib::generate_chord_graph(graph& g,id_type num_nodes)
 
 bool cmp(const vector<id_type>& lhs, const vector<id_type>& rhs) { return lhs.size() < rhs.size();}
 
-void CDLib::generate_kademlia_graph(graph& g,id_type num_bits, id_type bucket_length)
+
+void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes, id_type bucket_length)
+{
+    init_empty_graph(g,num_nodes);
+}
+/*void CDLib::generate_kademlia_graph(graph& g,id_type num_bits, id_type bucket_length)
 {
     id_type num_nodes = static_cast<id_type>(pow(2,num_bits));
     init_empty_graph(g,num_nodes);
@@ -159,7 +164,7 @@ void CDLib::generate_kademlia_graph(graph& g,id_type num_bits, id_type bucket_le
             while(k_buckets[i][k-1].size()<bucket_length && index <tree_part[k-1].size() )
             {
                 id_type j = tree_part[k-1][index];
-                if(k_buckets[j][k-1] < bucket_length)
+                if(k_buckets[j][k-1].size() < bucket_length)
                 {
                     k_buckets[i][k-1].insert(j);
                     k_buckets[j][k-1].insert(i);
@@ -171,7 +176,8 @@ void CDLib::generate_kademlia_graph(graph& g,id_type num_bits, id_type bucket_le
         for(id_type k=0;k<num_bits;k++)
             for(node_set::iterator nit = k_buckets[i][k].begin(); nit != k_buckets[i][k].end();nit++)
                 g.add_edge(i,*nit,1);
-}
+}*/
+
 
 
 //
