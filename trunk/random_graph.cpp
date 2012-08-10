@@ -125,47 +125,52 @@ void CDLib::generate_chord_graph(graph& g,id_type num_nodes)
     }
 }
 
-void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes, id_type bucket_length)
+bool cmp(const vector<id_type>& lhs, const vector<id_type>& rhs) { return lhs.size() < rhs.size();}
+
+void CDLib::generate_kademlia_graph(graph& g,id_type num_bits, id_type bucket_length)
 {
+    id_type num_nodes = static_cast<id_type>(pow(2,num_bits));
     init_empty_graph(g,num_nodes);
-    unordered_map<id_type,id_type> nodeid_map;
-    RandomGenerator<id_type> rgen(0,numeric_limits<id_type>::max(),0);
-    for(id_type i=0;i<num_nodes;)
+    vector< vector<node_set> > k_buckets(num_nodes,vector<node_set>(num_bits,node_set()));
+    for(id_type i=0;i<num_nodes;i++)
     {
-        pair<unordered_map<id_type,id_type>::iterator,bool> ret = nodeid_map.insert(make_pair(rgen.next(),i));
-        if(ret.second) i++;
-    }
-    for(unordered_map<id_type,id_type>::iterator it_i = nodeid_map.begin();it_i != nodeid_map.end();it_i++)
-    {
-        unordered_map<id_type,vector<id_type> > tree_partition;
-        id_type i = it_i->first;
-        for(unordered_map<id_type,id_type>::iterator it_j = nodeid_map.begin();it_j != nodeid_map.end();it_j++)
+        vector< vector<id_type> > tree_part(num_bits,vector<id_type>());
+        for(id_type j=0;j<num_nodes;j++)
         {
-            id_type j = it_j->first;
-            if(j != i)
+            for(id_type k=1;k<=num_bits;k++)
             {
-                id_type ander = i & j;
-                id_type bucket_id = 0;
-                for(id_type k=0;k<8*sizeof(id_type);k++)
+                id_type iand = i & ((num_nodes - 1) << k);
+                id_type jand = j & ((num_nodes - 1) << k);
+                if(iand == jand)
                 {
-                    id_type shifter = (~((unsigned long)0)) << (8*sizeof(id_type)-k);
-                    if((ander & shifter) == shifter)
+                    tree_part[k-1].push_back(j);
+                    if(k<= bucket_length)
                     {
-                        bucket_id = k;
-                        break;
+                        k_buckets[i][k-1].insert(j);
+                        k_buckets[j][k-1].insert(i);
                     }
                 }
-                pair<unordered_map<id_type,vector<id_type> >::iterator,bool> ret = tree_partition.insert(make_pair(bucket_id,vector<id_type>()));
-                ret.first->second.push_back(it_j->second);
             }
         }
-        for(unordered_map<id_type,vector<id_type> >::iterator umit = tree_partition.begin();umit != tree_partition.end();umit++)
+        for(id_type k=bucket_length+1;k<num_bits;k++)
         {
-            random_shuffle(umit->second.begin(),umit->second.end());
-            for(id_type j = 0; j<bucket_length && j<umit->second.size();j++)
-                g.add_edge(it_i->second,umit->second[j],1);
+            random_shuffle(tree_part[k-1].begin(),tree_part[k-1].end());
+            id_type index = 0;
+            while(k_buckets[i][k-1].size()<bucket_length && index <tree_part[k-1].size() )
+            {
+                id_type j = tree_part[k-1][index];
+                if(k_buckets[j][k-1] < bucket_length)
+                {
+                    k_buckets[i][k-1].insert(j);
+                    k_buckets[j][k-1].insert(i);
+                }
+            }
         }
     }
+    for(id_type i=0;i<num_nodes;i++)
+        for(id_type k=0;k<num_bits;k++)
+            for(node_set::iterator nit = k_buckets[i][k].begin(); nit != k_buckets[i][k].end();nit++)
+                g.add_edge(i,*nit,1);
 }
 
 
