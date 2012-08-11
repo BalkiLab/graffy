@@ -445,8 +445,10 @@ bool CDLib::write_partition_unlabelled(const graph& g,const string& filepath,vec
 {
     ofstream ofs(filepath.c_str());
     if(!ofs.is_open()) return false;
-    vector<id_type> labels;
-    convert_communities_to_labels(communities,labels);
+    vector<id_type> labels(g.get_num_nodes(),0);
+    for(id_type i=0;i<communities.size();i++)
+        for(node_set::const_iterator nit = communities[i].begin(); nit!= communities[i].end();nit++)
+            labels[*nit] = i;
     for(id_type i=0;i<labels.size();i++)
         ofs << labels[i] << endl;
     return true;
