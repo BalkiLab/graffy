@@ -20,6 +20,8 @@ namespace CDLib
         bool write_edgelist(graph& g,const string& filepath,bool weights);
         bool write_METIS(graph& g,const string& filepath,bool weights);
         bool write_SNAP(graph& g,const string& filepath,bool weights);
+        bool write_SMAT(graph& g,const string& filepath,bool weights);
+        bool write_UEL(graph& g,const string& filepath,bool weights);
         bool write_matlab_sp(graph& g,const string& filepath);
         bool write_dimacs_max_flow(graph& g, const string& filepath);
 };

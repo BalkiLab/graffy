@@ -107,6 +107,55 @@ bool CDLib::write_SNAP(graph& g,const string& filepath,bool weights)
     else return 0;
 }
 
+bool CDLib::write_SMAT(graph& g,const string& filepath,bool weights)
+{
+    ofstream file,file2;
+    string graphfilename = filepath+ ".smat";
+    string labelfilename = filepath+ ".smat_labels";
+    file.open(graphfilename.c_str());
+    file2.open(labelfilename.c_str());
+    if(file.is_open() && file2.is_open())
+    {
+        file << g.get_num_nodes() << " " << g.get_num_nodes() << " " << ((g.is_directed())?(g.get_num_edges()-g.get_num_self_edges()) : (2*(g.get_num_edges()-g.get_num_self_edges()))) << endl;
+        for(id_type i=0; i< g.get_num_nodes();i++)
+        {
+            file2 << i <<" "<< g.get_node_label(i) << endl;
+            map<id_type,double> emap;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++)
+                if(i != aeit->first)
+                    emap.insert(*aeit);
+            for(map<id_type,double>::iterator aeit = emap.begin(); aeit != emap.end();aeit++)
+                 file <<i << " " << aeit->first<< " " << aeit->second << endl;
+        }
+        return 1;
+    }
+    else return 0;    
+}
+
+bool CDLib::write_UEL(graph& g,const string& filepath,bool weights)
+{
+    ofstream file,file2;
+    string graphfilename = filepath+ ".net";
+    string labelfilename = filepath+ ".net_labels";
+    file.open(graphfilename.c_str());
+    file2.open(labelfilename.c_str());
+    if(file.is_open() && file2.is_open())
+    {
+        for(id_type i=0; i< g.get_num_nodes();i++)
+        {
+            file2 << i <<" "<< g.get_node_label(i) << endl;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++)
+            {
+                file <<i << " " << aeit->first << " " ;
+                if(weights) file << " " << aeit->second ;
+                file << endl;
+            }
+        }
+        return 1;
+    }
+    else return 0;  
+}
+
 bool CDLib::write_matlab_sp(graph& g,const string& filepath)
 {
     ofstream file,file2;
