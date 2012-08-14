@@ -512,11 +512,11 @@ void CDLib::LWP_2006(const graph& g, id_type src, vector<id_type>& output)
     } while (!Q.empty());
         
     //cout<<"\nNo. of iterations: "<<iter<<endl;
-    
+    output = S;
     if(M>1 && found_in_vector(src,S,index))
     {
         //cout<<endl<<I<<" "<<E<<" "<<M<<endl;
-        output = S;
+        //output = S;
     }
     else
     {
