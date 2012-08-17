@@ -69,7 +69,7 @@ public:
     inline id_type size() const { return max_label_index;}
     inline bool empty() const { return max_label_index == 0;}
     inline id_type num_labels() const { return label_fitness_map.size();}
-    inline Val max_fitness() const { return max_val; }
+    inline Val max_value() const { return max_val; }
     void insert(pair<id_type,double> lbl_fit)
     {
         pair<unordered_map<id_type,double>::iterator,bool> ret = label_fitness_map.insert(lbl_fit);
@@ -90,22 +90,19 @@ public:
             }
         }
     }
-    inline typename vector<Element>::const_iterator begin() const 
+    inline typename vector<Element>::const_iterator max_labels_begin() const 
     { 
         if(max_label_index)return max_labels.begin();
         else return max_labels.end();
     }
-    inline typename vector<Element>::const_iterator end() const 
+    inline typename vector<Element>::const_iterator max_labels_end() const 
     { 
         if(max_label_index)return max_labels.begin()+max_label_index;
         else return max_labels.end();
     }
-    inline typename vector<Element>::const_iterator find_max_label(Element elem) const 
+    inline typename vector<Element>::const_iterator find_in_max_labels(Element elem) const 
     { 
-        if(max_label_index)
-        {
-            return find(max_labels.begin(),max_labels.begin()+max_label_index,elem);
-        }
+        if(max_label_index) return find(max_labels.begin(),max_labels.begin()+max_label_index,elem);
         else return max_labels.end();
     }
     inline typename vector<Element>::const_iterator get_random_max_label()
@@ -117,9 +114,9 @@ public:
         }
         else return max_labels.end(); 
     }
-    inline typename unordered_map<Element,Val>::const_iterator label_fitness_begin() { return label_fitness_map.begin();}
-    inline typename unordered_map<Element,Val>::const_iterator label_fitness_end() { return label_fitness_map.end();}
-    inline typename unordered_map<Element,Val>::const_iterator get_label_fitness(id_type label) { return label_fitness_map.find(label);}    
+    inline typename unordered_map<Element,Val>::const_iterator all_labels_begin() { return label_fitness_map.begin();}
+    inline typename unordered_map<Element,Val>::const_iterator all_labels_end() { return label_fitness_map.end();}
+    inline typename unordered_map<Element,Val>::const_iterator find_in_all_labels(id_type label) { return label_fitness_map.find(label);}    
 };
 
     template <class Element, typename Priority>
