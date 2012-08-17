@@ -15,6 +15,7 @@ private:
     vector<id_type> xadj;
     vector<id_type> adjncy;
     vector<double> weights;
+    double total_weight;
 public:
     typedef vector<id_type>::const_iterator edgeIter;
 
@@ -24,6 +25,11 @@ public:
 
     inline id_type get_num_edges() const {
         return adjncy.size();
+    }
+    
+    inline double get_total_weight() const {
+        if(weights.size()) return total_weight;
+        else return 0;
     }
 
     inline id_type get_node_degree(id_type i) const {
@@ -78,6 +84,7 @@ public:
         weights.clear();
         xadj.assign(g.get_num_nodes(), 0);
         id_type num_edges;
+        total_weight = g.get_total_weight();
         if (g.is_directed()) num_edges = g.get_num_edges();
         else num_edges = (2 * g.get_num_edges()) - g.get_num_self_edges();
         adjncy.reserve(num_edges);
