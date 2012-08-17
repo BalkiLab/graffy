@@ -100,11 +100,18 @@ public:
         if(max_label_index)return max_labels.begin()+max_label_index;
         else return max_labels.end();
     }
+    inline typename vector<Element>::const_iterator find_max_label(Element elem) const 
+    { 
+        if(max_label_index)
+        {
+            return find(max_labels.begin(),max_labels.begin()+max_label_index,elem);
+        }
+        else return max_labels.end();
+    }
     inline typename vector<Element>::const_iterator get_random_max_label()
     {
         if(max_label_index !=0)
         {
-            random_shuffle(max_labels.begin(),(max_labels.begin()+max_label_index));
             RandomGenerator<id_type> gen(0,max_label_index,0);
             return max_labels.begin() + gen.next();
         }
