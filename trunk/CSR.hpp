@@ -63,8 +63,8 @@ public:
         return adjncy.end();
     }
 
-    inline double get_edge_weight(edgeIter & eit) const {
-        if (eit != adjncy.end() && weights.size())return weights.begin() + eit - adjncy.begin();
+    inline double get_edge_weight(edgeIter eit) const {
+        if (eit != adjncy.end() && weights.size())return *(weights.begin() + (eit - adjncy.begin()));
         else if (eit != adjncy.end()) return 1;
         return 0;
     }
@@ -87,7 +87,7 @@ public:
             vector<id_type> out_edges;
             vector<double> out_edge_wts;
             out_edges.reserve(g.get_node_out_degree(i));
-            for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(); aeit++)out_edges.push_back(aeit->first);
+            for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++)out_edges.push_back(aeit->first);
             sort(out_edges.begin(), out_edges.end());
             copy(out_edges.begin(), out_edges.end(), back_inserter(adjncy));
             if (g.is_weighted()) {

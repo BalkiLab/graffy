@@ -30,6 +30,7 @@
 #include "graph_properties.h"
 #include "local_community.h"
 #include "iterators.hpp"
+#include "CSR.hpp"
 
 
 #endif	/* CDLIB_H */
