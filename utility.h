@@ -45,48 +45,74 @@ void cumsum(const vector<T>& v_in,vector<T>& v_out)
 {
     v_out.assign(v_in.size(),0);
     v_out[0] = v_in[0];
-    for(id_type i=1;i<v_in.size();i++)
+    for(CDLib::id_type i=1;i<v_in.size();i++)
         v_out[i] = v_out[i-1] + v_in[i];
 }
 
 template <class Element, class Val>
-class max_manager
+class max_label_picker
 {
 private:
-    deque<Element> max_container;
+    unordered_map<Element,Val> label_fitness_map;
+    vector<Element> max_labels;
+    CDLib::id_type max_label_index;
     Val max_val;
-    unsigned long cont_last_index;
+    unordered_set<Element> curr_lbls;
 public:
-    typedef typename deque<Element>::const_iterator max_iterator;
-    max_manager() : max_container(), max_val(),cont_last_index(0)
+    typedef typename vector<Element>::const_iterator iterator; 
+    max_label_picker(id_type node_degree)
     {
         max_val = (numeric_limits<Val>::has_infinity) ? -numeric_limits<Val>::infinity() : -numeric_limits<Val>::max();
+        max_label_index = 0;
+        max_labels.assign(node_degree,((numeric_limits<Element>::has_infinity) ? -numeric_limits<Element>::infinity() : -numeric_limits<Element>::max()));
     }
-    id_type size() const { return cont_last_index+1; }
-    Element get_max() const 
+    inline id_type size() const { return max_label_index;}
+    inline bool empty() const { return max_label_index == 0;}
+    inline id_type num_labels() const { return label_fitness_map.size();}
+    inline Val max_fitness() const { return max_val; }
+    void insert(pair<id_type,double> lbl_fit)
     {
-        RandomGenerator<size_t> gen(0,cont_last_index,1);
-        return max_container[gen.next()]; 
+        pair<unordered_map<id_type,double>::iterator,bool> ret = label_fitness_map.insert(lbl_fit);
+        if(!ret.second)ret.first->second+=lbl_fit.second;
+        if(ret.first->second >= max_val)
+        {
+            if(ret.first->second > max_val) 
+            {
+                max_label_index = 0;
+                curr_lbls.clear();
+                max_val = ret.first->second;
+            }
+            if(!max_label_index || curr_lbls.find(ret.first->first) == curr_lbls.end())
+            {
+                max_labels[max_label_index] = ret.first->first;
+                max_label_index++;
+                curr_lbls.insert(ret.first->first);
+            }
+        }
     }
-    Val get_max_val() const { return max_val; }
-    max_iterator begin() { return max_container.begin(); }
-    max_iterator end() { return begin()+ cont_last_index+1;}
-    bool insert(Element elem, Val m_val)
+    inline typename vector<Element>::const_iterator begin() const 
+    { 
+        if(max_label_index)return max_labels.begin();
+        else return max_labels.end();
+    }
+    inline typename vector<Element>::const_iterator end() const 
+    { 
+        if(max_label_index)return max_labels.begin()+max_label_index;
+        else return max_labels.end();
+    }
+    inline typename vector<Element>::const_iterator get_random_max_label()
     {
-        if(max_val > m_val) return false;
-        else if(max_val == m_val)
+        if(max_label_index !=0)
         {
-            max_container.push_back(elem);
-            cont_last_index = ((max_container.empty()) ? 0 : cont_last_index+1);
+            random_shuffle(max_labels.begin(),(max_labels.begin()+max_label_index));
+            RandomGenerator<id_type> gen(0,max_label_index,0);
+            return max_labels.begin() + gen.next();
         }
-        else
-        {
-            if(max_container.empty()) max_container.push_back(elem);
-            else max_container[0] = elem;
-            cont_last_index =0;
-        }
-        return true;
+        else return max_labels.end(); 
     }
+    inline typename unordered_map<Element,Val>::const_iterator label_fitness_begin() { return label_fitness_map.begin();}
+    inline typename unordered_map<Element,Val>::const_iterator label_fitness_end() { return label_fitness_map.end();}
+    inline typename unordered_map<Element,Val>::const_iterator get_label_fitness(id_type label) { return label_fitness_map.find(label);}    
 };
 
     template <class Element, typename Priority>
