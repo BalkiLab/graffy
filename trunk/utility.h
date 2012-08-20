@@ -59,7 +59,8 @@ private:
     Val max_val;
     unordered_set<Element> curr_lbls;
 public:
-    typedef typename vector<Element>::const_iterator iterator; 
+    typedef typename vector<Element>::const_iterator max_labels_iterator; 
+    typedef typename unordered_map<Element,Val>::const_iterator all_labels_iterator;
     max_label_picker(id_type node_degree)
     {
         max_val = (numeric_limits<Val>::has_infinity) ? -numeric_limits<Val>::infinity() : -numeric_limits<Val>::max();
