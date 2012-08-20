@@ -89,7 +89,8 @@ namespace CDLib
     bool radicchi_community(const graph& g, node_set& comm,bool strong);        
     double modularity_comm(const graph& g, node_set& comm);
     double modularity_density_comm(const graph& g, node_set& comm);
-    
+    double ratio_assoc_comm(const graph& g, node_set& comm);
+    double normalized_assoc_comm(const graph& g, node_set& comm);
     
     double partition_quality(const graph& g,vector<node_set>& comms,double (*func)(const graph& g,node_set& comm));
     double modularity(const graph& g, vector<node_set>& comms);
@@ -98,7 +99,7 @@ namespace CDLib
     double description_length(const graph& g, vector<node_set>& comms);
     void compute_community_metrics(const graph& g, node_set& comm,community_metrics& metrics);
     void compute_all_metrics_partition(const graph& g, vector<node_set>& comms,vector<double>& metrics);
-    
+    void compute_imp_metrics_partition(const graph& g, vector<node_set>& comms,vector<double>& metrics);
     double rand_index(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2);
     double dongen_index(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2);
     double nmi(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2);

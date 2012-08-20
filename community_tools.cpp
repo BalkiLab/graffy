@@ -94,6 +94,18 @@ double CDLib::ratio_cut_comm(const graph& g, node_set& comm)
     return (double)ce.wt_inter_cluster_edges / (double)(comm.size()*(g.get_num_nodes() - comm.size()));
 }
 
+double CDLib::ratio_assoc_comm(const graph& g, node_set& comm)
+{
+    cluster_edges ce(g,comm);
+    return (double)ce.wt_intra_cluster_edges / (double)(comm.size());
+}
+
+double CDLib::normalized_assoc_comm(const graph& g, node_set& comm)
+{
+    cluster_edges ce(g,comm);
+    return ce.wt_intra_cluster_edges/(2*ce.wt_intra_cluster_edges + ce.wt_inter_cluster_edges);
+}
+
 double CDLib::conductance_comm(const graph& g, node_set& comm)
 {
     cluster_edges ce(g,comm);
@@ -177,7 +189,7 @@ double CDLib::modularity(const graph& g, vector<node_set>& comms)
         cluster_edges ce(g,comms[i]);
         mod_val += (ce.wt_intra_cluster_edges - ce.wt_expected_intra_cluster_edges);
     }
-    return mod_val/(2*g.get_total_weight());      
+    return mod_val/(4*g.get_total_weight());      
 }
 
 double CDLib::modularity_density(const graph& g, vector<node_set>& comms)
@@ -238,6 +250,19 @@ double CDLib::description_length(const graph& g, vector<node_set>& comms)
     return mod_val + (prod1 && prod2) ? log(prod1*prod2) : 0;
 }
 
+
+void CDLib::compute_imp_metrics_partition(const graph& g, vector<node_set>& comms,vector<double>& metrics)
+{
+    metrics.assign(4,0.0);
+    for(id_type i=0;i<comms.size();i++)
+    {
+        cluster_edges ce(g,comms[i]);
+        metrics[0] +=  ce.wt_intra_cluster_edges/static_cast<double>(comms[i].size()); // RASSOC
+        metrics[1] +=  ce.wt_inter_cluster_edges/static_cast<double>(comms[i].size()); // EXP
+        metrics[2] +=  ce.wt_intra_cluster_edges/(2*ce.wt_intra_cluster_edges + ce.wt_inter_cluster_edges); //NASSOC
+        metrics[3] +=  ce.wt_inter_cluster_edges/(2*ce.wt_intra_cluster_edges + ce.wt_inter_cluster_edges); //Conductance
+    }
+}
 
 void CDLib::compute_all_metrics_partition(const graph& g, vector<node_set>& comms,vector<double>& metrics)
 {

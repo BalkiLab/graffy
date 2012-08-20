@@ -105,8 +105,8 @@ void pre_run(ifstream& ifs, bool directed, bool weighted,dynamic_lp_output& outp
         output.book_times.push_back(0.0);
         output.lp_labels.push_back(vector<id_type>());
         output.graphs.push_back(graph(directed,weighted));
-        string filepath;
-        ifs >> filepath;
+        string filepath,outfilepath;
+        ifs >> filepath >> outfilepath;
         read_edgelist(output.graphs[output.graphs.size()-1],filepath,directed,weighted);
 }
 
