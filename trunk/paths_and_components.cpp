@@ -532,10 +532,10 @@ double CDLib::efficiency_sw_global_monte_carlo(graph& g)
 
 double CDLib::connectivity_entropy(graph& g)
 {
-    // Connective Entropy of the Network
+    // Connective Entropy of the Network or Information Entropy of the Network
     double entropy = 0;
     if ((2 * g.get_num_edges()) > 0){
-        for (id_type i = 0; i < g.get_num_edges(); i++){
+        for (id_type i = 0; i < g.get_num_nodes(); i++){
             double prob = (double)g.get_node_out_degree(i)/(2 * g.get_num_edges());
             entropy += prob * (log(prob)/log(2));
         }
@@ -550,11 +550,11 @@ double CDLib::path_entropy(graph& g)
     double entropy = 0;
     vector<id_type> each_source (g.get_num_nodes(),0);
     id_type all_sources = 0;
-    for (id_type i = 0; i < g.get_num_edges(); i++){
+    for (id_type i = 0; i < g.get_num_nodes(); i++){
         vector<double> distances;
         vector< vector<id_type> > preds;
         single_source_shortest_paths_bfs(g,i,distances,preds);
-        for (id_type j = 0; j < g.get_num_edges(); j++){
+        for (id_type j = 0; j < g.get_num_nodes(); j++){
             if ((j!=i) && (distances[j] != numeric_limits<double>::infinity()) && (distances[j] != 0)){
                 each_source[i]++;
                 all_sources++;
@@ -562,7 +562,7 @@ double CDLib::path_entropy(graph& g)
         }
     }
     if (all_sources > 0){
-        for (id_type i = 0; i < g.get_num_edges(); i++){
+        for (id_type i = 0; i < g.get_num_nodes(); i++){
             double prob = (double)each_source[i]/all_sources;
             entropy += prob * (log(prob)/log(2));
         }
@@ -571,6 +571,30 @@ double CDLib::path_entropy(graph& g)
     return entropy;
 }
 
+double CDLib::graph_modularity(graph& g)
+{
+    /* Functions returns the modularity of the whole graph considering the whole graph as a single community */
+    double denominator = 2 * g.get_num_edges();
+    double sum = 0;
+    if (g.is_directed()){
+        for (id_type i=0; i<g.get_num_nodes();i++){
+            for (id_type j=0; j<g.get_num_nodes();j++){
+                sum += g.get_edge_weight(i,j) - ((g.get_node_out_degree(i) * g.get_node_out_degree(j))/denominator);
+            }
+        } 
+    }
+    else{
+        for (id_type i=0; i<g.get_num_nodes();i++){
+            for (id_type j=i+1; j<g.get_num_nodes();j++){
+                sum += 2 * (g.get_edge_weight(i,j) - ((g.get_node_out_degree(i) * g.get_node_out_degree(j))/denominator));
+            }
+        }
+        for (id_type i=0; i<g.get_num_nodes();i++){
+            sum += g.get_edge_weight(i,i) - ((g.get_node_out_degree(i) * g.get_node_out_degree(i))/denominator);
+        }
+    }
+    return sum;
+}
 
 /*degree_dist_controlling_parameter controls degree distribution between power law and exponential degree distribution as it varies between 0 to 1.
   it is undirected graph model.*/
