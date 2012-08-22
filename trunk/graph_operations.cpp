@@ -30,6 +30,25 @@ id_type CDLib::extract_subgraph(const graph& g, node_set& nodes, graph& sg)
     return sg.get_num_edges();
 }
 
+id_type CDLib::copy_graph(const graph& src, graph& dst)
+{
+    // Naive implementation to Copy a graph. May be inefficient
+    // Returns the number of nodes in the new graph
+    dst.clear();
+    if(src.is_directed()!=dst.is_directed() && src.is_weighted()!=dst.is_weighted()) return 0;
+    for(id_type i=0;i < src.get_num_nodes();i++){
+        string first_label = src.get_node_label(i);
+        dst.add_node(first_label);
+        for(adjacent_edges_iterator aeit = src.out_edges_begin(i);aeit != src.out_edges_end(i); aeit++)
+        {
+            string second_label =  src.get_node_label(aeit->first);
+            dst.add_node(second_label);
+            dst.add_edge(first_label,second_label,aeit->second);
+        }
+    }
+    return dst.get_num_nodes();
+}
+
 void CDLib::sample_graph(const graph&g,node_set& seeds,id_type hop_dist,graph& sample)
 {
     node_set new_nodes;
