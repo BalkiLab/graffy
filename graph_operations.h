@@ -13,6 +13,8 @@
 namespace CDLib {
     id_type extract_subgraph(const graph& g, node_set& nodes, graph& sg);
     void sample_graph(const graph&g, node_set& seeds, id_type hop_dist, graph& sample);
+    // Naive implementation to Copy a graph. May be inefficient
+    id_type copy_graph(const graph& src, graph& dst);
     void multiply_vector_transform(const graph& g, vector<double>& invec, double (*wt_transform_func)(const graph&g, id_type, id_type, double), vector<double>& outvec);
     void random_walk(const graph& g, vector<double>& invec, id_type t, double (*wt_transform_func)(const graph&g, id_type, id_type, double), vector<double>& outvec);
     double transform_func_nop(const graph& g, id_type i, id_type j, double wt);
