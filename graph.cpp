@@ -8,7 +8,7 @@
 #include "graph.h"
 using namespace CDLib;
 
-graph::graph(): b_directed(true),b_weighted(true), blm_labels(),dam_backend(){}
+graph::graph(): b_directed(false),b_weighted(false), blm_labels(),dam_backend(){}
 graph::graph(bool directed, bool weighted): b_directed(directed),b_weighted(weighted), blm_labels(),dam_backend(){}
 
 bool graph::is_directed() const { return b_directed;}
@@ -115,6 +115,22 @@ bool graph::remove_node(id_type id)
     return false;
 }
 bool graph::remove_node(const string& label) { return remove_node(get_node_id(label));}
+
+id_type graph::remove_isolates()
+{
+// Returns the number of isolates nodes removed.
+    id_type number_of_removed = 0;
+    set<string> to_remove;
+    for(id_type i=0;i<get_num_nodes();i++){
+        if ((get_node_in_degree(i) == 0) && (get_node_out_degree(i) == 0)){
+            to_remove.insert(get_node_label(i));
+        }
+    }
+    for (set<string>::iterator it = to_remove.begin(); it != to_remove.end(); it++){
+        if (remove_node(*it)){ number_of_removed++; }
+    }
+    return number_of_removed;
+}
 
 bool graph::remove_edge(id_type from_id, id_type to_id) 
 { 

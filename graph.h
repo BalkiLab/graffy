@@ -81,6 +81,7 @@ namespace CDLib
         
         bool remove_node(id_type id);
         bool remove_node(const string& label);
+        id_type remove_isolates();
         
         bool remove_edge(id_type from_id, id_type to_id);
         wt_t remove_edge(const string& from_label, const string& to_label);
