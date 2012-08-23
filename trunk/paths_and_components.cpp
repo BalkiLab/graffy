@@ -537,7 +537,7 @@ double CDLib::connectivity_entropy(graph& g)
     if ((2 * g.get_num_edges()) > 0){
         for (id_type i = 0; i < g.get_num_nodes(); i++){
             double prob = (double)g.get_node_out_degree(i)/(2 * g.get_num_edges());
-            entropy += prob * (log(prob)/log(2));
+            if (prob != 0){ entropy += prob * (log(prob)/log(2)); }
         }
         entropy *= -1;
     }
@@ -564,7 +564,7 @@ double CDLib::path_entropy(graph& g)
     if (all_sources > 0){
         for (id_type i = 0; i < g.get_num_nodes(); i++){
             double prob = (double)each_source[i]/all_sources;
-            entropy += prob * (log(prob)/log(2));
+            if (prob != 0){ entropy += prob * (log(prob)/log(2)); }
         }
         entropy *= -1;
     }

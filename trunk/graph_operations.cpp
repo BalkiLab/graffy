@@ -37,13 +37,11 @@ id_type CDLib::copy_graph(const graph& src, graph& dst)
     dst.clear();
     if(src.is_directed()!=dst.is_directed() && src.is_weighted()!=dst.is_weighted()) return 0;
     for(id_type i=0;i < src.get_num_nodes();i++){
-        string first_label = src.get_node_label(i);
-        dst.add_node(first_label);
-        for(adjacent_edges_iterator aeit = src.out_edges_begin(i);aeit != src.out_edges_end(i); aeit++)
-        {
-            string second_label =  src.get_node_label(aeit->first);
-            dst.add_node(second_label);
-            dst.add_edge(first_label,second_label,aeit->second);
+        dst.add_node(src.get_node_label(i));
+    }
+    for(id_type i=0;i < src.get_num_nodes();i++){
+        for(adjacent_edges_iterator aeit = src.out_edges_begin(i);aeit != src.out_edges_end(i); aeit++){
+            dst.add_edge(src.get_node_label(i),src.get_node_label(aeit->first),aeit->second);
         }
     }
     return dst.get_num_nodes();

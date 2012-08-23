@@ -10,6 +10,8 @@ using namespace CDLib;
 
 bool CDLib::read_edgelist(graph& g,const string& filepath,bool directed, bool weighted)
 {
+    if(directed!=g.is_directed() && weighted!=g.is_weighted()) return false;
+    g.clear();
     ifstream ifs;
     ifs.open(filepath.c_str());
     if(ifs.is_open())
