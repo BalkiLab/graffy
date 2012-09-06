@@ -500,7 +500,7 @@ double CDLib::efficiency_sw_global(graph& g, bool type)
                 if (i != j)
                     efficiency = efficiency + (1/distance[j]);
         }
-        cout << "\nIdeal :" << ideal << "\tEfficiency :" << efficiency << endl;
+//        cout << "\nIdeal :" << ideal << "\tEfficiency :" << efficiency << endl;
         efficiency = efficiency / (g.get_num_nodes() * (g.get_num_nodes() - 1));
         efficiency /= ideal;
         return efficiency;
@@ -541,6 +541,7 @@ double CDLib::connectivity_entropy(graph& g)
         }
         entropy *= -1;
     }
+    entropy /= log(g.get_num_nodes())/log(2);   // Normalization of Entropy
     return entropy;
 }
 
