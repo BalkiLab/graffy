@@ -335,7 +335,7 @@ void CDLib::compute_community_metrics(const graph& g, node_set& comm,community_m
     }
     qinit.assign(cg.get_num_nodes(),1/static_cast<double>(cg.get_num_nodes()));
     metrics.rwalk_entropy = 0;
-    for(id_type i=0;i<cg.get_num_nodes();i++) if(qfinal[i] && qinit[i]) metrics.rwalk_entropy += qinit[i]*log(qinit[i]/qfinal[i]);
+    if(cg.get_num_nodes()>=2)for(id_type i=0;i<cg.get_num_nodes();i++) if(qfinal[i] && qinit[i]) metrics.rwalk_entropy += qinit[i]*log(qinit[i]/qfinal[i]);
 }
 
 bool comm_find_pair(vector<node_set>& comms,id_type x,id_type y)
