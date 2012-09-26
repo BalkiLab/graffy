@@ -81,7 +81,7 @@ void CDLib::multiply_vector_transform(const graph& g,vector<double>& invec,doubl
     {
         outvec.assign(g.get_num_nodes(),0);
         for(id_type i=0;i<g.get_num_nodes();i++)
-            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++)
+            for(adjacent_edges_iterator aeit = g.in_edges_begin(i);aeit != g.in_edges_end(i);aeit++)
                 outvec[i] += invec[aeit->first]*wt_transform_func(g,i,aeit->first,aeit->second);
     }
 }
