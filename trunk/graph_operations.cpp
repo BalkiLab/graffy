@@ -100,8 +100,8 @@ void CDLib::random_walk(const graph& g,vector<double>& invec,id_type t,double (*
 }
 
 double CDLib::transform_func_nop(const graph& g, id_type i,id_type j, double wt) { return wt; }
-double CDLib::transform_func_row_stochastic(const graph& g, id_type i,id_type j, double wt) { return wt/g.get_node_out_weight(i); }
-double CDLib::transform_func_column_stochastic(const graph& g, id_type i,id_type j, double wt) { return wt/g.get_node_in_weight(j); }
+double CDLib::transform_func_column_stochastic(const graph& g, id_type i,id_type j, double wt) { return wt/g.get_node_out_weight(i); }
+double CDLib::transform_func_row_stochastic(const graph& g, id_type i,id_type j, double wt) { return wt/g.get_node_in_weight(j); }
 double CDLib::transform_func_max_rowcol_stochastic(const graph& g, id_type i,id_type j, double wt) { return wt/max(g.get_node_out_weight(i),g.get_node_in_weight(j)); }
 double CDLib::transform_func_min_rowcol(const graph& g, id_type i,id_type j, double wt) { return wt/min(g.get_node_out_weight(i),g.get_node_in_weight(j)); }
 double CDLib::transform_func_laplacian(const graph& g, id_type i,id_type j, double wt) 
