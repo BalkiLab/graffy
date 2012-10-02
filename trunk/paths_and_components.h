@@ -33,6 +33,7 @@ namespace CDLib
     id_type get_connected_components_undirected(const graph& g, vector<node_set>& components);
     id_type get_weakly_connected_components(const graph& g, vector<node_set>& components);
     id_type get_strongly_connected_components(const graph& g, vector<node_set>& components);
+    id_type get_largest_connected_component(const graph& g, node_set &members);
 
     bool has_negative_edge_weights(const graph& g);
 

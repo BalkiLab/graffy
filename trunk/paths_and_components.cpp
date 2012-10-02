@@ -144,6 +144,30 @@ bool CDLib::is_connected_strongly(const graph& g)
      return (get_component_around_node_strong(g,0,visited) == g.get_num_nodes());
 }
 
+id_type CDLib::get_largest_connected_component(const graph& g, node_set &members)
+{
+//Return the size of the largest connected component in the graph. It also 
+//populates the set 'members' with the members of the largest connected component.
+//Returns strongly connected components for a directed graph.
+    vector<node_set> components;
+    members.clear();
+    if(g.is_directed()){
+        get_connected_components_undirected(g,components);
+    }
+    else{
+        get_strongly_connected_components(g,components);
+    }
+    id_type max_size = 0, max_id = 0;
+    for (id_type i=0; i < components.size(); i++){
+        if (components[i].size() > max_size){
+            max_size = components[i].size();
+            max_id = i;
+        }
+    }
+    members(components[max_id]);
+    return max_size;
+}
+
 id_type CDLib::get_connected_components_undirected(const graph& g, vector<node_set>& components)
 {
     if(g.is_directed()) return 0;
