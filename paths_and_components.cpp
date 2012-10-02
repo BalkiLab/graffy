@@ -164,7 +164,7 @@ id_type CDLib::get_largest_connected_component(const graph& g, node_set &members
             max_id = i;
         }
     }
-    members(components[max_id]);
+    members.insert(components[max_id].begin(),components[max_id].end());
     return max_size;
 }
 
