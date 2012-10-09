@@ -46,6 +46,7 @@ void CDLib::generate_scale_free_graph(graph& g, id_type num_nodes,id_type num_ed
     }
 }
 
+
 void CDLib::generate_planted_partition_graph(graph& g, id_type num_comms, id_type comm_size, double pin, double pout,vector< node_set>& communities)
 {
     if(pin >=0 && pout >=0 && pin<= 1 && pout <=1)
@@ -122,6 +123,19 @@ void CDLib::generate_chord_graph(graph& g,id_type num_nodes)
         g.add_edge(i,(i-1) %  g.get_num_nodes(),1);
         for(id_type j=1; j<= g.get_num_nodes()/2; j*=2 )
             g.add_edge(i,(i+j) % g.get_num_nodes(),1);
+    }
+}
+
+void CDLib::generate_LEET_chord_graph(graph& g, id_type num_nodes)
+{
+    init_empty_graph(g,num_nodes);
+    id_type cluster_size = log2(g.get_num_nodes());
+    for (id_type i=0; i<g.get_num_nodes(); i++) 
+    {       
+        g.add_edge(i,(i-1) %  g.get_num_nodes(),1);
+        g.add_edge(i,(i+1) %  g.get_num_nodes(),1);
+        id_type id_in_cluster = g.get_num_nodes() % static_cast<id_type>(log2(g.get_num_nodes()));
+        g.add_edge(i,id_in_cluster*(1+static_cast<id_type>(log2(g.get_num_nodes()))),1);
     }
 }
 
