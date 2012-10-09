@@ -308,6 +308,7 @@ void CDLib::compute_community_metrics(const graph& g, node_set& comm,community_m
             else metrics.intercluster_edges+=aeit->second;
         }
     }
+    metrics.intracluster_edges/=2;
     double volume = 2*metrics.intracluster_edges + metrics.intercluster_edges;
     metrics.expansion = metrics.intercluster_edges/static_cast<double>(metrics.size);
     metrics.conductance = metrics.intercluster_edges/volume;
