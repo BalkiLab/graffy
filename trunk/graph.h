@@ -97,9 +97,9 @@ namespace CDLib
         bool convert_to_directed();
         bool convert_to_weighted();
         
-        double extreme_weight(bool max);
-        double minimum_weight();
-        double maximum_weight();
+        double extreme_weight(bool max) const;
+        double minimum_weight() const;
+        double maximum_weight() const;
     };
 };
 

@@ -49,10 +49,10 @@ namespace CDLib
     double blocking_probability(id_type number_of_nodes, id_type degree, id_type visited);
     void alternate_path_length_destabilization(graph&g,id_type source,vector<double>& alternate_distances);
     void generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max_failure_allowed,double degree_dist_controling_parameter,double probability_to_alter_edge,double initial_probability_of_edge);
-    double efficiency_sw_global(graph& g, bool type);
+    double efficiency_sw_global(const graph& g, bool type);
     double efficiency_sw_global_monte_carlo(graph& g);
     
-    double connectivity_entropy(graph& g);
+    double connectivity_entropy(const graph& g);
     double path_entropy(graph& g);
     double graph_modularity(graph& g);
     id_type hop_distance_matrix(const graph& g, vector< vector<id_type> > & path_mat);

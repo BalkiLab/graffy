@@ -17,6 +17,9 @@ namespace CDLib
     double edge_clustering_coefficient(const graph&g,id_type from_id, id_type to_id);
     void degree_sequence(const graph& g, vector<id_type>& sequence);
     /*This gives the #nodes of degree indicated as the index of sequence variable in an undirected graph*/
+//    Overoaded Node Clustering Coefficient for single and all nodes.
+    double node_clustering_coefficient(const graph&g, id_type node);
+    void node_clustering_coefficient(const graph&g, vector<double> nodes);
 };
 
 #endif	/* CENTRALITY_H */

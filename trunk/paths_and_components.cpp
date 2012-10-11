@@ -501,7 +501,7 @@ void CDLib::alternate_path_length_destabilization(graph&g,id_type source,vector<
     }
 }
 
-double CDLib::efficiency_sw_global(graph& g, bool type)
+double CDLib::efficiency_sw_global(const graph& g, bool type)
 {
     /* Returning Global Efficiency of a Small World Network according to 2001 paper 
      * The bool type represents the type of distance calculation of efficiency. 
@@ -516,8 +516,10 @@ double CDLib::efficiency_sw_global(graph& g, bool type)
         {
             vector< vector<id_type> > preds;
             vector<double> distance;
-            if (type)
-                alternate_path_length_destabilization(g,i,distance);
+            if (type){
+                graph gtemp(g);
+                alternate_path_length_destabilization(gtemp,i,distance);
+            }
             else
                 single_source_shortest_paths_djikstra(g,i,distance,preds);
             for (unsigned long j = 0 ; j < g.get_num_nodes(); j++)
@@ -554,7 +556,7 @@ double CDLib::efficiency_sw_global_monte_carlo(graph& g)
 
 
 
-double CDLib::connectivity_entropy(graph& g)
+double CDLib::connectivity_entropy(const graph& g)
 {
     // Connective Entropy of the Network or Information Entropy of the Network
     double entropy = 0;

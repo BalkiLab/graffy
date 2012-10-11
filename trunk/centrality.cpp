@@ -63,6 +63,10 @@ void CDLib::betweeness_centralities(const graph& g, vector<double>& bc)
 {
     bc.clear();
     bc.assign(g.get_num_nodes(),0);
+//    Parallel calculation of betweenness centrality. 
+//    Parallelism is automatically controlled to number of available CPU's
+//    Mutual Exclusion of variable bc is not required as only one addition is performed on that variable.
+#pragma omp parallel for
     for(id_type i=0; i<g.get_num_nodes();i++)
     {
         vector< vector<id_type> > preds(g.get_num_nodes(),vector<id_type>());
@@ -83,7 +87,9 @@ void CDLib::betweeness_centralities(const graph& g, vector<double>& bc)
             if(curr != i) bc[curr]+=deps[curr];
         }
     }
-    if(!g.is_directed())for(id_type i=0;i<bc.size();i++) bc[i] /= 2;
+    if(!g.is_directed())
+#pragma omp parallel for
+        for(id_type i=0;i<bc.size();i++) bc[i] /= 2;
 }
 
 double CDLib::edge_clustering_coefficient(const graph&g,id_type from_id, id_type to_id)
@@ -126,4 +132,38 @@ void CDLib::degree_sequence(const graph& g, vector<id_type>& sequence)
         for(id_type i =0; i < g.get_num_nodes(); i++)
             sequence[g.get_node_out_degree(i)]++;
     }
+}
+
+//Overloaded function for a single node
+double CDLib::node_clustering_coefficient(const graph&g, id_type node)
+{
+    if (g.get_node_out_degree(node) == 0)
+        return 0;
+    if (g.get_node_out_degree(node) == 1)
+        return 1;
+    
+    double edge_count = 0;
+    node_set neighbours;
+    neighbours.insert(node);
+    for(adjacent_edges_iterator aeit = g.out_edges_begin(node);aeit != g.out_edges_end(node);aeit++)
+        neighbours.insert(aeit->first);
+    for(node_set::iterator nit = neighbours.begin(); nit != neighbours.end(); nit++){
+        for(adjacent_edges_iterator aeit = g.out_edges_begin(*nit);aeit != g.out_edges_end(*nit); aeit++){
+            if(neighbours.find(aeit->first)!=neighbours.end())
+                edge_count++;
+        }
+    }
+//    This below line automatically takes care of directed and undirected graphs.
+    edge_count /= (g.get_node_out_degree(node) * (g.get_node_out_degree(node) - 1));
+    return edge_count;
+}
+
+//Overloaded funtion for all nodes.
+void CDLib::node_clustering_coefficient(const graph&g, vector<double> nodes)
+{
+    nodes.clear();
+    nodes.assign(g.get_num_nodes(),0);
+#pragma omp parallel for
+    for(id_type i=0; i<g.get_num_nodes();i++)
+        nodes[i] = node_clustering_coefficient(g,i);
 }
