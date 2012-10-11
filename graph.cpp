@@ -184,7 +184,7 @@ bool graph::convert_to_weighted()
 }
 
 
-double graph::extreme_weight(bool max)
+double graph::extreme_weight(bool max) const
 {
     if(!is_weighted()) return 1;
     double minimum = numeric_limits<double>::infinity();
@@ -203,12 +203,12 @@ double graph::extreme_weight(bool max)
         return minimum;
 }
 
-double graph::minimum_weight()
+double graph::minimum_weight() const 
 {
     return extreme_weight(0);
 }
 
-double graph::maximum_weight()
+double graph::maximum_weight() const
 {
     return extreme_weight(1);
 }
