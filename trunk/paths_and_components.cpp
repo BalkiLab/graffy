@@ -294,13 +294,68 @@ double CDLib::diameter(const graph& g)
 
 void CDLib::all_pairs_shortest_paths(const graph& g, vector< vector<double> >& path_matrix)
 {
+//    The node_control value is set to control the memory overload due to large number of nodes. This value can be
+//    set depending on the available memory of the system. The memory calculation is:
+//    memory = node_control x node_control x 8 x 2 + some small constant
+    id_type node_control = 10000;
+    if (g.get_num_nodes() < 1 )
+        return;
+    else if (g.get_num_nodes() == 1){
+        path_matrix.clear();
+        path_matrix.assign(g.get_num_nodes(),vector<double>(g.get_num_nodes(),0));
+        return;
+    }
+    else if (g.get_num_nodes() < node_control){
+        if (g.get_density() < (log(2)/(log(g.get_num_nodes()))))
+            all_pairs_shortest_paths_djikshtra(g,path_matrix);
+        else
+            all_pairs_shortest_paths_floyd_warshal(g,path_matrix);
+    }
+    else{
+        all_pairs_shortest_paths_djikshtra(g,path_matrix);
+    }
+}
+
+void CDLib::all_pairs_shortest_paths_djikshtra(const graph& g, vector< vector<double> >& path_matrix)
+{
     path_matrix.assign(g.get_num_nodes(),vector<double>());
+#pragma omp parallel for     
     for(id_type i=0;i<g.get_num_nodes();i++)
     {
         vector< vector<id_type> > preds;
         if(!g.is_weighted()) single_source_shortest_paths_bfs(g,i,path_matrix[i],preds);
         else single_source_shortest_paths_djikstra(g,i,path_matrix[i],preds);
     }
+}
+
+void CDLib::all_pairs_shortest_paths_floyd_warshal(const graph& g, vector< vector<double> >& path_matrix)
+{
+//    Should be used only when space is not a constraint.
+    path_matrix.clear();
+    vector< vector<double> > prev (g.get_num_nodes(),vector<double>(g.get_num_nodes(),numeric_limits<double>::infinity()));
+    vector< vector<double> > next (g.get_num_nodes(),vector<double>(g.get_num_nodes(),numeric_limits<double>::infinity()));
+
+    
+    for(id_type i=0;i<g.get_num_nodes();i++){
+        for(adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i);aeit++){
+            prev[i][aeit->first] = aeit->second;
+        }
+        prev[i][i] = 0;
+    }
+    for(id_type k=0;k<g.get_num_nodes();k++){
+#pragma omp parallel for        
+        for(id_type i=0;i<g.get_num_nodes();i++){
+            for(id_type j=0;j<g.get_num_nodes();j++){
+                next[i][j] = ((prev[i][j] < (prev[i][k] + prev[k][j])) ? prev[i][j] : (prev[i][k] + prev[k][j]));
+            }
+        }
+        prev.clear();
+        prev.assign(next.begin(),next.end());
+        next.clear();
+        if (k < (g.get_num_nodes() - 1))
+            next.assign(g.get_num_nodes(),vector<double>(g.get_num_nodes(),numeric_limits<double>::infinity()));
+    }
+    path_matrix.assign(prev.begin(),prev.end());
 }
 
 void CDLib::single_source_shortest_paths_djikstra_with_paths(const graph&g,id_type source,vector<double>& distances,vector< vector<id_type> >& paths)
