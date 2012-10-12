@@ -41,6 +41,9 @@ namespace CDLib
     double single_source_shortest_paths_djikstra(const graph&g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds);
     double diameter(const graph& g);
     void all_pairs_shortest_paths(const graph& g, vector< vector<double> >& path_matrix);
+    void all_pairs_shortest_paths_djikshtra(const graph& g, vector< vector<double> >& path_matrix);
+    //    Floyd Warshal should be used only when space is not a constraint.
+    void all_pairs_shortest_paths_floyd_warshal(const graph& g, vector< vector<double> >& path_matrix);
     void single_source_shortest_paths_djikstra_with_paths(const graph&g,id_type source,vector<double>& distances,vector< vector<id_type> >& paths);
     bool get_topological_ordering(const graph& g,vector<id_type>& ordering);
     
