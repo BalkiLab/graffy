@@ -35,7 +35,7 @@ void do_bfs(const graph& g,id_type i,vector< vector<id_type> >& preds,vector<id_
 }
 
 void do_djikstra(const graph& g,id_type i,vector< vector<id_type> >& preds,vector<id_type>& paths, vector<double>& dist, stack<id_type>& s_dist)
-{
+{   
     binary_heap p_queue(dist,false);
     while(!p_queue.empty())
     {
@@ -166,4 +166,121 @@ void CDLib::node_clustering_coefficient(const graph&g, vector<double> nodes)
 #pragma omp parallel for
     for(id_type i=0; i<g.get_num_nodes();i++)
         nodes[i] = node_clustering_coefficient(g,i);
+}
+
+double CDLib::closeness_centrality_original(const graph& g, id_type node)
+{
+    if ((node <= g.get_num_nodes()) && (node >= 0)){
+        return -1;      // Reporting node out of range error.
+    }
+    vector<double> distances;
+    vector< vector<id_type> > preds;
+    single_source_shortest_paths_djikstra(g,node,distances,preds);
+    double sum = 0;
+    for (id_type i=0; i<distances.size(); i++)
+        sum += distances[i];
+    sum = g.get_num_nodes()/sum;
+    return sum;
+}
+
+void closeness_centralities_original(const graph& g, vector<double>& closeness)
+{
+    closeness.clear();
+    closeness.assign(g.get_num_nodes(),0);
+    vector< vector<double> > distance_matrix;
+    all_pairs_shortest_paths(g,distance_matrix);
+    for(id_type i=0; i<g.get_num_nodes();i++){
+        double sum = 0;
+        for (id_type j=0; j<distance_matrix[i].size(); j++)
+                sum += distance_matrix[i][j];
+        closeness[i] = g.get_num_nodes()/sum;
+    }
+}
+
+double CDLib::closeness_centrality(const graph& g, id_type node)
+{
+//    This approach is explained in the book: Networks, An Introduction by Newman.
+//    It takes the Harmonic Mean of the Geodesic Distance.
+    if ((node <= g.get_num_nodes()) && (node >= 0)){
+        return -1;      // Reporting node out of range error.
+    }
+    vector<double> distances;
+    vector< vector<id_type> > preds;
+    single_source_shortest_paths_djikstra(g,node,distances,preds);
+    double sum = 0;
+    for (id_type i=0; i<distances.size(); i++)
+        if (node != i)
+            sum += 1/distances[i];
+    sum /= g.get_num_nodes() - 1;
+    return sum;
+}
+
+void CDLib::closeness_centralities(const graph& g, vector<double>& closeness)
+{
+//    This approach is explained in the book: Networks, An Introduction by Newman.
+//    It takes the Harmonic Mean of the Geodesic Distance.
+    closeness.clear();
+    closeness.assign(g.get_num_nodes(),0);
+    vector< vector<double> > distance_matrix;
+    all_pairs_shortest_paths(g,distance_matrix);
+    for(id_type i=0; i<g.get_num_nodes();i++){
+        double sum = 0;
+        for (id_type j=0; j<distance_matrix[i].size(); j++)
+            if (i != j)
+                sum += 1/distance_matrix[i][j];
+        closeness[i] = sum/(g.get_num_nodes() - 1);
+    }
+}
+
+double sum_of_squares (double x, double y) {return ((x*x)+(y*y));}
+
+void CDLib::eigenvector_centralities(const graph& g, vector<double>& eigenvector)
+{
+    eigenvector.clear();
+    if (g.get_num_nodes() <= 0)
+        return;
+    if (g.get_num_nodes() == 1){
+        eigenvector.push_back(1);
+        return;
+    }
+    double init, sum_outv, sum_inv;
+    sum_inv = sqrt(g.get_num_nodes());
+    init = 1/sum_inv;
+    sum_outv = 0;
+    vector<double> invector(g.get_num_nodes(),init);
+    vector<double> outvector;
+    id_type iteration_count = 0;        // This is to forcefully terminate the loop depending on # of iteration.
+    const id_type converge = 1000;      // This is max. # of iteration before termination of the loop forcefully.
+    while ((abs(sum_inv - sum_outv) > 0.1) && (iteration_count < converge))
+    {
+        iteration_count++;
+        outvector.clear();
+        outvector.assign(g.get_num_nodes(),0);
+#pragma omp parallel for
+        for(id_type i=0;i<g.get_num_nodes();i++){
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++){
+                outvector[i] += aeit->second * invector[aeit->first];
+            }
+        }
+        double norm = accumulate(outvector.begin(),outvector.end(),0,sum_of_squares);
+        norm = sqrt(norm);
+        sum_inv = 0;            sum_outv = 0;
+#pragma omp parallel for
+        for(id_type i=0;i<g.get_num_nodes();i++){
+            sum_inv += invector[i];
+            invector[i] = outvector[i]/norm;
+            sum_outv += invector[i];
+        }
+    }
+    eigenvector.assign(invector.begin(),invector.end());
+}
+
+void CDLib::eigenvector_centralities_normalized(const graph& g, vector<double>& eigenvector)
+{
+    eigenvector_centralities(g, eigenvector);
+    if (g.get_num_nodes() <= 1)
+        return;
+    double sum_norm = accumulate(eigenvector.begin(),eigenvector.end(),0);
+    for (id_type i=0; i < eigenvector.size(); i++)
+        eigenvector[i] /= sum_norm;
 }
