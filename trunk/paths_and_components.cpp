@@ -37,6 +37,28 @@ void CDLib::bfs_visitor(const graph& g, node_set& visited, id_type source)
     }
 }
 
+void bfs_visitor_comps(const graph& g, node_set& not_visited,node_set& visited ,id_type source)
+{
+    queue<id_type> q_bfs;
+    q_bfs.push(source);
+    while(!q_bfs.empty())
+    {
+        id_type current  = q_bfs.front();
+        q_bfs.pop();
+        visited.insert(current);
+        not_visited.erase(current);
+        for(adjacent_edges_iterator aeit = g.out_edges_begin(current);aeit != g.out_edges_end(current);aeit++)
+        {
+            if(visited.find(aeit->first) == visited.end())
+            {
+                visited.insert(aeit->first);
+                not_visited.erase(current);
+                q_bfs.push(aeit->first);
+            }
+        }
+    }
+}
+
 double CDLib::single_source_shortest_paths_bfs(const graph& g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds)
 {
     distances.assign(g.get_num_nodes(),numeric_limits<double>::infinity());
@@ -170,25 +192,32 @@ id_type CDLib::get_largest_connected_component(const graph& g, node_set &members
 
 id_type CDLib::get_connected_components_undirected(const graph& g, vector<node_set>& components)
 {
-    if(g.is_directed()) return 0;
-    components.clear();
-    for(id_type i = 0; i<g.get_num_nodes(); i++)
-    {
-        bool is_found = false;
-        for(id_type j=0;j<components.size();j++)
-        {
-            //is_found = is_found || components[j].find(i) != components[j].end();
-            if(components[j].find(i) != components[j].end())
-            {
-                is_found = true;
-                break;
-            }
-        } 
-        if(!is_found)
-        {
-            components.push_back(node_set());
-            get_component_around_node_undirected(g,i,components[components.size()-1]);
-        }
+//    if(g.is_directed()) return 0;
+//    components.clear();
+//    for(id_type i = 0; i<g.get_num_nodes(); i++)
+//    {
+//        bool is_found = false;
+//        for(id_type j=0;j<components.size();j++)
+//        {
+//            //is_found = is_found || components[j].find(i) != components[j].end();
+//            if(components[j].find(i) != components[j].end())
+//            {
+//                is_found = true;
+//                break;
+//            }
+//        } 
+//        if(!is_found)
+//        {
+//            components.push_back(node_set());
+//            get_component_around_node_undirected(g,i,components[components.size()-1]);
+//        }
+//    }
+//    return components.size();
+    node_set not_visited;
+    for(id_type i=0;i<g.get_num_nodes();i++) not_visited.insert(i);
+    while(not_visited.size()){
+        components.push_back(node_set());
+        bfs_visitor_comps(g,not_visited,components[components.size()-1],*not_visited.begin());
     }
     return components.size();
 }
