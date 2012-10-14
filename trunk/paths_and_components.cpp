@@ -52,7 +52,7 @@ void bfs_visitor_comps(const graph& g, node_set& not_visited,node_set& visited ,
             if(visited.find(aeit->first) == visited.end())
             {
                 visited.insert(aeit->first);
-                not_visited.erase(current);
+                not_visited.erase(aeit->first);
                 q_bfs.push(aeit->first);
             }
         }
@@ -217,7 +217,7 @@ id_type CDLib::get_connected_components_undirected(const graph& g, vector<node_s
     for(id_type i=0;i<g.get_num_nodes();i++) not_visited.insert(i);
     while(not_visited.size()){
         components.push_back(node_set());
-        bfs_visitor_comps(g,not_visited,components[components.size()-1],*not_visited.begin());
+        bfs_visitor_comps(g,not_visited,components[components.size()-1],*(not_visited.begin()));
     }
     return components.size();
 }
