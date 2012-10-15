@@ -134,6 +134,22 @@ void CDLib::degree_sequence(const graph& g, vector<id_type>& sequence)
     }
 }
 
+void CDLib::degree_centralities(const graph& g, vector<id_type>& degrees)
+{
+//    Return the out-degree centrality of all the nodes in the given graph.
+    degrees.clear();
+    for(id_type i =0; i < g.get_num_nodes(); i++)
+        degrees.push_back(g.get_node_out_degree(i));
+}
+
+void CDLib::degree_centralities_normalized(const graph& g, vector<double>& degrees)
+{
+//    Return the normalized out-degree centrality of all the nodes in the given graph.
+    degrees.clear();
+    for(id_type i =0; i < g.get_num_nodes(); i++)
+        degrees.push_back((double)g.get_node_out_degree(i)/g.get_num_edges());
+}
+
 //Overloaded function for a single node
 double CDLib::node_clustering_coefficient(const graph&g, id_type node)
 {
