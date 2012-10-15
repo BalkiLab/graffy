@@ -68,6 +68,92 @@ namespace CDLib
         dist.assign(stat.max_val+1,0);
         for(id_type i=0;i<vec.size();i++) dist[vec[i]]++;
     }
+    
+    template <typename T>
+    double mean(const vector<T>& samples)
+    {
+        if (samples.size() == 0)
+            return 0;
+        if (samples.size() == 1)
+            return (double)samples[0];
+        T sum = 0;
+        sum = accumulate(samples.begin(), samples.end(),0);
+        return ((double)sum/samples.size());
+    }
+
+    template <typename T>
+    double variance(const vector<T>& samples)
+    {
+        if (samples.size() <= 1)
+            return 0;
+        double sample_mean = mean(samples);
+        double sum=0;
+        for (id_type i=0 ; i<samples.size(); i++)
+            sum += pow((samples[i] - sample_mean),2);
+        return (sum/samples.size());
+    }
+
+    template <typename T>
+    double std(const vector<T>& samples)
+    {
+        if (samples.size() <= 1)
+            return 0;
+        return sqrt(variance(samples));
+    }
+
+    template <typename T1, typename T2>
+    double covariance(const vector<T1>& sample1, const vector<T2>& sample2)
+    {
+        if (sample1.size() != sample2.size())
+            return -99999;          // Reporting unequal sample size error.
+        if (sample1.size() <= 1)
+            return 0;
+        double mean1 = mean(sample1);
+        double mean2 = mean(sample2);
+        double sum = 0;
+        for (id_type i=0 ; i<sample1.size(); i++)
+            sum += (sample1[i] - mean1) * (sample2[i] - mean2);
+        return (sum/(sample1.size() - 1));
+    }
+
+    template <typename T>
+    void change_to_zero_mean(vector<T>& samples)
+    {
+        if (samples.size() == 0)
+            return;
+        if (samples.size() == 1){
+            samples[0] = 0;
+            return;
+        }
+        double mean_val = mean(samples);
+        for (id_type i=0 ; i<samples.size(); i++)
+            samples[i] -= mean_val;
+    }
+    
+    template <typename T>
+    void change_to_zero_mean_unit_variance(vector<T>& samples)
+    {
+        if (samples.size() == 0)
+            return;
+        if (samples.size() == 1){
+            samples[0] = 0;
+            return;
+        }
+        double mean_val = mean(samples);
+        double std_val = std(samples);
+        for (id_type i=0 ; i<samples.size(); i++)
+            samples[i] = (samples[i] - mean_val)/std_val;
+    }
+    
+    template <typename T1, typename T2>
+    double pearson_correlation(const vector<T1>& sample1, const vector<T2>& sample2)
+    {
+        if (sample1.size() != sample2.size())
+            return -99999;          // Reporting unequal sample size error.
+        if (sample1.size() <= 1)
+            return 0;
+        return covariance(sample1,sample2)/(std(sample1) * std(sample2));
+    }
 
 };
 #endif	/* STATISTICS_H */
