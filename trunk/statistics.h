@@ -150,7 +150,7 @@ namespace CDLib
     {
         if (sample1.size() != sample2.size())
             return -99999;          // Reporting unequal sample size error.
-        if (sample1.size() <= 1)
+        if (sample1.size() == 0)
             return 0;
         return covariance(sample1,sample2)/(std(sample1) * std(sample2));
     }
