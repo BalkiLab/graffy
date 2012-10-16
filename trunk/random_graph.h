@@ -24,7 +24,7 @@ namespace CDLib {
     void generate_de_bruijn_graph(graph& g,id_type num_symbols,id_type sequence_length);
     void generate_chord_graph(graph& g,id_type num_nodes);
     void generate_LEET_chord_graph(graph& g,id_type num_nodes);
-    void generate_kademlia_graph(graph& g,id_type num_nodes, id_type bucket_length);
+    void generate_kademlia_graph(graph& g,id_type num_nodes);
     void generate_pref_attach_with_degree_seq(graph& g, vector<id_type>& deg_seq);
     void init_empty_graph(graph& g,size_t size);
     void generate_configuration_model(graph& g, vector<id_type>& degree_sequence);

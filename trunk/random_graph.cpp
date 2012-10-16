@@ -26,7 +26,7 @@ void CDLib::generate_erdos_renyi_graph(graph& g, id_type num_nodes,double p)
         init_empty_graph(g,num_nodes);
         RandomGenerator<double> p_gen(0,1);
         for(id_type i=0; i<num_nodes;i++)
-            for(id_type j=0; i<num_nodes;i++)
+            for(id_type j=0; j<num_nodes;j++)
                 if(p_gen.next() <= p) g.add_edge(i,j,1); 
     }
 }
@@ -134,16 +134,20 @@ void CDLib::generate_LEET_chord_graph(graph& g, id_type num_nodes)
     {       
         g.add_edge(i,(i-1) %  g.get_num_nodes(),1);
         g.add_edge(i,(i+1) %  g.get_num_nodes(),1);
-        id_type id_in_cluster = g.get_num_nodes() % static_cast<id_type>(log2(g.get_num_nodes()));
-        g.add_edge(i,id_in_cluster*(1+static_cast<id_type>(log2(g.get_num_nodes()))),1);
+        id_type id_in_cluster = g.get_num_nodes() % static_cast<id_type>(cluster_size);
+        g.add_edge(i,id_in_cluster*(1+static_cast<id_type>(cluster_size)),1);
     }
 }
 
 bool cmp(const vector<id_type>& lhs, const vector<id_type>& rhs) { return lhs.size() < rhs.size();}
 
-void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes, id_type bucket_length)
+void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes)
 {
     init_empty_graph(g,num_nodes);
+    unsigned int num_bits = log2(num_nodes);
+    for(unsigned int i=0;i<num_nodes;i++)
+        for(unsigned int j=0; j<num_bits;j++)
+                g.add_edge(i,(i ^ ((1 << j)))%num_nodes,1) ;
 }
 
 //void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes, id_type bucket_length)

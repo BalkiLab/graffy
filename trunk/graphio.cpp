@@ -45,8 +45,8 @@ bool CDLib::write_edgelist(graph& g,const string& filepath,bool weights)
         {
             for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++)
             {
-                ofs << g.get_node_label(i) << "\t" << g.get_node_label(aeit->first) ;
-                if(weights) ofs << "\t" << aeit->second ;
+                ofs << g.get_node_label(i) << " " << g.get_node_label(aeit->first) ;
+                if(weights) ofs << " " << aeit->second ;
                 ofs << endl;
             }
         }
