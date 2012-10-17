@@ -116,6 +116,25 @@ bool graph::remove_node(id_type id)
 }
 bool graph::remove_node(const string& label) { return remove_node(get_node_id(label));}
 
+id_type graph::remove_nodes(const set<id_type>& nodes)
+{
+//  Returns the number of nodes removed.    
+    set<string> to_remove;
+    for(set<id_type>::iterator it = nodes.begin(); it != nodes.end(); it++)
+        to_remove.insert(get_node_label(*it));
+    return remove_nodes(to_remove);
+}
+
+id_type graph::remove_nodes(const set<string>& nodes)
+{
+//  Returns the number of nodes removed.    
+    id_type number_of_removed = 0;
+    for (set<string>::iterator it = nodes.begin(); it != nodes.end(); it++){
+        if (remove_node(*it)){ number_of_removed++; }
+    }
+    return number_of_removed;
+}
+
 id_type graph::remove_isolates()
 {
 // Returns the number of isolates nodes removed.
@@ -126,10 +145,7 @@ id_type graph::remove_isolates()
             to_remove.insert(get_node_label(i));
         }
     }
-    for (set<string>::iterator it = to_remove.begin(); it != to_remove.end(); it++){
-        if (remove_node(*it)){ number_of_removed++; }
-    }
-    return number_of_removed;
+    return remove_nodes(to_remove);
 }
 
 bool graph::remove_edge(id_type from_id, id_type to_id) 
