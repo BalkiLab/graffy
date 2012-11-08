@@ -23,6 +23,7 @@
 #include "paths_and_components.h"
 #include "graph_operations.h"
 #include "community_tools.h"
+#include "graph_summary.h"
 #include "centrality.h"
 #include "divisive_algorithms.h"
 #include "label_propagation.h"

@@ -640,22 +640,7 @@ double CDLib::efficiency_sw_global_monte_carlo(graph& g)
 
 
 
-double CDLib::connectivity_entropy(const graph& g)
-{
-    // Connective Entropy of the Network or Information Entropy of the Network
-    double entropy = 0;
-    if ((2 * g.get_num_edges()) > 0){
-        for (id_type i = 0; i < g.get_num_nodes(); i++){
-            double prob = (double)g.get_node_out_degree(i)/(2 * g.get_num_edges());
-            if (prob != 0){ entropy += prob * (log(prob)/log(2)); }
-        }
-        entropy *= -1;
-    }
-    entropy /= log(g.get_num_nodes())/log(2);   // Normalization of Entropy
-    return entropy;
-}
-
-double CDLib::path_entropy(graph& g)
+double CDLib::path_entropy(const graph& g)
 {
     // Centrality Entropy of the Graph based on shortest path connectivity, as in Borgatti paper
     double entropy = 0;
@@ -682,126 +667,6 @@ double CDLib::path_entropy(graph& g)
     return entropy;
 }
 
-double CDLib::graph_modularity(graph& g)
-{
-    /* Functions returns the modularity of the whole graph considering the whole graph as a single community */
-    double denominator = 2 * g.get_num_edges();
-    double sum = 0;
-    if (g.is_directed()){
-        for (id_type i=0; i<g.get_num_nodes();i++){
-            for (id_type j=0; j<g.get_num_nodes();j++){
-                sum += g.get_edge_weight(i,j) - ((g.get_node_out_degree(i) * g.get_node_out_degree(j))/denominator);
-            }
-        } 
-    }
-    else{
-        for (id_type i=0; i<g.get_num_nodes();i++){
-            for (id_type j=i+1; j<g.get_num_nodes();j++){
-                sum += 2 * (g.get_edge_weight(i,j) - ((g.get_node_out_degree(i) * g.get_node_out_degree(j))/denominator));
-            }
-        }
-        for (id_type i=0; i<g.get_num_nodes();i++){
-            sum += g.get_edge_weight(i,i) - ((g.get_node_out_degree(i) * g.get_node_out_degree(i))/denominator);
-        }
-    }
-    return sum;
-}
-
-/*degree_dist_controlling_parameter controls degree distribution between power law and exponential degree distribution as it varies between 0 to 1.
-  it is undirected graph model.*/
-
-double energy(graph& g,double degree_dist_controlling_parameter,id_type nC2,double Dlinear);
-
-void CDLib::generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max_failure_allowed,double degree_dist_controlling_parameter,double probability_to_alter_edge,double initial_probability_of_edge)
-{
-    if(degree_dist_controlling_parameter<=1 && degree_dist_controlling_parameter>=0 && initial_probability_of_edge<=1 && initial_probability_of_edge>=0 && probability_to_alter_edge<=1 && probability_to_alter_edge>=0)
-    {
-        double Dlinear = ((num_nodes + 1) / 3.0);
-        id_type nC2 = ((num_nodes * (num_nodes - 1)) / 2);
-        
-        UniformRandomGenerator<double> rand;
-
-        graph g_t(0, 0);
-        init_empty_graph(g,num_nodes);
-        init_empty_graph(g_t,num_nodes);
-      
-        for(id_type i=0;i<num_nodes;i++)
-        {
-            for(id_type j=i+1;j<num_nodes;j++)
-            {
-                double R2=rand.next(1);
-                if(R2<initial_probability_of_edge && i!=j)
-                {
-                   g.add_edge(i,j,1);
-                } 
-            }
-        }
-
-        id_type failure = 0;
-
-        double Energy_old = energy(g, degree_dist_controlling_parameter, nC2, Dlinear);
-        
-        while (failure < max_failure_allowed) 
-        {
-            g_t=g;
-
-            for (id_type i = 0; i < num_nodes; i++) 
-            {
-                for (id_type j = i+1 ; j < num_nodes; j++) 
-                {
-                    double R1=rand.next(1);
-                    if(R1<probability_to_alter_edge)
-                    {
-                        if(g_t.get_edge_weight(i,j)==0)
-                            g_t.add_edge(i,j,1);
-                        else
-                            g_t.remove_edge(i,j);
-                    }
-                }
-            }
-
-            double Energy_new = energy(g_t, degree_dist_controlling_parameter, nC2, Dlinear);
-
-            if (Energy_new < Energy_old) 
-            {
-                g = g_t;
-                Energy_old = Energy_new;
-                failure = 0;
-            } else
-                failure++;
-        }
-    }
-    else
-        cout<<"\n last three parameter value should be between 0 and 1";
-    
-}
-
-double energy(graph& g,double degree_dist_controlling_parameter,id_type nC2,double Dlinear)
-{
-    id_type num_edges = g.get_num_edges();
-    id_type num_nodes = g.get_num_nodes();
-    
-    vector<double> distance;
-    vector< vector <id_type> > seq;
-    
-    id_type total_of_min_distance=0;
-    
-    for(id_type i=0;i<num_nodes;i++)
-    {
-        single_source_shortest_paths_bfs(g,i,distance,seq);
-        for(id_type j=0;j<num_nodes;j++)
-        {
-            total_of_min_distance = total_of_min_distance + distance[j];
-        }
-    }
-    double normalized_num_of_link = (double)num_edges/nC2;
-    double avg_min_distance = (double)total_of_min_distance/(nC2*2);
-    
-    double normalized_distance = avg_min_distance/Dlinear;
-    double Energy = degree_dist_controlling_parameter*normalized_distance + (1-degree_dist_controlling_parameter)*normalized_num_of_link;
-    
-    return Energy;
-}
 
 id_type CDLib::hop_distance_matrix(const graph& g, vector< vector<id_type> > & path_matrix)
 {
@@ -821,3 +686,5 @@ id_type CDLib::hop_distance_matrix(const graph& g, vector< vector<id_type> > & p
     }
     return max_dist;
 }
+
+

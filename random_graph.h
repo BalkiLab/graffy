@@ -11,9 +11,11 @@
 #include "graph.h"
 //#include "extern.hpp"
 #include "community_tools.h"
+#include "paths_and_components.h"
 
 namespace CDLib {
     void generate_erdos_renyi_graph(graph& g, id_type num_nodes,double p);
+    void generate_erdos_renyi_graph(graph& g, id_type num_nodes,id_type num_edges);
     void generate_scale_free_graph(graph& g, id_type num_nodes,id_type num_edges,double alpha, double beta);
     void generate_planted_partition_graph(graph& g, id_type num_comms, id_type comm_size, double pin, double pout,vector< node_set>& communities);
     long generate_lfr_graph(graph& g,id_type num_nodes,id_type num_edges, id_type max_degree,double tau, double tau2,double mixing_parameter,vector<node_set>& comms);
@@ -34,6 +36,7 @@ namespace CDLib {
     void generate_small_world_model(graph& g,size_t num_nodes,size_t degree_of_each_vertex,double probability_to_replace_edge);
     void generate_evolutionary_model_128_nodes_4_communities(vector<graph>& g,size_t num_inter_community_edges,size_t num_timesteps);
     void generate_evolutionary_model_800_nodes_4_communities(vector < vector < vector < double > > >& points,vector<double>& x_coordinates,vector<double>& y_coordinates,double variance,size_t num_timesteps);
+    void generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max_failure_allowed,double degree_dist_controling_parameter,double probability_to_alter_edge,double initial_probability_of_edge);
 };
 
 #endif	/* RANDOM_GRAPH_H */

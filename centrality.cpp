@@ -92,6 +92,16 @@ void CDLib::betweeness_centralities(const graph& g, vector<double>& bc)
         for(id_type i=0;i<bc.size();i++) bc[i] /= 2;
 }
 
+void CDLib::betweenness_centralities_normalized(const graph& g, vector<double>& bcn)
+{
+    betweeness_centralities(g,bcn);
+    if (g.get_num_nodes() <= 1)
+        return;
+    double sum_norm = accumulate(bcn.begin(),bcn.end(),0.0);
+    for (id_type i=0; i < bcn.size(); i++)
+        bcn[i] /= sum_norm;
+}
+
 double CDLib::edge_clustering_coefficient(const graph&g,id_type from_id, id_type to_id)
 {
     if(!g.get_edge_weight(from_id,to_id)) return 0;
@@ -170,18 +180,28 @@ double CDLib::node_clustering_coefficient(const graph&g, id_type node)
         }
     }
 //    This below line automatically takes care of directed and undirected graphs.
-    edge_count /= (g.get_node_out_degree(node) * (g.get_node_out_degree(node) - 1));
+    edge_count /= ((g.get_node_out_degree(node) + 1) * g.get_node_out_degree(node));
     return edge_count;
 }
 
 //Overloaded funtion for all nodes.
-void CDLib::node_clustering_coefficient(const graph&g, vector<double> nodes)
+void CDLib::node_clustering_coefficient(const graph&g, vector<double>& nodes)
 {
     nodes.clear();
     nodes.assign(g.get_num_nodes(),0);
 #pragma omp parallel for
     for(id_type i=0; i<g.get_num_nodes();i++)
         nodes[i] = node_clustering_coefficient(g,i);
+}
+
+void CDLib::node_clustering_coefficient_normalized(const graph& g, vector<double>& nodes)
+{
+    node_clustering_coefficient(g,nodes);
+    if (g.get_num_nodes() <= 1)
+        return;
+    double sum_norm = accumulate(nodes.begin(),nodes.end(),0.0);
+    for (id_type i=0; i < nodes.size(); i++)
+        nodes[i] /= sum_norm;
 }
 
 double CDLib::closeness_centrality_original(const graph& g, id_type node)
@@ -248,7 +268,17 @@ void CDLib::closeness_centralities(const graph& g, vector<double>& closeness)
     }
 }
 
-double sum_of_squares (double x, double y) {return ((x*x)+(y*y));}
+void CDLib::closeness_centralities_normalized(const graph& g, vector<double>& closeness)
+{
+    closeness_centralities(g, closeness);
+    if (g.get_num_nodes() <= 1)
+        return;
+    double sum_norm = accumulate(closeness.begin(),closeness.end(),0.0);
+    for (id_type i=0; i < closeness.size(); i++)
+        closeness[i] /= sum_norm;
+}
+
+double sum_of_squares (double x, double y) {return (x +(y*y));}
 
 void CDLib::eigenvector_centralities(const graph& g, vector<double>& eigenvector)
 {
@@ -278,8 +308,9 @@ void CDLib::eigenvector_centralities(const graph& g, vector<double>& eigenvector
                 outvector[i] += aeit->second * invector[aeit->first];
             }
         }
-        double norm = accumulate(outvector.begin(),outvector.end(),0,sum_of_squares);
-        norm = sqrt(norm);
+        double norm = accumulate(outvector.begin(),outvector.end(),0.0,sum_of_squares);
+        if (norm > 0)
+            norm = sqrt(norm);
         sum_inv = 0;            sum_outv = 0;
 #pragma omp parallel for
         for(id_type i=0;i<g.get_num_nodes();i++){
@@ -296,7 +327,7 @@ void CDLib::eigenvector_centralities_normalized(const graph& g, vector<double>& 
     eigenvector_centralities(g, eigenvector);
     if (g.get_num_nodes() <= 1)
         return;
-    double sum_norm = accumulate(eigenvector.begin(),eigenvector.end(),0);
+    double sum_norm = accumulate(eigenvector.begin(),eigenvector.end(),0.0);
     for (id_type i=0; i < eigenvector.size(); i++)
         eigenvector[i] /= sum_norm;
 }

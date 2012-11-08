@@ -81,7 +81,7 @@ namespace CDLib
         
         bool remove_node(id_type id);
         bool remove_node(const string& label);
-        id_type remove_nodes(const set<id_type>& nodes);
+        id_type remove_nodes(const node_set& nodes);
         id_type remove_nodes(const set<string>& nodes);
         id_type remove_isolates();
         
