@@ -116,11 +116,11 @@ bool graph::remove_node(id_type id)
 }
 bool graph::remove_node(const string& label) { return remove_node(get_node_id(label));}
 
-id_type graph::remove_nodes(const set<id_type>& nodes)
+id_type graph::remove_nodes(const node_set& nodes)
 {
 //  Returns the number of nodes removed.    
     set<string> to_remove;
-    for(set<id_type>::iterator it = nodes.begin(); it != nodes.end(); it++)
+    for(node_set::const_iterator it = nodes.begin(); it != nodes.end(); it++)
         to_remove.insert(get_node_label(*it));
     return remove_nodes(to_remove);
 }

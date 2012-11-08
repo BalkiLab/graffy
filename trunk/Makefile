@@ -1,5 +1,5 @@
-OBJS = label_propagation.o random_graph.o divisive_algorithms.o disjoint_set.o centrality.o community_tools.o graph_operations.o paths_and_components.o graphio.o graph.o binary_heap.o double_adjacency_map.o bidirectional_label_map.o graph_properties.o local_community.o
-OBJS_D = label_propagation_d.o random_graph_d.o divisive_algorithms_d.o disjoint_set_d.o centrality_d.o community_tools_d.o graph_operations_d.o paths_and_components_d.o graphio_d.o graph_d.o binary_heap_d.o double_adjacency_map_d.o bidirectional_label_map_d.o graph_properties_d.o local_community_d.o
+OBJS = label_propagation.o random_graph.o divisive_algorithms.o disjoint_set.o centrality.o community_tools.o graph_operations.o paths_and_components.o graphio.o graph.o binary_heap.o double_adjacency_map.o bidirectional_label_map.o graph_properties.o local_community.o statistics.o graph_summary.o
+OBJS_D = label_propagation_d.o random_graph_d.o divisive_algorithms_d.o disjoint_set_d.o centrality_d.o community_tools_d.o graph_operations_d.o paths_and_components_d.o graphio_d.o graph_d.o binary_heap_d.o double_adjacency_map_d.o bidirectional_label_map_d.o graph_properties_d.o local_community_d.o statistics_d.o graph_summary_d.o
 
 CC = g++
 CFLAGS = -O3 -fPIC -fopenmp -std=c++0x -DNDEBUG
@@ -10,19 +10,28 @@ libcdlib.so : $(OBJS)
 	$(CC) -std=c++0x -shared -o libcdlib.so $(OBJS) $(LIBS)
 	$(CC) -std=c++0x -shared -o libcdlib_d.so $(OBJS_D) $(LIBS)
 	
-graph_properties.o : graph.o
-	$(CC) $(CFLAGS) -o graph_properties.o  -c graph_properties.cpp $(LIBS)
-	$(CC) $(CFLAGS_D) -o graph_properties_d.o  -c graph_properties.cpp $(LIBS)
-
 dynamic_communities.o : graph.o graphio.o label_propagation.o
 	$(CC) $(CFLAGS) -o dynamic_communities.o  -c dynamic_communities.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o dynamic_communities_d.o  -c dynamic_communities.cpp $(LIBS)
 
+community_tools.o : graph.o graph_operations.o statistics.o
+	$(CC) $(CFLAGS) -o community_tools.o  -c community_tools.cpp $(LIBS)
+	$(CC) $(CFLAGS_D) -o community_tools_d.o  -c community_tools.cpp $(LIBS)
+
 label_propagation.o : graph.o graph_operations.o community_tools.o
 	$(CC) $(CFLAGS) -o label_propagation.o  -c label_propagation.cpp $(LIBS)
-	$(CC) $(CFLAGS_D) -o label_propagation_d.o  -c label_propagation.cpp $(LIBS)
+	$(CC) $(CFLAGS_D) -o label_propagation_d.o  -c label_propagation.cpp $(LIBS)	
+	
+graph_properties.o : graph.o paths_and_components.o statistics.o
+	$(CC) $(CFLAGS) -o graph_properties.o  -c graph_properties.cpp $(LIBS)
+	$(CC) $(CFLAGS_D) -o graph_properties_d.o  -c graph_properties.cpp $(LIBS)
 
-random_graph.o : graph.o
+graph_summary.o : graph.o paths_and_components.o graph_properties.o statistics.o
+	$(CC) $(CFLAGS) -o graph_summary.o  -c graph_summary.cpp $(LIBS)
+	$(CC) $(CFLAGS_D) -o graph_summary_d.o  -c graph_summary.cpp $(LIBS)
+
+
+random_graph.o : graph.o community_tools.o paths_and_components.o
 	$(CC) $(CFLAGS) -o random_graph.o  -c random_graph.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o random_graph_d.o  -c random_graph.cpp $(LIBS)
 	
@@ -38,15 +47,11 @@ centrality.o : graph.o binary_heap.o
 	$(CC) $(CFLAGS) -o centrality.o  -c centrality.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o centrality_d.o  -c centrality.cpp $(LIBS)
 
-community_tools.o : graph.o graph_operations.o
-	$(CC) $(CFLAGS) -o community_tools.o  -c community_tools.cpp $(LIBS)
-	$(CC) $(CFLAGS_D) -o community_tools_d.o  -c community_tools.cpp $(LIBS)
-
 graph_operations.o  : graph.o
 	$(CC) $(CFLAGS) -o graph_operations.o  -c graph_operations.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o graph_operations_d.o  -c graph_operations.cpp $(LIBS)
 
-paths_and_components.o  : graph.o binary_heap.o random_graph.o
+paths_and_components.o  : graph.o binary_heap.o
 	$(CC) $(CFLAGS) -o paths_and_components.o  -c paths_and_components.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o paths_and_components_d.o  -c paths_and_components.cpp $(LIBS)
 
@@ -76,6 +81,9 @@ bidirectional_label_map.o :
 	$(CC) $(CFLAGS_D) -o bidirectional_label_map_d.o -c bidirectional_label_map.cpp $(LIBS)
 
 
+statistics.o : 
+	$(CC) $(CFLAGS) -o statistics.o -c statistics.cpp $(LIBS)
+	$(CC) $(CFLAGS_D) -o statistics_d.o -c statistics.cpp $(LIBS)
 
 clean:
 	rm *.o *.so

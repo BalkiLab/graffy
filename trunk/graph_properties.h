@@ -10,13 +10,19 @@
 #include "typedefs.h"
 #include "graph.h"
 #include "statistics.h"
+#include "random_graph.h"
 using namespace std;
 
 
 namespace CDLib 
 {
-    string get_graph_details(const graph& g);
-    void get_degree_distribution(const graph& g,vector<id_type>& dist,bool in_degrees);
+    void get_degree_histogram(const graph& g,vector<id_type>& dist, bool in_degrees);
+    void get_degree_distribution(const graph& g,vector<double>& dist,bool in_degrees);
+    
+    double kl_divergence_from_random_graph(const graph& g);
+    double distance_from_random_graph(const graph& g, bool hellinger);  // Hellinger and Bhattacharyya Distance of Degree Distribution
+    double connectivity_entropy(const graph& g);
+    double graph_modularity(graph& g);
 };
 
 #endif	/* GRAPH_PROPERTIES_H */

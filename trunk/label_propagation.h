@@ -10,6 +10,7 @@
 
 #include "graph.h"
 #include "community_tools.h"
+#include "graph_operations.h"
 using namespace std;
 
 namespace CDLib
@@ -280,5 +281,5 @@ namespace CDLib
    
 };
 
-#endif	/* lplabel_PROPAGATION_H */
+#endif	/* LABEL_PROPAGATION_H */
 

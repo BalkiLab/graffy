@@ -13,7 +13,7 @@ using namespace std;
 namespace CDLib
 {
 
- template <typename T>
+    template <typename T>
     struct statistics
     {
         T min_val;
@@ -154,7 +154,13 @@ namespace CDLib
             return 0;
         return covariance(sample1,sample2)/(std(sample1) * std(sample2));
     }
+    bool is_distribution(const vector<double>& distribution);
+    double kl_divergence(const vector<double>& distribution1,const vector<double>& distribution2);
+    double kl_divergence_symmetric(const vector<double>& distribution1,const vector<double>& distribution2);
+    double bhattacharyya_distance(const vector<double>& distribution1,const vector<double>& distribution2);
+    double hellinger_distance(const vector<double>& distribution1,const vector<double>& distribution2);
 
 };
+
 #endif	/* STATISTICS_H */
 
