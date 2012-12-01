@@ -146,22 +146,24 @@ bool double_adjacency_map::delete_node(id_type id) {
     deque< pair<id_type, id_type> > edges_to_delete;
     deque< pair< pair<id_type, id_type>, wt_type> >edges_to_add;
     if(id != last_id){
-    for (adjacent_edges_iterator aeit = am_in_edges[id].begin(); aeit != am_in_edges[id].end(); aeit++)
-        edges_to_delete.push_back(make_pair(aeit->first, id));
-    for (adjacent_edges_iterator aeit = am_out_edges[id].begin(); aeit != am_out_edges[id].end(); aeit++)
-        edges_to_delete.push_back(make_pair(id, aeit->first));
-    for (adjacent_edges_iterator aeit = am_in_edges[last_id].begin(); aeit != am_in_edges[last_id].end(); aeit++) {
-        if(aeit->first != id)edges_to_add.push_back(make_pair(make_pair(aeit->first, id), aeit->second));
-        edges_to_delete.push_back(make_pair(aeit->first, last_id));
-    }
-    for (adjacent_edges_iterator aeit = am_out_edges[last_id].begin(); aeit != am_out_edges[last_id].end(); aeit++) {
-        if(aeit->first != id)edges_to_add.push_back(make_pair(make_pair(id, aeit->first), aeit->second));
-        edges_to_delete.push_back(make_pair(last_id, aeit->first));
-    }
+        for (adjacent_edges_iterator aeit = am_in_edges[id].begin(); aeit != am_in_edges[id].end(); aeit++)
+            edges_to_delete.push_back(make_pair(aeit->first, id));
+        for (adjacent_edges_iterator aeit = am_out_edges[id].begin(); aeit != am_out_edges[id].end(); aeit++)
+            edges_to_delete.push_back(make_pair(id, aeit->first));
+        for (adjacent_edges_iterator aeit = am_in_edges[last_id].begin(); aeit != am_in_edges[last_id].end(); aeit++) {
+            if(aeit->first != id)edges_to_add.push_back(make_pair(make_pair(aeit->first, id), aeit->second));
+            edges_to_delete.push_back(make_pair(aeit->first, last_id));
+        }
+        for (adjacent_edges_iterator aeit = am_out_edges[last_id].begin(); aeit != am_out_edges[last_id].end(); aeit++) {
+            if(aeit->first != id)edges_to_add.push_back(make_pair(make_pair(id, aeit->first), aeit->second));
+            edges_to_delete.push_back(make_pair(last_id, aeit->first));
+        }
     }
     else{
         for (adjacent_edges_iterator aeit = am_in_edges[last_id].begin(); aeit != am_in_edges[last_id].end(); aeit++) 
-        edges_to_delete.push_back(make_pair(aeit->first, last_id));
+                edges_to_delete.push_back(make_pair(aeit->first, last_id));
+        for (adjacent_edges_iterator aeit = am_out_edges[last_id].begin(); aeit != am_out_edges[last_id].end(); aeit++)
+                edges_to_delete.push_back(make_pair(last_id, aeit->first));
     }
     for (id_type i = 0; i < edges_to_delete.size(); i++) delete_edge(edges_to_delete[i].first, edges_to_delete[i].second);
     if(id!=last_id)for (id_type i = 0; i < edges_to_add.size(); i++) insert_edge(edges_to_add[i].first.first, edges_to_add[i].first.second, edges_to_add[i].second);
