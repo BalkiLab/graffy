@@ -12,11 +12,14 @@
 #include <iostream>
 #include <string>
 #include "graph.h"
+#include "paths_and_components.h"
+#include "graph_operations.h"
 using namespace std;
 
 namespace CDLib
 {
         bool read_edgelist(graph& g,const string& filepath,bool directed, bool weighted);
+        bool read_matlab_sp(graph& g,const string& filepath);
         bool write_edgelist(graph& g,const string& filepath,bool weights);
         bool write_METIS(graph& g,const string& filepath,bool weights);
         bool write_SNAP(graph& g,const string& filepath,bool weights);
@@ -24,6 +27,7 @@ namespace CDLib
         bool write_UEL(graph& g,const string& filepath,bool weights);
         bool write_matlab_sp(graph& g,const string& filepath);
         bool write_dimacs_max_flow(graph& g, const string& filepath);
+        bool write_lcc_and_props(graph& g,const string& filepath,bool start_with_one);
 };
 
 #endif	/* GRAPHIO_H */

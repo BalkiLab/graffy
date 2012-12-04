@@ -6,6 +6,7 @@
  */
 
 #include "graphio.h"
+#include "centrality.h"
 using namespace CDLib;
 
 bool CDLib::read_edgelist(graph& g,const string& filepath,bool directed, bool weighted)
@@ -29,6 +30,27 @@ bool CDLib::read_edgelist(graph& g,const string& filepath,bool directed, bool we
                 g.add_edge(label1,label2,weight);
                 if(!directed)g.add_edge(label2,label1,weight);
             }
+        }
+        return true;
+    }
+    return false;
+}
+
+bool CDLib::read_matlab_sp(graph& g,const string& filepath){
+    g.clear();
+    ifstream ifs;
+    ifs.open(filepath.c_str());
+    if(ifs.is_open())
+    {
+        id_type from,to;
+        double weight = 1;
+        while(!ifs.eof())
+        {
+            ifs >> from >> to >> weight; 
+            while( max(from,to) > g.get_num_nodes()){
+                g.add_node();
+            }
+            g.add_edge(from-1,to-1,weight);
         }
         return true;
     }
@@ -196,6 +218,42 @@ bool CDLib::write_dimacs_max_flow(graph& g, const string& filepath)
             for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++)
                 file <<i+1 << " " << aeit->first+1 << " " << aeit->second << endl;
         }
+        return 1;
+    }
+    else return 0; 
+}
+
+bool CDLib::write_lcc_and_props(graph& base,const string& filepath,bool start_with_one){
+    if(base.is_directed() || base.is_weighted()) return 0;
+    node_set lcc;
+    graph g(0,0);
+    cout <<base.get_num_nodes()<< " "<< get_largest_connected_component(base,lcc) << endl;
+    extract_subgraph(base,lcc,g);
+    cout <<base.get_num_edges()<< " "<< g.get_num_edges() << endl;
+    ofstream file,file2,file3;
+    string graphfilename = filepath+ ".graph";
+    string degdistfilename = filepath+ ".degdist";
+    string nccfilename = filepath+ ".ncc"; 
+    
+    file.open(graphfilename.c_str());
+    file2.open(degdistfilename.c_str());
+    //file3.open(nccfilename.c_str());
+    map<id_type,id_type> degdist;
+    if(file.is_open() && file2.is_open())// && file3.is_open())
+    {
+        for(id_type i=0; i< g.get_num_nodes();i++)
+        {
+            set<id_type> neighbors;
+            //file3 << node_clustering_coefficient(g,i) << endl;
+            pair<map<id_type,id_type>::iterator,bool> ret = degdist.insert(make_pair(g.get_node_out_degree(i),1));
+            if(!ret.second)ret.first->second++;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++)
+                neighbors.insert(aeit->first);
+            for(set<id_type>::iterator it = neighbors.begin();it!=neighbors.end();it++)
+                file << i+start_with_one << " " << (*it) + start_with_one <<endl;
+        }
+        for(map<id_type,id_type>::iterator it = degdist.begin(); it != degdist.end();it++)
+            file2 << it->first << " " << it->second << endl;
         return 1;
     }
     else return 0; 
