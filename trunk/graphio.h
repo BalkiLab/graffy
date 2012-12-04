@@ -21,6 +21,7 @@ namespace CDLib
         bool read_edgelist(graph& g,const string& filepath,bool directed, bool weighted);
         bool read_matlab_sp(graph& g,const string& filepath);
         bool write_edgelist(graph& g,const string& filepath,bool weights);
+        bool write_xml(graph& g,const string& filepath,bool weights);
         bool write_METIS(graph& g,const string& filepath,bool weights);
         bool write_SNAP(graph& g,const string& filepath,bool weights);
         bool write_SMAT(graph& g,const string& filepath,bool weights);

@@ -77,6 +77,62 @@ bool CDLib::write_edgelist(graph& g,const string& filepath,bool weights)
     return false;
 }
 
+string filename(string file)
+{
+    ostringstream oss;
+    size_t found_dot,found_slash;
+    found_dot=file.find_last_of(".");
+    found_slash=file.find_last_of("/");
+    if ((found_dot != string::npos) && (found_slash != string::npos))
+        oss << file.substr(found_slash+1,(found_dot-found_slash-1));
+    else if ((found_dot == string::npos) && (found_slash != string::npos))
+        oss << file.substr(found_slash+1,(file.size()-found_slash-1));
+    else if ((found_dot != string::npos) && (found_slash == string::npos))
+        oss << file.substr(0,found_dot);
+    else
+        oss << file;
+    return oss.str();
+}
+
+bool CDLib::write_xml(graph& g,const string& filepath,bool weights)
+{
+    ofstream ofs;
+    string fp = filepath + ".xml";
+    ofs.open(fp.c_str());
+    if(ofs.is_open())
+    {
+        string fid = filename(filepath);
+        ofs << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" << endl;
+        ofs << "<DynamicMetaNetwork id=\"" << fid << "\">" << endl;
+        ofs << "\t<MetaNetwork id=\"" << fid << "\">" << endl;
+        ofs << "\t\t<nodes>" << endl;
+        ofs << "\t\t\t<nodeclass type=\"Agent\" id=\"Agent\">" << endl;
+        for(id_type i=0; i< g.get_num_nodes();i++)
+        {
+            ofs << "\t\t\t\t<node id=\"" << i << "\" title=\"" << g.get_node_label(i) <<"\"/>" << endl;
+        }
+        ofs << "\t\t\t</nodeclass>" << endl;
+        ofs << "\t\t</nodes>" << endl;
+        ofs << "\t\t<networks>" << endl;
+        ofs << "\t\t\t<graph sourceType=\"agent\" source=\"Agent\" targetType=\"agent\" target=\"Agent\" id=\"Agent x Agent\">" << endl;
+        for(id_type i=0; i< g.get_num_nodes();i++)
+        {
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++)
+            {
+                ofs << "\t\t\t\t<edge source=\"" << i << "\" target=\"" << aeit->first << "\"";
+                if(weights) ofs << " type=\"double\" value=\"" << aeit->second << "\"";
+                ofs << "/>" << endl;
+            }
+        }
+        ofs << "\t\t\t</graph>" << endl;
+        ofs << "\t\t</networks>" << endl;
+        ofs << "\t</MetaNetwork>" << endl;
+        ofs << "</DynamicMetaNetwork>" << endl;
+        return true;
+    }
+    return false;
+}
+
 bool CDLib::write_METIS(graph& g,const string& filepath,bool weights)
 {
     ofstream file,file2;
