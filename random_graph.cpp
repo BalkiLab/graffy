@@ -60,7 +60,7 @@ void CDLib::generate_planted_partition_graph(graph& g, id_type num_comms, id_typ
         id_type num_nodes = comm_size*num_comms;
         init_empty_graph(g,num_nodes);
         communities.assign(num_comms,node_set());
-        RandomGenerator<double> p_gen(0,1);
+        Uniform01RandomGeneratorMT p_gen;
         for(id_type i=0; i<num_nodes; i++)
             if(i % comm_size) communities[i/comm_size].insert(i);
         for(id_type i=0;i<g.get_num_nodes();i++)
@@ -271,7 +271,7 @@ void CDLib::generate_configuration_model(graph& g, vector<id_type>& degree_seque
             }
         }
         
-        UniformRandomGenerator<id_type> rand;
+        UniformRandomGeneratorAkash<id_type> rand;
         for(id_type i=0;i<degree_sequence.size();i++)
         {
             id_type remaining_degree=degree_sequence[i];
@@ -311,8 +311,8 @@ void CDLib::generate_prices_model(graph& g,size_t num_nodes, size_t num_of_out_d
 {
     init_empty_graph(g,num_nodes);
     vector<id_type> vertices_pointed_by_edges;
-    UniformRandomGenerator<id_type> randint;
-    UniformRandomGenerator<double> randdouble;
+    UniformRandomGeneratorAkash<id_type> randint;
+    UniformRandomGeneratorAkash<double> randdouble;
     
     double probability=num_of_out_degree/(num_of_out_degree + in_degree_constant);
     
@@ -344,8 +344,8 @@ void CDLib::generate_barabasi_albert_model(graph& g, size_t num_nodes, size_t mi
 {
     init_empty_graph(g,num_nodes);
     vector<id_type> vertices_with_edges;
-    UniformRandomGenerator<id_type> randint;
-    UniformRandomGenerator<double> randdouble;
+    UniformRandomGeneratorAkash<id_type> randint;
+    UniformRandomGeneratorAkash<double> randdouble;
     
     for(id_type k=1;k<=min_degree_of_node;k++)
     {
@@ -380,8 +380,8 @@ void CDLib::generate_vertex_copying_model(graph& g,size_t num_nodes,size_t num_o
 {
     if (num_of_vertices_at_initial > num_of_out_degree && probability_to_copy_from_existing_vertex>=0 && probability_to_copy_from_existing_vertex<=1) 
     {
-        UniformRandomGenerator<wt_t> randdouble;
-        UniformRandomGenerator<id_type> randint;
+        UniformRandomGeneratorAkash<wt_t> randdouble;
+        UniformRandomGeneratorAkash<id_type> randint;
 
         init_empty_graph(g, num_nodes);
 
@@ -440,8 +440,8 @@ void CDLib::generate_small_world_model(graph& g,size_t num_nodes,size_t degree_o
 {
     if(probability_to_replace_edge>=0 && probability_to_replace_edge<=1)
     {
-        UniformRandomGenerator<id_type> randint;
-        UniformRandomGenerator<double> randdouble;
+        UniformRandomGeneratorAkash<id_type> randint;
+        UniformRandomGeneratorAkash<double> randdouble;
         
         init_empty_graph(g,num_nodes);
         
@@ -494,8 +494,8 @@ void CDLib::generate_evolutionary_model_128_nodes_4_communities(vector<graph>& g
         double probability_inter_comm_edge = num_inter_community_edges/16.0;
         double probability_intra_comm_edge = 1-probability_inter_comm_edge;
         
-        UniformRandomGenerator<double> randdouble;
-        UniformRandomGenerator<id_type> randint;
+        UniformRandomGeneratorAkash<double> randdouble;
+        UniformRandomGeneratorAkash<id_type> randint;
         
         for(id_type t=0;t<num_timesteps;t++)
         {

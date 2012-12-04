@@ -55,7 +55,7 @@ paths_and_components.o  : graph.o binary_heap.o
 	$(CC) $(CFLAGS) -o paths_and_components.o  -c paths_and_components.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o paths_and_components_d.o  -c paths_and_components.cpp $(LIBS)
 
-graphio.o : graph.o
+graphio.o : graph.o paths_and_components.o graph_operations.o
 	$(CC) $(CFLAGS) -o graphio.o -c graphio.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o graphio_d.o -c graphio.cpp $(LIBS)
 
