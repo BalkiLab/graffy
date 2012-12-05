@@ -717,7 +717,7 @@ void CDLib::generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max
         double Dlinear = ((num_nodes + 1) / 3.0);
         id_type nC2 = ((num_nodes * (num_nodes - 1)) / 2);
         
-        UniformRandomGenerator<double> rand;
+        UniformRandomGeneratorAkash<double> rand;
 
         graph g_t(0, 0);
         init_empty_graph(g,num_nodes);

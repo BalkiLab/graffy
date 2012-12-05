@@ -113,7 +113,7 @@ namespace CDLib
         double sum = 0;
         for (id_type i=0 ; i<sample1.size(); i++)
             sum += (sample1[i] - mean1) * (sample2[i] - mean2);
-        return (sum/(sample1.size() - 1));
+        return (sum/sample1.size());
     }
 
     template <typename T>
