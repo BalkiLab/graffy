@@ -27,7 +27,7 @@ void CDLib::generate_erdos_renyi_graph(graph& g, id_type num_nodes,double p)
         RandomGenerator<double> p_gen(0,1,1);
         for(id_type i=0; i<num_nodes;i++)
             for(id_type j=0; j<num_nodes;j++)
-                if(p_gen.next() <= p) g.add_edge(i,j,1); 
+                if((!g.is_directed() && i<j) && p_gen.next() <= p) g.add_edge(i,j,1); 
     }
 }
 
