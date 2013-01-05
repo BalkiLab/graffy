@@ -138,7 +138,6 @@ id_type graph::remove_nodes(const set<string>& nodes)
 id_type graph::remove_isolates()
 {
 // Returns the number of isolates nodes removed.
-    id_type number_of_removed = 0;
     set<string> to_remove;
     for(id_type i=0;i<get_num_nodes();i++){
         if ((get_node_in_degree(i) == 0) && (get_node_out_degree(i) == 0)){
@@ -157,7 +156,11 @@ wt_t graph::remove_edge(const string& from_label, const string& to_label) { retu
 
 bool graph::set_edge_weight(id_type from_id, id_type to_id, wt_t weight) 
 {
-    if(!is_weighted()) return dam_backend.set_edge_wt(from_id,to_id,1);
+    if(!is_weighted()){
+        if(!is_directed()) dam_backend.set_edge_wt(to_id,from_id,1);
+        return dam_backend.set_edge_wt(from_id,to_id,1);
+    }
+    if(!is_directed()) dam_backend.set_edge_wt(to_id,from_id,weight);
     return dam_backend.set_edge_wt(from_id,to_id,weight);
 }
 wt_t graph::set_edge_weight(const string& from_label, const string& to_label,wt_t weight) { return set_edge_weight(blm_labels.get_id(from_label),blm_labels.get_id(to_label),weight);}

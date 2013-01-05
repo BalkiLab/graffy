@@ -6,7 +6,9 @@
  */
 
 #include "local_community.h"
+//#include "utitlity.h"
 #include "utility.h"
+
 using namespace CDLib;
 
 /*
@@ -56,22 +58,22 @@ double get_neighs_in_set(id_type v, const graph& g, node_set& B, node_set& X)
         if(B.find(aeit->first) != B.end())
         {
             X.insert(aeit->first);
-            retval += aeit->second;
+            retval += 1;
         }
     }
     return retval;
 }
 
-double get_neighs_not_in_set(id_type v, const graph& g, node_set& C, node_set& X)
+double get_neighs_not_in_sets(id_type v, const graph& g, node_set& C, node_set& U, node_set& X)
 {
     X.clear();
     double retval = 0;
     for(adjacent_edges_iterator aeit = g.out_edges_begin(v); aeit != g.out_edges_end(v); aeit++)
     {
-        if(C.find(aeit->first) == C.end())   
+        if(C.find(aeit->first) == C.end() && U.find(aeit->first) == U.end())   
         {
             X.insert(aeit->first);
-            retval += aeit->second;
+            retval += 1;
         }
     }
     return retval;
@@ -91,7 +93,7 @@ double no_BI_edges(id_type v, const graph& g, node_set& C, node_set& B)
     double count=0;
     for(adjacent_edges_iterator aeit = g.out_edges_begin(v); aeit != g.out_edges_end(v); aeit++)
         if(C.find(aeit->first)!=C.end() && B.find(aeit->first)==B.end())
-            count+=aeit->second;
+            count+=1;
     return count;
 }
 
@@ -100,15 +102,16 @@ double no_BY_edges(id_type v, const graph& g, node_set& Y)
     double count=0;
     for(adjacent_edges_iterator aeit = g.out_edges_begin(v); aeit != g.out_edges_end(v); aeit++)
         if(Y.find(aeit->first)!=Y.end())
-            count+=aeit->second;
+            count+=1;
     return count;
 }
 
 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
-void CDLib::local_community_clauset(const graph& g, id_type src, size_t k, vector< pair<id_type,double> >& output)
+bool CDLib::local_community_clauset(const graph& g, id_type src, size_t k, node_set& output)
 {
+    vector< pair<id_type,double> > output2;
     node_set C,U,B;
     C.insert(src);
     for(adjacent_edges_iterator aeit = g.out_edges_begin(src); aeit != g.out_edges_end(src); aeit++)
@@ -116,17 +119,18 @@ void CDLib::local_community_clauset(const graph& g, id_type src, size_t k, vecto
     B.insert(src);
     
     double R=0;
-    double T=g.get_node_out_weight(src);
+    double T=g.get_node_out_degree(src);
     
-    //Update output
-    output.push_back(make_pair(src,R));
+    //Update output2
+    output2.push_back(make_pair(src,R));
+    output.insert(src);
     
-    while (C.size() < k)
+    while (C.size() < k && !U.empty())
     {
         double max=-numeric_limits<double>::infinity();
-        long cntr=-1; //Doubt
+        long cntr=-1; 
         long no_max=1;
-        vector<id_type> V;
+        vector<id_type> V; //DOUBT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         
         unordered_map<id_type,node_set> temp_Y; //To store the necessary v and Y pairs 
         unordered_map<id_type,double> temp_T; //To store the necessary v and T pairs        
@@ -143,9 +147,10 @@ void CDLib::local_community_clauset(const graph& g, id_type src, size_t k, vecto
             
             x = get_neighs_in_set(v,g,B,X); //X = set of all neighbors of vj in B   //x = No. of edges in T that terminate at vj
             
-            y = g.get_node_out_weight(v)-x; //No. of edges that will be added to T by the agglomeration of vj
+            y = g.get_node_out_degree(v)-x; //No. of edges that will be added to T by the agglomeration of vj
             
             z=0; //No. of edges that will be removed from T by the agglomeration of vj
+            Y.clear(); // DEBUGGED!!!!
             for(node_set::iterator iter1=X.begin();iter1!=X.end();iter1++)
             {
                 id_type vk=*iter1;
@@ -154,7 +159,7 @@ void CDLib::local_community_clauset(const graph& g, id_type src, size_t k, vecto
                     Y.insert(vk);
                     z+=no_BI_edges(vk,g,C,B)+no_BY_edges(vk,g,Y);
                     if(y==0)
-                        z=z+g.get_edge_weight(vk,v);
+                        z=z+1;
                 }     
             }
             
@@ -184,8 +189,8 @@ void CDLib::local_community_clauset(const graph& g, id_type src, size_t k, vecto
         
         //Selecting the node to be agglomerated v_aggl (breaking ties randomly if needed)
         //Choose a random number rand in [cntr,V.size()-1] such that v_aggl=V[rand] 
-        RandomGenerator<long> rnd_gen(cntr,V.size()-1); //Doubt
-        id_type v_aggl=V[rnd_gen.next()]; //Doubt
+        RandomGenerator<long> rnd_gen(cntr,V.size()-1); 
+        id_type v_aggl=V[rnd_gen.next()]; 
         
         //Update B
         node_set Y_aggl; //corresponding Y of v_aggl
@@ -199,17 +204,17 @@ void CDLib::local_community_clauset(const graph& g, id_type src, size_t k, vecto
         Y_aggl=(temp_Y.find(v_aggl))->second;
         
         x = get_neighs_in_set(v_aggl,g,B,X);
-        y =g.get_node_out_weight(v_aggl)-x;
+        y =g.get_node_out_degree(v_aggl)-x;
         
         for(node_set::iterator iter3=Y_aggl.begin();iter3!=Y_aggl.end();iter3++)
             B.erase(*iter3);
         
-        if(y>0) //Doubt (complexity)
+        if(y>0) 
             B.insert(v_aggl);
         
         //Update U
         U.erase(v_aggl);
-        get_neighs_not_in_set(v_aggl,g,C,X); //X = all neighbors of v_aggl not in C
+        get_neighs_not_in_sets(v_aggl,g,C,U,X); //X = all neighbors of v_aggl not in C
         for(node_set::iterator iter4=X.begin();iter4!=X.end();iter4++)
             U.insert(*iter4);
         
@@ -226,16 +231,24 @@ void CDLib::local_community_clauset(const graph& g, id_type src, size_t k, vecto
                 T=iter5->second;*/
         T=(temp_T.find(v_aggl))->second;
         
-        //Update output
-        output.push_back(make_pair(v_aggl,R));
-    }  
+        //Update output2
+        output2.push_back(make_pair(v_aggl,R));
+        output.insert(v_aggl);
+    }
+    
+    if(output.size()==k)
+        return 1; //comm found/exists
+    else
+        return 0; //comm not found/doesn't exist
+    
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
-void CDLib::local_community_clauset_modified(const graph& g, id_type src, size_t k, vector< pair<id_type,double> >& output)
+bool CDLib::local_community_clauset_modified(const graph& g, id_type src, size_t k, node_set& output)
 {
+    vector< pair<id_type,double> > output2;
     node_set C,U;
     C.insert(src);
     for(adjacent_edges_iterator aeit = g.out_edges_begin(src); aeit != g.out_edges_end(src); aeit++)
@@ -243,15 +256,16 @@ void CDLib::local_community_clauset_modified(const graph& g, id_type src, size_t
     
     double Z=0;
     double I=0;
-    double T=g.get_node_out_weight(src);
+    double T=g.get_node_out_degree(src);
     
-    //Update output
-    output.push_back(make_pair(src,Z));
+    //Update output2
+    output2.push_back(make_pair(src,Z));
+    output.insert(src);
     
-    while (C.size() < k)
+    while (C.size() < k && !U.empty())
     {
         double max=-numeric_limits<double>::infinity();
-        long cntr=-1; //Doubt
+        long cntr=-1; 
         long no_max=1;
         vector<id_type> V;
         
@@ -267,7 +281,7 @@ void CDLib::local_community_clauset_modified(const graph& g, id_type src, size_t
             
             x = get_neighs_in_set(v,g,C,X); //X = set of all neighbors of vj in C  //x = No. of edges in T that terminate at vj
             
-            y = g.get_node_out_weight(v)-x; //No. of edges that will be added to T by the agglomeration of vj
+            y = g.get_node_out_degree(v)-x; //No. of edges that will be added to T by the agglomeration of vj
             
             delta=((I+x)/(T+y)) - Z;
             
@@ -297,14 +311,14 @@ void CDLib::local_community_clauset_modified(const graph& g, id_type src, size_t
         //Update I and T
         x = get_neighs_in_set(v_aggl,g,C,X); 
             
-        y = g.get_node_out_weight(v_aggl)-x; 
+        y = g.get_node_out_degree(v_aggl)-x; 
         
         I=I+x;
         T=T+y;
                 
         //Update U
         U.erase(v_aggl);
-        get_neighs_not_in_set(v_aggl,g,C,X); //X = all neighbors of v_aggl not in C
+        get_neighs_not_in_sets(v_aggl,g,C,U,X); //X = all neighbors of v_aggl not in C
         for(node_set::iterator iter4=X.begin();iter4!=X.end();iter4++)
             U.insert(*iter4);
         
@@ -314,13 +328,46 @@ void CDLib::local_community_clauset_modified(const graph& g, id_type src, size_t
         //Update Z
         Z=Z+max;
         
-        //Update output
-        output.push_back(make_pair(v_aggl,Z));        
+        //Update output2
+        output2.push_back(make_pair(v_aggl,Z));
+        output.insert(v_aggl);
     }
+    
+    if(output.size()==k)
+        return 1; //comm found/exists
+    else
+        return 0; //comm not found/doesn't exist
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
+struct deg_comp
+{
+    const graph* graph_ref;
+    deg_comp(const graph* g)
+    {
+        graph_ref = g;
+    }
+    bool operator() (id_type i,id_type j){ 
+        return (graph_ref->get_node_out_degree(i) <= graph_ref->get_node_out_degree(j));
+    }
+};
 
+bool degpr_comp(const pair<id_type,id_type>& lhs, const pair<id_type,id_type>& rhs){
+    return lhs.first < rhs.first;
+}
+
+void sort_acc_degrees(vector<id_type>& N,const graph& g)
+{
+    //deg_comp this_object_compares_degrees(&g);
+    //sort(N.begin(),N.end(),degpr_comp);
+    vector<pair<id_type,id_type> > degpr(g.get_num_nodes(),make_pair(0,0));
+    for(id_type i=0;i<N.size();i++){
+        degpr[i].first = g.get_node_out_degree(N[i]);
+        degpr[i].second = N[i];
+    }
+    for(id_type i=0;i<N.size();i++)N[i] = degpr[i].second;
+        
+}
 
 void bubble_sort_acc_degrees(vector<id_type>& N, const graph& g)
 {
@@ -336,7 +383,7 @@ void bubble_sort_acc_degrees(vector<id_type>& N, const graph& g)
             }
 }
 
-bool found_in_vector(id_type v, vector<id_type>& S, size_t& index)
+bool found_in_vector(id_type v, const vector<id_type>& S, size_t& index)
 {
     for(size_t i=0; i<S.size(); i++) //Linear Search
         if(v==S[i])
@@ -347,30 +394,38 @@ bool found_in_vector(id_type v, vector<id_type>& S, size_t& index)
     return 0;
 }
 
-double get_no_neighs_in_vector(id_type v, const graph& g, vector<id_type>& subgraph)
+double get_no_neighs_in_vector(id_type v, const graph& g, const vector<id_type>& subgraph)
 {
     //create an unordered set copy of the subgraph vector for time complexity issues
-    node_set S;
-    for(size_t i=0; i<subgraph.size(); i++)
-        S.insert(subgraph[i]);
-    
+//    node_set S;
+//    for(size_t i=0; i<subgraph.size(); i++)
+//        S.insert(subgraph[i]);
+//    
+//    double retval = 0;
+//    for(adjacent_edges_iterator aeit = g.out_edges_begin(v); aeit != g.out_edges_end(v); aeit++)
+//    {
+//        if(S.find(aeit->first) != S.end())
+//            retval += 1;
+//    }
+//    return retval;
     double retval = 0;
-    for(adjacent_edges_iterator aeit = g.out_edges_begin(v); aeit != g.out_edges_end(v); aeit++)
-    {
-        if(S.find(aeit->first) != S.end())
-            retval += 1;
-    }
+    for(size_t i=0; i<subgraph.size(); i++)
+        retval += g.get_edge_weight(v,subgraph[i]);
     return retval;
 }
 
 void delete_from_vector_at_position(id_type v, vector<id_type>& N, size_t i)
 {
-    for(size_t j=i; j<N.size()-1; j++)
-        N[j]=N[j+1];
-    N.pop_back();
+    if(i >=0 && N.size() &&  i<N.size()){
+    //for(size_t j=i; j<N.size()-1; j++)
+    //    N[j]=N[j+1];
+    // N.pop_back();
+        N.erase(N.begin()+i);
+    }
+    
 }
 
-void bfs_visitor_in_subgraph(const graph& g, vector<id_type>& subgraph, id_type source, node_set& visited)
+void bfs_visitor_in_subgraph(const graph& g, const vector<id_type>& subgraph, id_type source, node_set& visited)
 {
     //create an unordered set copy of the subgraph vector for time complexity issues
     node_set S;
@@ -400,26 +455,29 @@ void bfs_visitor_in_subgraph(const graph& g, vector<id_type>& subgraph, id_type 
     }
 }
 
-size_t get_component_around_node_in_subgraph(const graph& g, vector<id_type>& S, id_type source, node_set& visited)
+size_t get_component_around_node_in_subgraph(const graph& g, const vector<id_type>& S, id_type source, node_set& visited)
 {
     bfs_visitor_in_subgraph(g,S,source,visited);
     return visited.size();
 }
 
-bool connected_on_removal_at_position(const graph& g, vector<id_type> S, id_type u, size_t i)
+bool connected_on_removal_at_position(const graph& g, const vector<id_type>& S, id_type u, size_t i)
 {
     //Note: S has been passed by value to avoid reflection of changes to the original subgraph S after deletion in this function
     //removing node u at position i in subgraph vector S in graph G
-    delete_from_vector_at_position(u,S,i);
+    vector<id_type> Sc(S.size(),0);
+    for(id_type k=0;k<S.size();k++)Sc[k] = S[k];
+    delete_from_vector_at_position(u,Sc,i);
     node_set visited;
-    return (get_component_around_node_in_subgraph(g,S,S[0],visited) == S.size());
+    return (get_component_around_node_in_subgraph(g,Sc,Sc[0],visited) == Sc.size());
 }
 
 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
-void CDLib::LWP_2006(const graph& g, id_type src, vector<id_type>& output)
+bool CDLib::LWP_2006(const graph& g, id_type src, node_set& output)
 {
+    output.clear();
     vector<id_type> S, N, Q, deleteQ;
     size_t index;
     //initialization
@@ -439,7 +497,8 @@ void CDLib::LWP_2006(const graph& g, id_type src, vector<id_type>& output)
         Q.clear();
         
         //ADDITION STEP
-        bubble_sort_acc_degrees(N,g); //sort N in order of increasing degrees
+        sort_acc_degrees(N,g); //sort N in order of increasing degrees
+        //sort_acc_degrees(N,g); //sort N in order of increasing degrees
         
         for(long i=0; i<(long)N.size(); i++) //Doubt (i's datatype to allow for value -1)
         {
@@ -492,7 +551,7 @@ void CDLib::LWP_2006(const graph& g, id_type src, vector<id_type>& output)
                     
                     deleteQ.push_back(u);
                     I=I-x;
-                    E=E-y;
+                    E=E-y+x;  //debugged!!
                     M+=delta;
                     if(found_in_vector(u,Q,index))
                         delete_from_vector_at_position(u,Q,index);
@@ -512,16 +571,31 @@ void CDLib::LWP_2006(const graph& g, id_type src, vector<id_type>& output)
     } while (!Q.empty());
         
     //cout<<"\nNo. of iterations: "<<iter<<endl;
-    output = S;
+    
     if(M>1 && found_in_vector(src,S,index))
     {
+        output.clear();
         //cout<<endl<<I<<" "<<E<<" "<<M<<endl;
-        //output = S;
+        for (size_t i=0; i<S.size(); i++)
+            output.insert(S[i]);
+        deleteQ.clear();
+        Q.clear();
+        N.clear();
+        S.clear();
+        return 1; //comm found/exists
     }
     else
     {
         //cout<<"\nNO MODULE FOUND BY LWP FOR SOURCE VERTEX "<<g.get_node_label(src)<<endl;
-        //output = S;
+        //cout<<"\nNO MODULE FOUND BY LWP FOR SOURCE VERTEX "<<src<<endl;        
+        //output2 = S;
+        output.clear();
+        output.insert(src);
+        deleteQ.clear();
+        Q.clear();
+        N.clear();
+        S.clear();
+        return 0; //comm not found/doesn't exist
     }
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -563,7 +637,7 @@ void delete_from_deque(id_type u, deque<id_type>& Q)
 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
-void CDLib::VD_2011(const graph& g, id_type src, node_set& output,id_type k)
+void CDLib::VD_2011(const graph& g, id_type src, node_set& output)
 {
     deque<id_type> Q;
     node_set C;
@@ -571,7 +645,7 @@ void CDLib::VD_2011(const graph& g, id_type src, node_set& output,id_type k)
     id_type u = src;
     C.insert(u);
     double I=0, E=g.get_node_out_degree(u), N=1, f, x, y, I2, E2, N2, f2;
-    size_t iter_count = 0;// N_at_start;
+    size_t iter_count = 0, N_at_start;
     
     //Initialize C with the source vertex and its neighbors AND update I, E and N
     for(adjacent_edges_iterator aeit = g.out_edges_begin(u); aeit != g.out_edges_end(u); aeit++)
@@ -605,7 +679,7 @@ void CDLib::VD_2011(const graph& g, id_type src, node_set& output,id_type k)
         
         //cout<<"\n\nITERATION NO. "<<iter_count<<endl<<endl;
         
-        //N_at_start = C.size(); //size of C at the start of the iteration
+        N_at_start = C.size(); //size of C at the start of the iteration
         
         //ADDITION PHASE
         if(iter_count!=1 && !Q.empty())
@@ -685,7 +759,7 @@ void CDLib::VD_2011(const graph& g, id_type src, node_set& output,id_type k)
         //for(size_t i=0; i<Q.size(); i++)
             //cout<<g.get_node_label(Q[i])<<"  ";
     
-    } while(C.size() < k);//while (N_at_start != C.size()); //go to next iteration if community size changes, else exit
+    } while (N_at_start != C.size()); //go to next iteration if community size changes, else exit
     
     //cout<<"\n\nNo. of iterations: "<<iter_count<<endl<<endl;
     
@@ -696,7 +770,7 @@ void CDLib::VD_2011(const graph& g, id_type src, node_set& output,id_type k)
 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
-pair<double,node_set> CDLib::Bagrow_2007(const graph& g, id_type src)
+/*pair<double,node_set> CDLib::Bagrow_2007(const graph& g, id_type src)
 {
     //const double max_threshold = 0.1;
     node_set C, B;
@@ -815,6 +889,174 @@ pair<double,node_set> CDLib::Bagrow_2007(const graph& g, id_type src)
     return *iter4;
     //output = make_pair(iter4->first,iter4->second); //in case of duplicates????????
 }
+ */
+
+bool CDLib::Bagrow_2007(const graph& g, id_type src, node_set& output)
+{
+    //const double max_threshold = 0.1;
+    node_set C, B, temp;
+    C.insert(src);
+    for(adjacent_edges_iterator aeit = g.out_edges_begin(src); aeit != g.out_edges_end(src); aeit++)
+        B.insert(aeit->first);
+    
+    //map<double,id_type> omegas;
+    id_dbl_min_heap omegas;
+    double omega_val, p_eff = 0, x, y, xi, yi, xf, yf, p_eff_numerator = 0;
+    double M_out = g.get_node_out_degree(src);
+    id_type v, node_aggl, u, z;
+    double start_val = 0.75;
+    double threshold = start_val;    //dependency on arbitrary parameters
+    multimap<double,node_set> choices; //no duplicates allowed--flaw------------RESOLVED!!
+    bool flag=1;
+    
+    //Initializing omegas
+    for(node_set::iterator iter=B.begin();iter!=B.end();iter++)
+    {
+        v = *iter;
+        omega_val = 1 - 2/g.get_node_out_degree(v);
+        omegas.insert(make_pair(v,omega_val));   
+    }
+    
+    //cout<<"initializations complete";
+    //cout.flush();
+    
+    do
+    {
+        //extract the node with the minimum omega_val
+        id_dbl_min_heap::iterator iter2 = omegas.begin();
+        node_aggl = iter2->first; //no breaking ties randomly??????!!!!!!-------NOT NEEDED I GUESS
+        omegas.pop();
+        
+        x = get_no_neighs_in_set(node_aggl, g, C);
+        y = g.get_node_out_degree(node_aggl) - x;
+        
+        for(adjacent_edges_iterator aeit = g.out_edges_begin(node_aggl); aeit != g.out_edges_end(node_aggl); aeit++)
+            if(C.find(aeit->first) != C.end())
+            {
+                z = aeit->first;
+                xi = get_no_neighs_in_set(z, g, C);
+                yi = g.get_node_out_degree(z) - xi;
+                xf = xi+1;
+                yf = yi-1;
+                if(xi<yi && xf>yf)
+                    p_eff_numerator+=1;
+            }
+                
+        
+        C.insert(node_aggl);
+        
+        M_out = M_out-x+y;
+        
+        //cout<<"\n\nNode aggl: "<<g.get_node_label(node_aggl);
+        //cout<<"\nnew M_out: "<<M_out;
+        
+        if(x>y)
+            p_eff_numerator+=1;
+        
+        p_eff = p_eff_numerator/C.size();
+        //cout<<"\nnew p_eff: "<<p_eff;
+        
+        if(p_eff>=threshold)
+        {
+            //if(p_eff!=1.0)    //equality!!!!
+            if(M_out!=0)   
+                choices.insert(make_pair(M_out,C)); //state of C saved
+            //cout<<"\nHIT P_EFF: C SAVED";
+            //cout<<"\ncurr threshold: "<<threshold <<endl;
+            if(threshold==1) //equality!!!!!
+            {
+                flag=0;
+                //cout<<"flag is now 0";
+                //cout.flush();
+            }
+            else
+            { 
+                threshold+=0.01*((floor((p_eff-threshold)/0.01))+1); //checked
+                //cout<<"\nNEW threshold: "<<threshold <<endl;
+                //threshold+=0.01;
+            }
+        }
+        
+        B.erase(node_aggl);
+        //cout<<"\nnew content of B: "<<endl;
+        //for(node_set::iterator iter5=B.begin(); iter5!=B.end(); iter5++)
+        //    cout<<g.get_node_label(*iter5)<<endl<<endl;
+        //cout<<"\nnew flag: "<<flag;
+        
+        //Update omegas and B
+        for(adjacent_edges_iterator aeit = g.out_edges_begin(node_aggl); aeit != g.out_edges_end(node_aggl); aeit++)
+        {
+            u = aeit->first;
+            if(B.find(u) == B.end() && C.find(u) == C.end())
+            {
+                omega_val = 1 - 2/g.get_node_out_degree(u);
+                omegas.insert(make_pair(u,omega_val));
+                B.insert(u);
+            }
+            else if (B.find(u) != B.end())
+            {
+                id_dbl_min_heap::iterator iter3 = omegas.find(u);
+                omega_val = iter3->second;
+                omega_val-=2/g.get_node_out_degree(u);
+                omegas.update_key(make_pair(u,omega_val)); //redundant search (but constant time)
+            }
+        }
+        
+    } while(flag==1 && !B.empty()) ;
+    
+    //return C;
+    
+    //map<double,node_set>::iterator iter4 = choices.begin();
+    if(threshold > start_val)
+    {
+        multimap<double,node_set>::iterator iter4 = choices.begin();
+        double min_val = iter4->first;
+        int min_count = choices.count(min_val);
+        if(min_count == 1)
+        {
+            output = iter4->second;
+        }
+        else
+        {
+            double max = -numeric_limits<double>::infinity();
+            for(int i=1; i<=min_count; i++)
+            {
+                //calculate p_eff for iter4->second
+                temp.clear();
+                temp = iter4->second;
+
+                p_eff_numerator = 0;
+                for(node_set::iterator iter5=temp.begin(); iter5!=temp.end(); iter5++)
+                {
+                    v = *iter5;
+                    x = get_no_neighs_in_set(v, g, temp);
+                    y = g.get_node_out_degree(v) - x;
+                    if(x>y)
+                        p_eff_numerator+=1;
+                }
+                p_eff = p_eff_numerator/temp.size();
+
+                if(p_eff>max)
+                {
+                    max = p_eff;
+                    output.clear();
+                    output = temp;
+                }
+
+                iter4++;    
+            }
+        }
+        return 1; //comm found/exists
+    }
+    else
+    {
+        output.insert(src);
+        return 0; //comm not found/doesn't exist
+    }
+    
+    //output = make_pair(iter4->first,iter4->second); //in case of duplicates????????
+}
+
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 void bfs_visitor_in_subgraph_set(const graph& g, node_set& C, id_type source, node_set& visited)
@@ -863,7 +1105,7 @@ bool connected_on_removal(const graph& g, node_set C, id_type u)
     return (get_component_around_node(g,C,start_node,visited) == C.size());
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------
-void CDLib::My_Algorithm(const graph& g, id_type src, node_set& output)
+bool CDLib::My_Algorithm(const graph& g, id_type src, node_set& output)
 {
     node_set C,U;
     vector<id_type> U_vector;
@@ -895,6 +1137,7 @@ void CDLib::My_Algorithm(const graph& g, id_type src, node_set& output)
         for(node_set::iterator iter=U.begin(); iter!=U.end();iter++)
             U_vector.push_back(*iter);
         
+        //ADDITION PHASE
         do
         {
             flag = 0;
@@ -1053,10 +1296,399 @@ void CDLib::My_Algorithm(const graph& g, id_type src, node_set& output)
     {
         //cout<<endl<<I<<" "<<E<<" "<<M<<endl;
         output = C;
+        return 1; //comm found/exists
     }
     else
     {
         //cout<<"\nNO MODULE FOUND BY MY_ALGO FOR SOURCE VERTEX "<<g.get_node_label(src)<<endl;
         //output = C;
+        output.insert(src);
+        return 0; //comm not found/doesn't exist
     }
+    
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+bool CDLib::CZR(const graph& g, id_type src, node_set& output)
+{
+    //DISCOVERY PHASE
+    node_set C, U;
+    C.insert(src);
+    for(adjacent_edges_iterator aeit = g.out_edges_begin(src); aeit != g.out_edges_end(src); aeit++)
+        U.insert(aeit->first);
+    
+    double I=0, E=g.get_node_out_degree(src), n=1, nb=1, L_in=0, L_ex=E/nb, L=0;
+    double I_new, E_new, n_new, nb_new, L_in_new, L_ex_new, L_new;
+    double L_at_start, L_at_end;
+    double x, y;
+    
+    id_type ni,v,v_aggl;
+    
+    do
+    {
+        L_at_start = L;
+        //double max = L_at_start;
+        double max = -numeric_limits<double>::infinity(); //CZR being really unclear!!!!
+        long no_max = 1;
+        long cntr = -1;
+        vector<id_type> V;
+        
+        for(node_set::iterator iter=U.begin(); iter!=U.end(); iter++)
+        {
+            ni = *iter;
+            //compute L_new
+            x = get_no_neighs_in_set(ni,g,C);
+            y = g.get_node_out_degree(ni) - x;
+                
+            I_new = I+x; E_new = E-x+y; n_new = n+1;
+            
+            if(y>0)
+                nb_new = nb+1;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(ni); aeit != g.out_edges_end(ni); aeit++)
+            {
+                v = aeit->first;
+                //if(C.find(v)!=C.end() && get_no_neighs_in_set(v,g,U)==1)
+                if(C.find(v)!=C.end() && (g.get_node_out_degree(v)-get_no_neighs_in_set(v,g,C))==1)
+                    nb_new = nb_new-1;
+            }
+            
+            L_new = (2*I_new*nb_new)/(E_new*n_new);
+            
+            if(L_new > max)
+            {
+                V.push_back(ni);
+                cntr+=no_max;
+                max=L_new;
+                no_max=1;
+            }
+            else if (L_new == max)
+            {
+                V.push_back(ni);
+                no_max+=1;
+            }
+        }
+        
+        //cout<<V.size();
+        
+        if(!V.empty())
+        {
+            //Selecting the node to be agglomerated v_aggl (breaking ties randomly if needed)
+            //Choose a random number rand in [cntr,V.size()-1] such that v_aggl=V[rand] 
+            RandomGenerator<long> rnd_gen(cntr,V.size()-1);
+            v_aggl=V[rnd_gen.next()];
+            
+            //compute and recompute
+            x = get_no_neighs_in_set(v_aggl,g,C);
+            y = g.get_node_out_degree(v_aggl) - x;
+                
+            I_new = I+x; E_new = E-x+y; n_new = n+1;
+            
+            if(y>0)
+                nb_new = nb+1;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(v_aggl); aeit != g.out_edges_end(v_aggl); aeit++)
+            {
+                v = aeit->first;
+                //if(C.find(v)!=C.end() && get_no_neighs_in_set(v,g,U)==1)
+                if(C.find(v)!=C.end() && (g.get_node_out_degree(v)-get_no_neighs_in_set(v,g,C))==1)
+                    nb_new = nb_new-1;
+            }
+            
+            L_new = (2*I_new*nb_new)/(E_new*n_new);
+            L_in_new = (2*I_new)/n_new;
+            L_ex_new = E_new/nb_new;
+            
+            //check extra conditions
+            if((L_in_new>L_in && L_ex_new<L_ex)||(L_in_new>L_in && L_ex_new>L_ex))
+            {
+                //cout<<"node agglomerated";
+                C.insert(v_aggl);
+                U.erase(v_aggl);
+                for(adjacent_edges_iterator aeit = g.out_edges_begin(v_aggl); aeit != g.out_edges_end(v_aggl); aeit++)
+                {
+                    v = aeit->first;
+                    if(C.find(v)==C.end() && U.find(v)==U.end())
+                        U.insert(v);
+                }
+                
+                I = I_new, E = E_new, n = n_new, nb = nb_new;
+                L = L_new, L_in = L_in_new, L_ex = L_ex_new;
+            }
+            else
+            {
+                //cout<<"node deleted from U";
+                U.erase(v_aggl); //(DONE INTENTIONALLY----CAUTION!!!!)
+            }
+            
+        }
+        else    //artificially added else condition (prevents infinite loop when U becomes empty) because CZR write pathetic pseudocode
+            break;
+        
+        L_at_end = L;
+        
+    } while(L_at_end >= L_at_start); //again!! an example of CZR's irritating pseudocode! modification: >= instead of > to make the best sense
+    
+    //EXAMINATION PHASE
+    for(node_set::iterator iter=C.begin(); iter!=C.end();)
+    {
+        ni = *iter;
+        //compute
+        x = get_no_neighs_in_set(ni,g,C);
+        y = g.get_node_out_degree(ni) - x;
+                
+        I_new = I-x; E_new = E+x-y; n_new = n-1;
+        
+        if(y > 0)
+            nb_new = nb - 1;
+
+        for (adjacent_edges_iterator aeit = g.out_edges_begin(ni); aeit != g.out_edges_end(ni); aeit++) 
+        {
+            v = aeit->first;
+            //if (C.find(v) != C.end() && get_no_neighs_in_set(v, g, U) == 0)
+            if (C.find(v) != C.end() && (g.get_node_out_degree(v) - get_no_neighs_in_set(v, g, C)) == 0)
+                nb_new = nb_new + 1;
+        }
+        
+        L_new = (2*I_new*nb_new)/(E_new*n_new);
+        L_in_new = (2*I_new)/n_new;
+        L_ex_new = E_new/nb_new;
+        
+        if(!(L_in>L_in_new && L_ex<L_ex_new))
+        {
+            iter++;
+            //cout<<endl<<"node "<<g.get_node_label(ni)<<" deleted";
+            C.erase(ni);
+            U.insert(ni);
+            for (adjacent_edges_iterator aeit = g.out_edges_begin(ni); aeit != g.out_edges_end(ni); aeit++) 
+            {
+                v = aeit->first;
+                //if (U.find(v) != U.end() && get_no_neighs_in_set(v, g, C) == 0) //DEPENDENT ON U----CAUTION!!!!
+                if (C.find(v) == C.end() && get_no_neighs_in_set(v, g, C) == 0)
+                    U.erase(v);
+            }
+            
+            I = I_new, E = E_new, n = n_new, nb = nb_new;
+            L = L_new, L_in = L_in_new, L_ex = L_ex_new;
+        }
+        else
+            iter++;
+    }
+    
+    //LAST PHASE
+    if(C.find(src)!=C.end())
+    {
+        //cout<<endl<<I<<" "<<E<<" "<<M<<endl;
+        output = C;
+    }
+    else
+    {
+        //cout<<"\nNO MODULE FOUND BY CZR FOR SOURCE VERTEX "<<g.get_node_label(src)<<endl;
+        //output = C;
+        output.insert(src);
+    }
+    
+    if (output.size()>1)
+        return 1; //comm found/exists
+    else
+        return 0; //comm not found/doesn't exist
+    
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+bool CDLib::CZR_Beta(const graph& g, id_type src, node_set& output)
+{
+    //DISCOVERY PHASE
+    node_set C, U;
+    C.insert(src);
+    for(adjacent_edges_iterator aeit = g.out_edges_begin(src); aeit != g.out_edges_end(src); aeit++)
+        U.insert(aeit->first);
+    
+    double I=0, E=g.get_node_out_degree(src), n=1, nb=1, L_in=0, L_ex=E/nb, L=0;
+    double I_new, E_new, n_new, nb_new, L_in_new, L_ex_new, L_new;
+    double L_at_start, L_at_end;
+    double x, y;
+    
+    id_type ni,v,v_aggl;
+    
+    do
+    {
+        L_at_start = L;
+        //double max = L_at_start;
+        double max = -numeric_limits<double>::infinity(); //CZR being really unclear!!!!
+        long no_max = 1;
+        long cntr = -1;
+        vector<id_type> V;
+        
+        for(node_set::iterator iter=U.begin(); iter!=U.end(); iter++)
+        {
+            ni = *iter;
+            //compute L_new
+            x = get_no_neighs_in_set(ni,g,C);
+            y = g.get_node_out_degree(ni) - x;
+                
+            I_new = I+x; E_new = E-x+y; n_new = n+1;
+            
+            if(y>0)
+                nb_new = nb+1;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(ni); aeit != g.out_edges_end(ni); aeit++)
+            {
+                v = aeit->first;
+                //if(C.find(v)!=C.end() && get_no_neighs_in_set(v,g,U)==1)
+                if(C.find(v)!=C.end() && (g.get_node_out_degree(v)-get_no_neighs_in_set(v,g,C))==1)
+                    nb_new = nb_new-1;
+            }
+            
+            L_new = (2*I_new*nb_new)/(E_new*n_new);
+            
+            if(L_new > max)
+            {
+                V.push_back(ni);
+                cntr+=no_max;
+                max=L_new;
+                no_max=1;
+            }
+            else if (L_new == max)
+            {
+                V.push_back(ni);
+                no_max+=1;
+            }
+        }
+        
+        //cout<<V.size();
+        
+        if(!V.empty())
+        {
+            //Selecting the node to be agglomerated v_aggl (breaking ties randomly if needed)
+            //Choose a random number rand in [cntr,V.size()-1] such that v_aggl=V[rand] 
+            RandomGenerator<long> rnd_gen(cntr,V.size()-1);
+            v_aggl=V[rnd_gen.next()];
+            
+            //compute and recompute
+            x = get_no_neighs_in_set(v_aggl,g,C);
+            y = g.get_node_out_degree(v_aggl) - x;
+                
+            I_new = I+x; E_new = E-x+y; n_new = n+1;
+            
+            if(y>0)
+                nb_new = nb+1;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(v_aggl); aeit != g.out_edges_end(v_aggl); aeit++)
+            {
+                v = aeit->first;
+                //if(C.find(v)!=C.end() && get_no_neighs_in_set(v,g,U)==1)
+                if(C.find(v)!=C.end() && (g.get_node_out_degree(v)-get_no_neighs_in_set(v,g,C))==1)
+                    nb_new = nb_new-1;
+            }
+            
+            L_new = (2*I_new*nb_new)/(E_new*n_new);
+            L_in_new = (2*I_new)/n_new;
+            L_ex_new = E_new/nb_new;
+            
+            //check extra conditions
+            if((L_in_new>L_in && L_ex_new<L_ex)||(L_in_new>L_in && L_ex_new>L_ex))
+            {
+                //cout<<"node agglomerated";
+                C.insert(v_aggl);
+                U.erase(v_aggl);
+                for(adjacent_edges_iterator aeit = g.out_edges_begin(v_aggl); aeit != g.out_edges_end(v_aggl); aeit++)
+                {
+                    v = aeit->first;
+                    if(C.find(v)==C.end() && U.find(v)==U.end())
+                        U.insert(v);
+                }
+                
+                I = I_new, E = E_new, n = n_new, nb = nb_new;
+                L = L_new, L_in = L_in_new, L_ex = L_ex_new;
+            }
+            else
+            {
+                //cout<<"node deleted from U";
+                U.erase(v_aggl); //(DONE INTENTIONALLY----CAUTION!!!!)
+                //update E, nb, L_ex, L
+                E = E - x;
+                for(adjacent_edges_iterator aeit = g.out_edges_begin(v_aggl); aeit != g.out_edges_end(v_aggl); aeit++)
+                {
+                        v = aeit->first;
+                        //if(C.find(v)!=C.end() && get_no_neighs_in_set(v,g,U)==1)
+                        if(C.find(v)!=C.end() && (g.get_node_out_degree(v)-get_no_neighs_in_set(v,g,C))==1)
+                                nb = nb-1;
+                }
+                L_ex = E/nb;
+                L = L_in/L_ex;
+            }
+            
+        }
+        else    //artificially added else condition (prevents infinite loop when U becomes empty) because CZR write pathetic pseudocode
+            break;
+        
+        L_at_end = L;
+        
+    } while(L_at_end > L_at_start); //again!! an example of CZR's irritating pseudocode! modification: >= instead of > to make the best sense
+    
+    //EXAMINATION PHASE
+    for(node_set::iterator iter=C.begin(); iter!=C.end();)
+    {
+        ni = *iter;
+        //compute
+        x = get_no_neighs_in_set(ni,g,C);
+        y = g.get_node_out_degree(ni) - x;
+                
+        I_new = I-x; E_new = E+x-y; n_new = n-1;
+        
+        if(y > 0)
+            nb_new = nb - 1;
+
+        for (adjacent_edges_iterator aeit = g.out_edges_begin(ni); aeit != g.out_edges_end(ni); aeit++) 
+        {
+            v = aeit->first;
+            //if (C.find(v) != C.end() && get_no_neighs_in_set(v, g, U) == 0)
+            if (C.find(v) != C.end() && (g.get_node_out_degree(v) - get_no_neighs_in_set(v, g, C)) == 0)
+                nb_new = nb_new + 1;
+        }
+        
+        L_new = (2*I_new*nb_new)/(E_new*n_new);
+        L_in_new = (2*I_new)/n_new;
+        L_ex_new = E_new/nb_new;
+        
+        if(!(L_in>L_in_new && L_ex<L_ex_new))
+        {
+            iter++;
+            //cout<<endl<<"node "<<g.get_node_label(ni)<<" deleted";
+            C.erase(ni);
+            U.insert(ni);
+            for (adjacent_edges_iterator aeit = g.out_edges_begin(ni); aeit != g.out_edges_end(ni); aeit++) 
+            {
+                v = aeit->first;
+                //if (U.find(v) != U.end() && get_no_neighs_in_set(v, g, C) == 0) //DEPENDENT ON U----CAUTION!!!!
+                if (C.find(v) == C.end() && get_no_neighs_in_set(v, g, C) == 0)
+                    U.erase(v);
+            }
+            
+            I = I_new, E = E_new, n = n_new, nb = nb_new;
+            L = L_new, L_in = L_in_new, L_ex = L_ex_new;
+        }
+        else
+            iter++;
+    }
+    
+    //LAST PHASE
+    if(C.find(src)!=C.end())
+    {
+        //cout<<endl<<I<<" "<<E<<" "<<M<<endl;
+        output = C;
+    }
+    else
+    {
+        //cout<<"\nNO MODULE FOUND BY CZR FOR SOURCE VERTEX "<<g.get_node_label(src)<<endl;
+        //output = C;
+        output.insert(src);
+    }
+    
+    if (output.size()>1)
+        return 1; //comm found/exists
+    else
+        return 0; //comm not found/doesn't exist
+    
 }
