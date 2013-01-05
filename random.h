@@ -137,55 +137,10 @@ namespace CDLib {
         vector<double> cdf;
         U01RG gen;
         id_type t_min;
-        id_type t_avg;
         id_type t_max;
         double exponent;
-        inline double integral(double a, double b) {
-            if (fabs(a+1.0)>1e-10) return (1.0/(a+1.0)*pow(b, a+1.0));
-            else return (log(b));
-        }
-        
-        inline double average(double dmax, double dmin, double gamma) {
-            return (1.0/(integral(gamma, dmax)-integral(gamma, dmin)))*(integral(gamma+1, dmax)-integral(gamma+1, dmin));
-        }
-        
-        double integer_average (id_type n, id_type min, double tau) {
-            double a=0;
-            for (double h=min; h<n+1; h++)
-                a+= pow((1./h),tau);
-            double pf=0;
-            for(double i=min; i<n+1; i++) 
-                pf+=1/a*pow((1./(i)),tau)*i;
-            return pf;
-        }
-        
-        void set_min(double threshold) {
-            double dmax = t_max,dmed = t_avg,gamma = -exponent;
-            double dmin_l=1,dmin_r=dmax;
-            double average_k1=average(dmin_r, dmin_l, gamma),average_k2=dmin_r;
-            if ((average_k1-dmed<0) && (average_k2-dmed>0)){
-                while (fabs(average_k1-dmed)>threshold) {
-                        double temp=average(dmax, ((dmin_r+dmin_l)/2.), gamma);
-                        if ((temp-dmed)*(average_k2-dmed)>0) {
-                                average_k2=temp;
-                                dmin_r=((dmin_r+dmin_l)/2.);
-                        }
-                        else {
-                            average_k1=temp;
-                            t_min=((dmin_r+dmin_l)/2.);
-                        }
-                }
-                t_min = static_cast<id_type>(dmin_l);
-                double media1=integer_average(t_max, t_min, exponent);
-                double media2=integer_average(t_max, t_min+1, exponent);
-                if (fabs(media1-t_avg)>fabs(media2-t_avg))t_min++;
-		
-            }
-        }
         
         void generate_cdf() {
-            //set_min(1e-5);
-            t_min = 1;
             cdf.clear();
             double a=0;		
             for (double h=t_min; h<t_max+1; h++) a+= pow((1.0/h),exponent);
@@ -197,8 +152,8 @@ namespace CDLib {
         }
         
     public:
-        DiscretePowerLawGenerator(id_type avg_val, id_type max_val,double exp_value,long seed_value) : cdf(),gen(seed_value),t_min(1),t_avg(avg_val),t_max(max_val),exponent(exp_value) { generate_cdf(); }
-        DiscretePowerLawGenerator(id_type avg_val, id_type max_val,double exp_value) : cdf(),gen(time(NULL)),t_min(1),t_avg(avg_val),t_max(max_val),exponent(exp_value) { generate_cdf(); }
+        DiscretePowerLawGenerator(id_type min_val, id_type max_val,double exp_value,long seed_value) : cdf(),gen(seed_value),t_min(min_val),t_max(max_val),exponent(exp_value) { generate_cdf(); }
+        DiscretePowerLawGenerator(id_type min_val, id_type max_val,double exp_value) : cdf(),gen(time(NULL)),t_min(min_val),t_max(max_val),exponent(exp_value) { generate_cdf(); }
         id_type next() { return lower_bound(cdf.begin(), cdf.end(), gen.next())-cdf.begin()+t_min; }
     };
     

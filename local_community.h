@@ -24,12 +24,14 @@ namespace CDLib
      *        The size of the community desired k
      */
     
-    void local_community_clauset(const graph& g, id_type src,size_t k, vector< pair<id_type,double> >& output);
-    void local_community_clauset_modified(const graph& g, id_type src, size_t k, vector< pair<id_type,double> >& output);
-    void LWP_2006(const graph& g, id_type src, vector<id_type>& output);
-    void VD_2011(const graph& g, id_type src, node_set& output,id_type k);
-    pair<double,node_set> Bagrow_2007(const graph& g, id_type src);
-    void My_Algorithm(const graph& g, id_type src, node_set& output);
+    bool local_community_clauset(const graph& g, id_type src,size_t k,node_set& output);
+    bool local_community_clauset_modified(const graph& g, id_type src, size_t k, node_set& output);
+    bool LWP_2006(const graph& g, id_type src, node_set& output);
+    void VD_2011(const graph& g, id_type src, node_set& output);
+    bool Bagrow_2007(const graph& g, id_type src, node_set& output);
+    bool My_Algorithm(const graph& g, id_type src, node_set& output);
+    bool CZR(const graph& g, id_type src, node_set& output);
+    bool CZR_Beta(const graph& g, id_type src, node_set& output);
 }
 
 

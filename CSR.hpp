@@ -104,7 +104,7 @@ public:
             }
         }
     }
-
+    CSR() {}
     CSR(const graph & g) {
         populate_from_graph(g);
     }
