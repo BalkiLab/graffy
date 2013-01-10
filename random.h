@@ -44,7 +44,7 @@ namespace CDLib {
             UniformRandomGenerator(long seed_value) :t_max(1),t_min(0),gen(seed_value){ }
             UniformRandomGenerator() :t_max(1),t_min(0),gen(srand(time(NULL))){ }
             UniformRandomGenerator(long seed_value,T min, T max) :t_max(max),t_min(min),gen(seed_value){ }
-            UniformRandomGenerator(T min, T max) :t_max(max),t_min(min),gen(srand(time(NULL))){ }
+            UniformRandomGenerator(T min, T max) :t_max(max),t_min(min),gen(time(NULL)) { }
             inline T next() { return static_cast<T>((t_max - t_min)*(gen.next()) + t_min);  }
     };
     
