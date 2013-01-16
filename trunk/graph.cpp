@@ -152,7 +152,43 @@ bool graph::remove_edge(id_type from_id, id_type to_id)
     if(!is_directed()) return dam_backend.delete_edge(from_id,to_id) && dam_backend.delete_edge(to_id,from_id);
     else return dam_backend.delete_edge(from_id,to_id);
 }
+
+id_type graph::remove_adjacent_edges(id_type id){
+    deque<id_type> in_neighbors,out_neighbors;
+    for(adjacent_edges_iterator aeit = out_edges_begin(id); aeit != out_edges_end(id);aeit++)
+        out_neighbors.push_back(aeit->first);
+    for(adjacent_edges_iterator aeit = in_edges_begin(id); aeit != in_edges_end(id);aeit++)
+        in_neighbors.push_back(aeit->first);
+
+    for(id_type i=0;i<out_neighbors.size();i++) remove_edge(id,out_neighbors[i]);
+    for(id_type i=0;i<in_neighbors.size();i++) remove_edge(in_neighbors[i],id);
+    if (is_directed())
+        return (in_neighbors.size() + out_neighbors.size());
+    else
+        return (out_neighbors.size());
+}
+
+id_type graph::remove_adjacent_edges(const string& label){ return remove_adjacent_edges(get_node_id(label)); }
+
 wt_t graph::remove_edge(const string& from_label, const string& to_label) { return remove_edge(blm_labels.get_id(from_label),blm_labels.get_id(to_label)); }
+
+id_type graph::remove_edges(vector<pair<id_type,id_type> >& edges)
+{
+    id_type removed = 0;
+    for (id_type i=0;i<edges.size();i++) {
+        removed += remove_edge(edges[i].first,edges[i].second);
+    }
+    return removed;
+}
+
+id_type graph::remove_edges(vector<pair<string,string> >& edges)
+{
+    id_type removed = 0;
+    for (id_type i=0;i<edges.size();i++) {
+        removed += remove_edge(edges[i].first,edges[i].second);
+    }
+    return removed;
+}
 
 bool graph::set_edge_weight(id_type from_id, id_type to_id, wt_t weight) 
 {

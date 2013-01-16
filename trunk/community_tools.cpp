@@ -189,7 +189,7 @@ double CDLib::modularity(const graph& g, vector<node_set>& comms)
         cluster_edges ce(g,comms[i]);
         mod_val += (ce.wt_intra_cluster_edges - ce.wt_expected_intra_cluster_edges);
     }
-    return mod_val/(4*g.get_total_weight());      
+    return mod_val/(2*g.get_total_weight());      
 }
 
 double CDLib::modularity_density(const graph& g, vector<node_set>& comms)

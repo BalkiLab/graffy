@@ -67,6 +67,22 @@ void CDLib::sample_graph(const graph&g,node_set& seeds,id_type hop_dist,graph& s
     extract_subgraph(g,new_nodes,sample);
 }
 
+double CDLib::remove_edges_randomly(graph& g,double percentage)
+{
+    id_type num_edges = g.get_num_edges();
+    vector<pair<id_type,id_type> > edges_to_remove;
+    RandomGenerator<double> p_gen(0,1,1);
+    for (id_type id=0;id<g.get_num_nodes();id++) {
+        for(adjacent_edges_iterator aeit = g.out_edges_begin(id); aeit != g.out_edges_end(id);aeit++) {
+            if ((id < aeit->first) && (p_gen.next() <= percentage))
+                edges_to_remove.push_back(make_pair(id,aeit->first));
+        }
+    }
+    double removed = g.remove_edges(edges_to_remove);
+    removed = (double)(num_edges - removed)/num_edges;
+    return removed;
+}
+
 void CDLib::multiply_vector_transform(const graph& g,vector<double>& invec,double (*wt_transform_func)(const graph&g,id_type,id_type,double),vector<double>& outvec)
 {
     if(invec.size()==g.get_num_nodes())

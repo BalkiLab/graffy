@@ -33,6 +33,7 @@ namespace CDLib
     id_type get_weakly_connected_components(const graph& g, vector<node_set>& components);
     id_type get_strongly_connected_components(const graph& g, vector<node_set>& components);
     id_type get_largest_connected_component(const graph& g, node_set &members);
+    double fraction_of_nodes_in_LCC(const graph& g);
 
     bool has_negative_edge_weights(const graph& g);
 
@@ -47,11 +48,12 @@ namespace CDLib
     bool get_topological_ordering(const graph& g,vector<id_type>& ordering);
     
     void get_all_paths(const graph& g,id_type source, id_type dest,vector<id_type>& paths);
-    void all_path_lenth_Monte_Carlo(const graph& g, vector< vector<double> >& paths, long monte_c);
-    double blocking_probability(id_type number_of_nodes, id_type degree, id_type visited);
-    void alternate_path_length_destabilization(graph&g,id_type source,vector<double>& alternate_distances);
-    double efficiency_sw_global(const graph& g, bool type);
-    double efficiency_sw_global_monte_carlo(graph& g);
+//    void all_path_lenth_Monte_Carlo(const graph& g, vector< vector<double> >& paths, long monte_c);
+//    double blocking_probability(id_type number_of_nodes, id_type degree, id_type visited);
+//    void alternate_path_length_destabilization(graph&g,id_type source,vector<double>& alternate_distances);
+//    double efficiency_sw_global_monte_carlo(graph& g);
+//    double efficiency_sw_global(const graph& g, bool type);
+    double efficiency_sw_global(const graph& g);
     
     double path_entropy(const graph& g);
     id_type hop_distance_matrix(const graph& g, vector< vector<id_type> > & path_mat);
