@@ -60,7 +60,7 @@ string CDLib::get_graph_details_efficiency(const graph& g)
 {
     ostringstream oss;
     oss << "Diameter : " << diameter(g) << endl;
-    oss << "Small-World Efficiency : " << efficiency_sw_global(g,0) << endl;
+    oss << "Small-World Efficiency : " << efficiency_sw_global(g) << endl;
     oss << "Connectivity Entropy (i.e. Entropy based on Degree Distt.) : " << connectivity_entropy(g) << endl;
     oss << "Path Entropy (i.e. Entropy based on Distance Distt.) : " << path_entropy(g) << endl;
     return oss.str();

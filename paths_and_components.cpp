@@ -61,12 +61,14 @@ void bfs_visitor_comps(const graph& g, node_set& not_visited,node_set& visited ,
 
 double CDLib::single_source_shortest_paths_bfs(const graph& g,id_type source,vector<double>& distances,vector< vector<id_type> >& preds)
 {
+    preds.clear();
     distances.assign(g.get_num_nodes(),numeric_limits<double>::infinity());
     preds.assign(g.get_num_nodes(),vector<id_type>());
     queue<id_type> q_bfs;
     q_bfs.push(source);
     distances[source] = 0;
     id_type last_node = source;
+//    int count1 = 0, count2 = 0, count3 = 0;
     while(!q_bfs.empty())
     {
         id_type current  = q_bfs.front();
@@ -76,13 +78,20 @@ double CDLib::single_source_shortest_paths_bfs(const graph& g,id_type source,vec
         {
             if(distances[aeit->first] == numeric_limits<double>::infinity())
             {
+//                if (distances[current] == numeric_limits<double>::infinity())
+//                    cout << "aeit->first = " << aeit->first << "current = " << current << "distances[current] = " << distances[current] << endl;
+//                if (aeit->first == 254)
+//                    cout << "aeit->first = " << aeit->first << endl;
                 distances[aeit->first] = distances[current]+ 1;
+//                preds[aeit->first].push_back(current);
                 q_bfs.push(aeit->first);
-                
+//                count1++;
             }
+//            count2++;
             if(distances[aeit->first] == distances[current]+ 1)
                 preds[aeit->first].push_back(current);
         }
+//        count3++;
     }
     return distances[last_node];
 }
@@ -186,7 +195,8 @@ id_type CDLib::get_largest_connected_component(const graph& g, node_set &members
             max_id = i;
         }
     }
-    members.insert(components[max_id].begin(),components[max_id].end());
+    if (components.size() > 0)
+        members.insert(components[max_id].begin(),components[max_id].end());
     return max_size;
 }
 
@@ -250,6 +260,13 @@ id_type CDLib::get_strongly_connected_components(const graph& g, vector<node_set
          return components.size();
     }
     else return get_connected_components_undirected(g,components);
+}
+
+double CDLib::fraction_of_nodes_in_LCC(const graph& g)
+{
+    node_set members;
+    id_type large_size = get_largest_connected_component(g,members);
+    return (double)large_size/g.get_num_nodes();
 }
 
 bool visit_topsort(const graph& g,id_type id,vector<id_type>& ordering,node_set& visited)
@@ -348,7 +365,7 @@ void CDLib::all_pairs_shortest_paths(const graph& g, vector< vector<double> >& p
 void CDLib::all_pairs_shortest_paths_djikshtra(const graph& g, vector< vector<double> >& path_matrix)
 {
     path_matrix.assign(g.get_num_nodes(),vector<double>());
-#pragma omp parallel for     
+#pragma omp parallel for shared(g,path_matrix)
     for(id_type i=0;i<g.get_num_nodes();i++)
     {
         vector< vector<id_type> > preds;
@@ -372,7 +389,7 @@ void CDLib::all_pairs_shortest_paths_floyd_warshal(const graph& g, vector< vecto
         prev[i][i] = 0;
     }
     for(id_type k=0;k<g.get_num_nodes();k++){
-#pragma omp parallel for        
+#pragma omp parallel for schedule(dynamic,10) shared(k,next,g)       
         for(id_type i=0;i<g.get_num_nodes();i++){
             for(id_type j=0;j<g.get_num_nodes();j++){
                 next[i][j] = ((prev[i][j] < (prev[i][k] + prev[k][j])) ? prev[i][j] : (prev[i][k] + prev[k][j]));
@@ -444,172 +461,235 @@ void CDLib::get_all_paths(const graph& g,id_type source, id_type dest,vector<id_
     do_count_paths(g,source,dest,visited,paths);
 }
 
-void CDLib::all_path_lenth_Monte_Carlo(const graph& g, vector< vector<double> >& paths, long monte_c)
-{
-    // Returns the path length in terms of hop distance using random walk from source-destination.
-    /* less than 50% not reachable => avg. path length of that else => not reachable
-    * monte_c tell us the number of iteration over which the the mean is taken. */
-    vector< vector<id_type> > mc_monte_times (g.get_num_nodes(),vector<id_type>(g.get_num_nodes(),0));
-    paths.assign(g.get_num_nodes(),vector<double>(g.get_num_nodes(),0.0));
-    for (long s=0; s<monte_c; s++)
-    {
-        #pragma omp parallel for
-        for(id_type i=0; i<g.get_num_nodes();i++)
-        {
-            id_type x = i,last = i, length = 0;
-            paths[i][x] += length;  mc_monte_times[i][x]++;
-            graph g2(g);
-            g2.convert_to_directed();
-            if (g2.get_node_out_degree(x) >= 1)
-            {
-                length++;
-                RandomGenerator<id_type> gen(0,(g2.get_node_out_degree(x)-1));
-                id_type assign_index = gen.next();
-                id_type new_node,count=0;
-                node_set adj;
-                for(adjacent_edges_iterator aeit = g2.out_edges_begin(x);aeit != g2.out_edges_end(x); aeit++)
-                    adj.insert(aeit->first);
-                for (node_set::iterator sit = adj.begin(); sit != adj.end(); sit++, count++)
-                {
-                    g2.remove_edge(*sit,x);
-                    paths[i][*sit] += length;  mc_monte_times[i][*sit]++;
-                    if (count == assign_index)
-                        new_node = *sit;
-                    for (node_set::iterator sjt = adj.begin(); sjt != adj.end(); sjt++)
-                    {
-                        g2.remove_edge(*sit,*sjt);
-                        g2.remove_edge(*sjt,*sit);
-                    }
-                }
-                x = new_node;
-            }
-            while(g2.get_node_out_degree(x) > 1)
-            {
-                g2.remove_edge(x,last);
-                g2.remove_edge(last,x);
-                RandomGenerator<id_type> gen(0,(g2.get_node_out_degree(x)-1));
-                id_type assign_index = gen.next();
-                id_type new_node,count = 0;
-                node_set adj;
-                for(adjacent_edges_iterator aeit = g2.out_edges_begin(x);aeit != g2.out_edges_end(x); aeit++)
-                    adj.insert(aeit->first);
-                for (node_set::iterator sit = adj.begin(); sit != adj.end(); sit++, count++)
-                {
-                    g2.remove_edge(*sit,x);
-                    if (count == assign_index)
-                        new_node = *sit;
-                }
-                last = x;
-                x= new_node;
-                paths[i][x] += ++length;  mc_monte_times[i][x]++;
-            }
-            
-        }
-    }
-    unsigned long thres = monte_c * 0.1;
-    for(id_type i=0; i<g.get_num_nodes();i++)
-    {
-        for(id_type j=0; j<g.get_num_nodes();j++)
-        {     
-            if (mc_monte_times[i][j] >= thres)
-            {
-                paths[i][j] /= mc_monte_times[i][j];
-            }
-            else
-                paths[i][j] = numeric_limits<double>::infinity();
-        }
-    }
-}
+//void CDLib::all_path_lenth_Monte_Carlo(const graph& g, vector< vector<double> >& paths, long monte_c)
+//{
+//    // Returns the path length in terms of hop distance using random walk from source-destination.
+//    /* less than 50% not reachable => avg. path length of that else => not reachable
+//    * monte_c tell us the number of iteration over which the the mean is taken. */
+//    vector< vector<id_type> > mc_monte_times (g.get_num_nodes(),vector<id_type>(g.get_num_nodes(),0));
+//    paths.assign(g.get_num_nodes(),vector<double>(g.get_num_nodes(),0.0));
+//    for (long s=0; s<monte_c; s++)
+//    {
+//        #pragma omp parallel for
+//        for(id_type i=0; i<g.get_num_nodes();i++)
+//        {
+//            id_type x = i,last = i, length = 0;
+//            paths[i][x] += length;  mc_monte_times[i][x]++;
+//            graph g2(g);
+//            g2.convert_to_directed();
+//            if (g2.get_node_out_degree(x) >= 1)
+//            {
+//                length++;
+//                RandomGenerator<id_type> gen(0,(g2.get_node_out_degree(x)-1));
+//                id_type assign_index = gen.next();
+//                id_type new_node,count=0;
+//                node_set adj;
+//                for(adjacent_edges_iterator aeit = g2.out_edges_begin(x);aeit != g2.out_edges_end(x); aeit++)
+//                    adj.insert(aeit->first);
+//                for (node_set::iterator sit = adj.begin(); sit != adj.end(); sit++, count++)
+//                {
+//                    g2.remove_edge(*sit,x);
+//                    paths[i][*sit] += length;  mc_monte_times[i][*sit]++;
+//                    if (count == assign_index)
+//                        new_node = *sit;
+//                    for (node_set::iterator sjt = adj.begin(); sjt != adj.end(); sjt++)
+//                    {
+//                        g2.remove_edge(*sit,*sjt);
+//                        g2.remove_edge(*sjt,*sit);
+//                    }
+//                }
+//                x = new_node;
+//            }
+//            while(g2.get_node_out_degree(x) > 1)
+//            {
+//                g2.remove_edge(x,last);
+//                g2.remove_edge(last,x);
+//                RandomGenerator<id_type> gen(0,(g2.get_node_out_degree(x)-1));
+//                id_type assign_index = gen.next();
+//                id_type new_node,count = 0;
+//                node_set adj;
+//                for(adjacent_edges_iterator aeit = g2.out_edges_begin(x);aeit != g2.out_edges_end(x); aeit++)
+//                    adj.insert(aeit->first);
+//                for (node_set::iterator sit = adj.begin(); sit != adj.end(); sit++, count++)
+//                {
+//                    g2.remove_edge(*sit,x);
+//                    if (count == assign_index)
+//                        new_node = *sit;
+//                }
+//                last = x;
+//                x= new_node;
+//                paths[i][x] += ++length;  mc_monte_times[i][x]++;
+//            }
+//            
+//        }
+//    }
+//    unsigned long thres = monte_c * 0.1;
+//    for(id_type i=0; i<g.get_num_nodes();i++)
+//    {
+//        for(id_type j=0; j<g.get_num_nodes();j++)
+//        {     
+//            if (mc_monte_times[i][j] >= thres)
+//            {
+//                paths[i][j] /= mc_monte_times[i][j];
+//            }
+//            else
+//                paths[i][j] = numeric_limits<double>::infinity();
+//        }
+//    }
+//}
+//
+//double CDLib::blocking_probability(id_type number_of_nodes, id_type degree, id_type visited)
+//{
+//    if ((visited > 1) && (degree == 1))
+//        return 1;
+//    else 
+//        if (visited <= (degree + 1))
+//        return 0;
+//    else
+//    {
+//        id_type con0 = degree + 1;
+//        id_type c1 = number_of_nodes - con0;
+//        id_type c2 = number_of_nodes - 2;
+//        id_type c4 = visited - 2;
+//        id_type c3 = visited - con0;
+//        
+//        double con4 = c4*log(c4);
+//        double con1 = c1*log(c1);
+//        double con3 = c3*log(c3);
+//        double con2 = c2*log(c2);
+//        
+//        double const1 = sqrt((c4*c1)/(c3*c2));
+//        double const2 = exp(con4 + con1 - con3 - con2);
+//        return (const1 * const2);
+//    }
+//}
+//
+//void CDLib::alternate_path_length_destabilization(graph&g,id_type source,vector<double>& alternate_distances)
+//{
+//    /* This function returns alternate distance (not geodesic) from source to all other nodes.
+//     * The alternate distance is obtained as an average geodesic distance between a pair of nodes 
+//     * when each edge in the geodesic path is removed one by one barring from the edge which 
+//     * would disconnect the graph.*/
+//    vector<double> dist;
+//    vector< vector<id_type> > paths;
+//    single_source_shortest_paths_djikstra_with_paths(g,source,dist,paths);
+//    alternate_distances.assign(g.get_num_nodes(),0);
+//    for(id_type i=0; i<g.get_num_nodes();i++)
+//    {
+//        if ((dist[i] <=2) || (dist[i] == numeric_limits<double>::infinity()))
+//            alternate_distances[i] = dist[i];
+//        else
+//        {
+//            long inf = 0;
+//            for (unsigned long y=0; y<(paths[i].size()-1); y++)
+//            {
+//                g.remove_edge(paths[i][y],paths[i][y+1]);
+//                vector<double> new_dist;
+//                vector< vector<id_type> > new_preds;
+//                single_source_shortest_paths_djikstra(g,source,new_dist,new_preds);
+//                if (new_dist[i] == numeric_limits<double>::infinity())
+//                    inf++;
+//                else
+//                    alternate_distances[i] += new_dist[i];
+//                g.add_edge(paths[i][y],paths[i][y+1],1);
+//            }
+//            id_type operations = paths[i].size() - 1 - inf;
+//            if (operations == 0)
+//                alternate_distances[i] = dist[i];
+//            else
+//                alternate_distances[i] /= operations;
+//        }
+//    }
+//}
 
-double CDLib::blocking_probability(id_type number_of_nodes, id_type degree, id_type visited)
-{
-    if ((visited > 1) && (degree == 1))
-        return 1;
-    else 
-        if (visited <= (degree + 1))
-        return 0;
-    else
-    {
-        id_type con0 = degree + 1;
-        id_type c1 = number_of_nodes - con0;
-        id_type c2 = number_of_nodes - 2;
-        id_type c4 = visited - 2;
-        id_type c3 = visited - con0;
-        
-        double con4 = c4*log(c4);
-        double con1 = c1*log(c1);
-        double con3 = c3*log(c3);
-        double con2 = c2*log(c2);
-        
-        double const1 = sqrt((c4*c1)/(c3*c2));
-        double const2 = exp(con4 + con1 - con3 - con2);
-        return (const1 * const2);
-    }
-}
+//double CDLib::efficiency_sw_global_monte_carlo(graph& g)
+//{
+//    /* Returns the small world global efficiency of the graph using loop avoiding 
+//     * random walk and averaging out using monte carlo simulation as the distance 
+//     * measure in the efficiency formula. The monte carlo simulation is parallelized
+//     * using open MPI #prgma. */
+//    vector< vector<double> > paths;
+//    double efficiency = 0;
+//    all_path_lenth_Monte_Carlo(g, paths, 10000);
+//    for (unsigned long i = 0 ; i < g.get_num_nodes(); i++)
+//        for (unsigned long j = 0 ; j < g.get_num_nodes(); j++)
+//            if (i != j)
+//                    efficiency += 1 / paths[i][j];
+//    efficiency /= g.get_num_nodes() * (g.get_num_nodes() - 1);
+//    return efficiency;
+//}
 
-void CDLib::alternate_path_length_destabilization(graph&g,id_type source,vector<double>& alternate_distances)
-{
-    /* This function returns alternate distance (not geodesic) from source to all other nodes.
-     * The alternate distance is obtained as an average geodesic distance between a pair of nodes 
-     * when each edge in the geodesic path is removed one by one barring from the edge which 
-     * would disconnect the graph.*/
-    vector<double> dist;
-    vector< vector<id_type> > paths;
-    single_source_shortest_paths_djikstra_with_paths(g,source,dist,paths);
-    alternate_distances.assign(g.get_num_nodes(),0);
-    for(id_type i=0; i<g.get_num_nodes();i++)
-    {
-        if ((dist[i] <=2) || (dist[i] == numeric_limits<double>::infinity()))
-            alternate_distances[i] = dist[i];
-        else
-        {
-            long inf = 0;
-            for (unsigned long y=0; y<(paths[i].size()-1); y++)
-            {
-                g.remove_edge(paths[i][y],paths[i][y+1]);
-                vector<double> new_dist;
-                vector< vector<id_type> > new_preds;
-                single_source_shortest_paths_djikstra(g,source,new_dist,new_preds);
-                if (new_dist[i] == numeric_limits<double>::infinity())
-                    inf++;
-                else
-                    alternate_distances[i] += new_dist[i];
-                g.add_edge(paths[i][y],paths[i][y+1],1);
-            }
-            id_type operations = paths[i].size() - 1 - inf;
-            if (operations == 0)
-                alternate_distances[i] = dist[i];
-            else
-                alternate_distances[i] /= operations;
-        }
-    }
-}
+//double CDLib::efficiency_sw_global(const graph& g, bool type)
+//{
+//    /* Returning Global Efficiency of a Small World Network according to 2001 paper 
+//     * The bool type represents the type of distance calculation of efficiency. 
+//     * type = 0 implies distance calculation based on dijkshtra's algorithm. 
+//     * type = 1 implies distance calculation based on alternate_path_length_destabilization()
+//     *  function in this library. The chunk size of dynamic scheduling in OpenMP is set to 10. */
+//    if (g.get_num_nodes() > 1)
+//    {
+//        double efficiency = 0;
+//        double ideal = 1 / g.minimum_weight();
+//#pragma omp parallel for schedule(dynamic,10) shared(g) reduction(+:efficiency)
+//        for (unsigned long i = 0 ; i < g.get_num_nodes(); i++)
+//        {
+//            vector< vector<id_type> > preds;
+//            vector<double> distance;
+//            if (type){
+//                graph gtemp(g);
+//                alternate_path_length_destabilization(gtemp,i,distance);
+//            }
+//            else
+//                single_source_shortest_paths_djikstra(g,i,distance,preds);
+//            for (unsigned long j = 0 ; j < g.get_num_nodes(); j++)
+//                if (i != j)
+//                    efficiency = efficiency + (1/distance[j]);
+//        }
+////        cout << "\nIdeal :" << ideal << "\tEfficiency :" << efficiency << endl;
+//        efficiency = efficiency / (g.get_num_nodes() * (g.get_num_nodes() - 1));
+//        efficiency /= ideal;
+//        return efficiency;
+//    }
+//    else if (g.get_num_nodes() == 1)
+//            return 1;
+//    else
+//            return 0;
+//}
 
-double CDLib::efficiency_sw_global(const graph& g, bool type)
+double CDLib::efficiency_sw_global(const graph& g)
 {
     /* Returning Global Efficiency of a Small World Network according to 2001 paper 
-     * The bool type represents the type of distance calculation of efficiency. 
-     * type = 0 implies distance calculation based on dijkshtra's algorithm. 
-     * type = 1 implies distance calculation based on alternate_path_length_destabilization()
-     *  function in this library. */
+     *  function in this library. The chunk size of dynamic scheduling in OpenMP is set to 10. */
     if (g.get_num_nodes() > 1)
     {
+        const id_type control = 70000;        // This controls the memory requirement. 70000 x 70000 x 8 = 36.51GB
         double efficiency = 0;
         double ideal = 1 / g.minimum_weight();
-        for (unsigned long i = 0 ; i < g.get_num_nodes(); i++)
+        if (g.get_num_nodes() < control)
         {
-            vector< vector<id_type> > preds;
-            vector<double> distance;
-            if (type){
-                graph gtemp(g);
-                alternate_path_length_destabilization(gtemp,i,distance);
+            vector< vector<double> > path_matrix;
+            all_pairs_shortest_paths(g,path_matrix);
+#pragma omp parallel for schedule(dynamic,10) shared(g,path_matrix) reduction(+:efficiency)
+            for (unsigned long i = 0 ; i < g.get_num_nodes(); i++)
+            {
+                for (unsigned long j = 0 ; j < g.get_num_nodes(); j++)
+                    if (i != j)
+                        efficiency = efficiency + (1/path_matrix[i][j]);
             }
-            else
-                single_source_shortest_paths_djikstra(g,i,distance,preds);
-            for (unsigned long j = 0 ; j < g.get_num_nodes(); j++)
-                if (i != j)
-                    efficiency = efficiency + (1/distance[j]);
         }
+        else {
+#pragma omp parallel for schedule(dynamic,10) shared(g) reduction(+:efficiency)
+            for (unsigned long i = 0 ; i < g.get_num_nodes(); i++)
+            {
+                vector< vector<id_type> > preds;
+                vector<double> distance;
+                single_source_shortest_paths_djikstra(g,i,distance,preds);
+                for (unsigned long j = 0 ; j < g.get_num_nodes(); j++)
+                    if (i != j)
+                        efficiency = efficiency + (1/distance[j]);
+            } 
+        }
+        
 //        cout << "\nIdeal :" << ideal << "\tEfficiency :" << efficiency << endl;
         efficiency = efficiency / (g.get_num_nodes() * (g.get_num_nodes() - 1));
         efficiency /= ideal;
@@ -620,25 +700,6 @@ double CDLib::efficiency_sw_global(const graph& g, bool type)
     else
             return 0;
 }
-
-double CDLib::efficiency_sw_global_monte_carlo(graph& g)
-{
-    /* Returns the small world global efficiency of the graph using loop avoiding 
-     * random walk and averaging out using monte carlo simulation as the distance 
-     * measure in the efficiency formula. The monte carlo simulation is parallelized
-     * using open MPI #prgma. */
-    vector< vector<double> > paths;
-    double efficiency = 0;
-    all_path_lenth_Monte_Carlo(g, paths, 10000);
-    for (unsigned long i = 0 ; i < g.get_num_nodes(); i++)
-        for (unsigned long j = 0 ; j < g.get_num_nodes(); j++)
-            if (i != j)
-                    efficiency += 1 / paths[i][j];
-    efficiency /= g.get_num_nodes() * (g.get_num_nodes() - 1);
-    return efficiency;
-}
-
-
 
 double CDLib::path_entropy(const graph& g)
 {

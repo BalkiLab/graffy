@@ -59,7 +59,6 @@ graphio.o : graph.o paths_and_components.o graph_operations.o
 	$(CC) $(CFLAGS) -o graphio.o -c graphio.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o graphio_d.o -c graphio.cpp $(LIBS)
 
-
 local_community.o : graph.o
 	$(CC) $(CFLAGS) -o local_community.o -c local_community.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o local_community_d.o -c local_community.cpp $(LIBS)
@@ -80,10 +79,29 @@ bidirectional_label_map.o :
 	$(CC) $(CFLAGS) -o bidirectional_label_map.o -c bidirectional_label_map.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o bidirectional_label_map_d.o -c bidirectional_label_map.cpp $(LIBS)
 
-
 statistics.o : 
 	$(CC) $(CFLAGS) -o statistics.o -c statistics.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o statistics_d.o -c statistics.cpp $(LIBS)
 
 clean:
 	rm *.o *.so
+
+
+#CC = g++
+#CFLAGS = -O3 -fPIC -fopenmp -std=c++0x -DNDEBUG
+#CFLAGS_D = -g -fPIC -fopenmp -std=c++0x -Wall
+#LIBS = -lm -lgomp -lrt -lpthread
+#
+#all: libcdlib.so libcdlib_d.so
+#	
+#
+#libcdlib.so:
+#	$(CC) -std=c++0x -fPIC -O3 -c *.cpp $(LIBS)
+#	$(CC) -std=c++0x -O3 -shared -o libcdlib.so $(LIBS)
+#
+#libcdlib_d.so:
+#	$(CC) -std=c++0x -fPIC -g -c *.cpp $(LIBS)
+#	$(CC) -std=c++0x -g -shared -o libcdlib_d.so $(LIBS)	
+#
+#clean:
+#	rm *.o *.so

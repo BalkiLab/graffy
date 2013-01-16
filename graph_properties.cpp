@@ -6,14 +6,20 @@
  */
 
 #include "graph_properties.h"
+#include "divisive_algorithms.h"
 
-
+void CDLib::get_degree_sequence(const graph& g,vector<id_type>& degrees, bool in_degrees)
+{
+    degrees.clear();
+    degrees.assign(g.get_num_nodes(),0);
+    for(id_type i=0;i<g.get_num_nodes();i++)
+        degrees[i] = (in_degrees)? g.get_node_in_degree(i) : g.get_node_out_degree(i);
+}
 
 void CDLib::get_degree_histogram(const graph& g,vector<id_type>& dist, bool in_degrees)
 {
-    vector<id_type> degrees(g.get_num_nodes(),0);
-    for(id_type i=0;i<g.get_num_nodes();i++)
-        degrees[i] = (in_degrees)? g.get_node_in_degree(i) : g.get_node_out_degree(i);
+    vector<id_type> degrees;
+    get_degree_sequence(g,degrees,in_degrees);
     get_discrete_distribution<id_type>(degrees,dist);
 }
 
@@ -25,6 +31,34 @@ void CDLib::get_degree_distribution(const graph& g,vector<double>& dist, bool in
     dist.assign(degree_hist.size(),0);
     for (id_type i=0; i<degree_hist.size(); i++)
         dist[i] = (double)degree_hist[i]/(double)g.get_num_nodes();
+}
+
+double CDLib::get_degree_variance(const graph& g,bool in_degrees)
+{
+    if (g.get_num_nodes() <= 0)
+        return 0;
+    vector<id_type> degrees;
+    get_degree_sequence(g,degrees,in_degrees);
+    return variance(degrees);
+}
+
+double CDLib::get_degree_assortativity_coefficient(const graph& g,bool in_degrees)
+{
+    if (g.get_num_nodes() <= 0)
+        return 0;
+    vector<id_type> degrees;
+    get_degree_sequence(g,degrees,in_degrees);
+    double assortative_cov = 0,max_assortative_cov = 0;
+    id_type edge_factor = 2 * g.get_num_edges();
+#pragma omp parallel for schedule(dynamic,10) shared(g,degrees,edge_factor) reduction(+:assortative_cov,max_assortative_cov)     
+    for(id_type i=0;i<g.get_num_nodes();i++) {
+        for(id_type j=0;j<g.get_num_nodes();j++) {
+            double deg_prod = degrees[i] * degrees[j];
+            assortative_cov += (g.get_edge_weight(i,j) - (deg_prod/edge_factor)) * deg_prod;
+            max_assortative_cov += ((degrees[i] * kronecker_delta(degrees[i],degrees[j])) - (deg_prod/edge_factor)) * deg_prod;
+        }
+    }
+    return (assortative_cov/max_assortative_cov);
 }
 
 double CDLib::kl_divergence_from_random_graph(const graph& g)

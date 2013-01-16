@@ -12,7 +12,6 @@
 using namespace std;
 namespace CDLib
 {
-
     template <typename T>
     struct statistics
     {
@@ -23,6 +22,9 @@ namespace CDLib
         double variance;
     };
     
+    template <typename T1, typename T2>
+    int kronecker_delta(const T1 sample1, const T2 sample2) { return (sample1 == sample2)?1:0; }
+    
     template <typename T>
     void compute_statistics(const vector<T>& vec,statistics<T>& res)
     {
@@ -30,20 +32,23 @@ namespace CDLib
         res.mean_val = 0.0;
         res.max_val = (numeric_limits<T>::has_infinity) ? -numeric_limits<T>::infinity() : -numeric_limits<T>::max();
         res.min_val = (numeric_limits<T>::has_infinity) ? numeric_limits<T>::infinity() : numeric_limits<T>::max();
-        for(typename vector<T>::const_iterator it = vec.begin();it != vec.end();it++)
-        {
-            if(res.max_val < *it) res.max_val = *it;
-            if(res.min_val > *it) res.min_val = *it;
-            res.mean_val += *it;
-            res.variance += (*it)*(*it);
+        res.median_val = 0;
+        if(vec.size() > 0){
+            for(typename vector<T>::const_iterator it = vec.begin();it != vec.end();it++)
+            {
+                if(res.max_val < *it) res.max_val = *it;
+                if(res.min_val > *it) res.min_val = *it;
+                res.mean_val += *it;
+                res.variance += (*it)*(*it);
+            }
+            res.mean_val/=(double)vec.size();
+            res.variance /= (double)vec.size();
+            res.variance -= (res.mean_val*res.mean_val);
+            res.variance /= (double)vec.size();
+            vector<T> bleh(vec);
+            sort(bleh.begin(),bleh.end());
+            res.median_val = (bleh.size()%2) ? (bleh[bleh.size()/2]) :  (bleh[(bleh.size()-1)/2] +  bleh[(bleh.size()+1)/2])/2;
         }
-        res.mean_val/=(double)vec.size();
-        res.variance /= (double)vec.size();
-        res.variance -= (res.mean_val*res.mean_val);
-        res.variance /= (double)vec.size();
-        vector<T> bleh(vec);
-        sort(bleh.begin(),bleh.end());
-        res.median_val = (bleh.size()%2) ? (bleh[bleh.size()/2]) :  (bleh[(bleh.size()-1)/2] +  bleh[(bleh.size()+1)/2])/2;
     }
     
     template <typename T>

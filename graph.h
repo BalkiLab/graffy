@@ -87,6 +87,10 @@ namespace CDLib
         
         bool remove_edge(id_type from_id, id_type to_id);
         wt_t remove_edge(const string& from_label, const string& to_label);
+        id_type remove_adjacent_edges(id_type id);
+        id_type remove_adjacent_edges(const string& label);
+        id_type remove_edges(vector<pair<id_type,id_type> >& edges);
+        id_type remove_edges(vector<pair<string,string> >& edges);
         
         bool set_edge_weight(id_type from_id, id_type to_id, wt_t weight);
         wt_t set_edge_weight(const string& from_label, const string& to_label,wt_t weight);
