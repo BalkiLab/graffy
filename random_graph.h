@@ -32,11 +32,11 @@ namespace CDLib {
     void generate_configuration_model(graph& g, vector<id_type>& degree_sequence);
     void generate_prices_model(graph& g,size_t num_nodes, size_t num_of_out_degree, size_t in_degree_constant);
     void generate_barabasi_albert_model(graph& g,size_t num_nodes,size_t min_degree_of_node);
-    void generate_vertex_copying_model(graph& g,size_t num_nodes,size_t num_of_out_degree,size_t num_of_vertices_at_initial,double probability_to_copy_from_existing_vertex);
-    void generate_small_world_model(graph& g,size_t num_nodes,size_t degree_of_each_vertex,double probability_to_replace_edge);
+    bool generate_vertex_copying_model(graph& g,size_t num_nodes,size_t num_of_out_degree,size_t num_of_vertices_at_initial,double probability_to_copy_from_existing_vertex);
+    bool generate_small_world_model(graph& g,size_t num_nodes,size_t degree_of_each_vertex,double probability_to_replace_edge);
     void generate_evolutionary_model_128_nodes_4_communities(vector<graph>& g,size_t num_inter_community_edges,size_t num_timesteps);
     void generate_evolutionary_model_800_nodes_4_communities(vector < vector < vector < double > > >& points,vector<double>& x_coordinates,vector<double>& y_coordinates,double variance,size_t num_timesteps);
-    void generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max_failure_allowed,double degree_dist_controling_parameter,double probability_to_alter_edge,double initial_probability_of_edge);
+    bool generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max_failure_allowed,double degree_dist_controling_parameter,double probability_to_alter_edge,double initial_probability_of_edge);
 };
 
 #endif	/* RANDOM_GRAPH_H */

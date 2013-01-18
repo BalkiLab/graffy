@@ -13,6 +13,9 @@ graph::graph(bool directed, bool weighted): b_directed(directed),b_weighted(weig
 
 bool graph::is_directed() const { return b_directed;}
 bool graph::is_weighted() const { return b_weighted; }
+
+void graph::set_graph_name(string gname) { graph_name = gname; }
+string graph::get_graph_name() { return graph_name; }
        
 id_type graph::get_num_nodes() const { return dam_backend.num_nodes();}
 id_type graph::get_num_edges() const
@@ -208,7 +211,8 @@ bool graph::remove_all_edges()
 
 bool graph::clear()
 {
-    return dam_backend.clear() && blm_labels.clear();
+    graph_name.clear();
+    return (dam_backend.clear() && blm_labels.clear() && graph_name.empty());
 }
 
 bool graph::convert_to_unweighted(double threshold)

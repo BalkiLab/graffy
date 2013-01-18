@@ -27,7 +27,8 @@ void CDLib::generate_erdos_renyi_graph(graph& g, id_type num_nodes,double p)
         RandomGenerator<double> p_gen(0,1,1);
         for(id_type i=0; i<num_nodes;i++)
             for(id_type j=0; j<num_nodes;j++)
-                if((!g.is_directed() && i<j) && p_gen.next() <= p) g.add_edge(i,j,1); 
+                if((!g.is_directed() && i<j) && p_gen.next() <= p) g.add_edge(i,j,1);
+        g.set_graph_name("er_" + T2str<id_type>(num_nodes) + "_" + T2str<double>(p));
     }
 }
 
@@ -35,6 +36,7 @@ void CDLib::generate_erdos_renyi_graph(graph& g, id_type num_nodes,id_type num_e
 {
     double p = (double)num_edges/(num_nodes * (num_nodes - 1));
     generate_erdos_renyi_graph(g,num_nodes,p);
+    g.set_graph_name("er_" + T2str<id_type>(num_nodes) + "_" + T2str<id_type>(num_edges));
 }
 
 void CDLib::generate_scale_free_graph(graph& g, id_type num_nodes,id_type num_edges,double alpha, double beta)
@@ -50,6 +52,7 @@ void CDLib::generate_scale_free_graph(graph& g, id_type num_nodes,id_type num_ed
         if(outdegrees[from_id] && outdegrees[to_id] && from_id != to_id && !g.get_edge_weight(from_id,to_id)) 
             g.add_edge(from_id,to_id,1);
     }
+    g.set_graph_name("sf_" + T2str<id_type>(num_nodes) + "_" + T2str<id_type>(num_edges) + "_" + T2str<double>(alpha) + "_" + T2str<double>(beta));
 }
 
 
@@ -74,6 +77,7 @@ void CDLib::generate_planted_partition_graph(graph& g, id_type num_comms, id_typ
                 else if(p > pout) g.add_edge(i,j,1);
             }
         }
+        g.set_graph_name("pp_" + T2str<id_type>(num_comms) + "_" + T2str<id_type>(comm_size) + "_" + T2str<double>(pin) + "_" + T2str<double>(pout));
     }
 }
 
@@ -81,12 +85,14 @@ void CDLib::generate_ring_graph(graph& g, id_type size)
 {
     init_empty_graph(g,size);
     for(id_type i=0;i<g.get_num_nodes();i++)g.add_edge(i,(i+1)%size,1);
+    g.set_graph_name("ring_" + T2str<id_type>(size));
 }
 
 void CDLib::generate_star_graph(graph& g, id_type size)
 {
     init_empty_graph(g,size);
     for(id_type i=1;i<g.get_num_nodes();i++)g.add_edge(0,i,1);
+    g.set_graph_name("star_" + T2str<id_type>(size));
 }
 
 void CDLib::generate_clique_graph(graph& g, id_type size)
@@ -95,6 +101,7 @@ void CDLib::generate_clique_graph(graph& g, id_type size)
     for(id_type i=0;i<g.get_num_nodes();i++)
         for(id_type j=0;j<i;j++)
             if(i!=j) g.add_edge(i,j,1);
+    g.set_graph_name("clique_" + T2str<id_type>(size));
 }
 
 void CDLib::generate_spoke_graph(graph& g,id_type size)
@@ -105,6 +112,7 @@ void CDLib::generate_spoke_graph(graph& g,id_type size)
         if(i)g.add_edge(i,(i+1)%size,1);
         g.add_edge(i,(i+1)%size,1);
     }
+    g.set_graph_name("spoke_" + T2str<id_type>(size));
 }
 
 void CDLib::generate_de_bruijn_graph(graph& g,id_type num_symbols,id_type sequence_length)
@@ -118,6 +126,7 @@ void CDLib::generate_de_bruijn_graph(graph& g,id_type num_symbols,id_type sequen
             id_type basis=(i*num_symbols) % g.get_num_nodes();
             for (id_type j=0; j<num_symbols; j++) g.add_edge(i,basis+j,1);    
         }
+        g.set_graph_name("db_" + T2str<id_type>(num_symbols) + "_" + T2str<id_type>(sequence_length));
     }
 }
 
@@ -130,6 +139,7 @@ void CDLib::generate_chord_graph(graph& g,id_type num_nodes)
         for(id_type j=1; j<= g.get_num_nodes()/2; j*=2 )
             g.add_edge(i,(i+j) % g.get_num_nodes(),1);
     }
+    g.set_graph_name("chord_" + T2str<id_type>(num_nodes));
 }
 
 void CDLib::generate_LEET_chord_graph(graph& g, id_type num_nodes)
@@ -143,6 +153,7 @@ void CDLib::generate_LEET_chord_graph(graph& g, id_type num_nodes)
         id_type id_in_cluster = g.get_num_nodes() % static_cast<id_type>(cluster_size);
         g.add_edge(i,id_in_cluster*(1+static_cast<id_type>(cluster_size)),1);
     }
+    g.set_graph_name("leet_chord_" + T2str<id_type>(num_nodes));
 }
 
 bool cmp(const vector<id_type>& lhs, const vector<id_type>& rhs) { return lhs.size() < rhs.size();}
@@ -154,6 +165,7 @@ void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes)
     for(unsigned int i=0;i<num_nodes;i++)
         for(unsigned int j=0; j<num_bits;j++)
                 g.add_edge(i,(i ^ ((1 << j)))%num_nodes,1) ;
+    g.set_graph_name("kademlia_" + T2str<id_type>(num_nodes));
 }
 
 //void CDLib::generate_kademlia_graph(graph& g,id_type num_nodes, id_type bucket_length)
@@ -300,7 +312,8 @@ void CDLib::generate_configuration_model(graph& g, vector<id_type>& degree_seque
             {
                 nodes_with_non_0_degree.erase(nodes_with_non_0_degree.begin());
             }
-        } 
+        }
+        g.set_graph_name("configuration_model");
     }
 }
 
@@ -335,6 +348,7 @@ void CDLib::generate_prices_model(graph& g,size_t num_nodes, size_t num_of_out_d
             }
         }
     }
+    g.set_graph_name("price_" + T2str<size_t>(num_nodes) + "_" + T2str<size_t>(num_of_out_degree) + "_" + T2str<size_t>(in_degree_constant));
 }
 
 /*this is preferential attachment model. it follows power law degree distribution.
@@ -372,11 +386,12 @@ void CDLib::generate_barabasi_albert_model(graph& g, size_t num_nodes, size_t mi
             }
         }
     }
+    g.set_graph_name("ba_" + T2str<size_t>(num_nodes) + "_" + T2str<size_t>(min_degree_of_node));
 }
 
 /*degree distribution of this model follows power law distribution. 
  * this is a most suitable synthetic model to real-world network like peer to peer networks and citation networks.*/
-void CDLib::generate_vertex_copying_model(graph& g,size_t num_nodes,size_t num_of_out_degree,size_t num_of_vertices_at_initial,double probability_to_copy_from_existing_vertex)
+bool CDLib::generate_vertex_copying_model(graph& g,size_t num_nodes,size_t num_of_out_degree,size_t num_of_vertices_at_initial,double probability_to_copy_from_existing_vertex)
 {
     if (num_of_vertices_at_initial > num_of_out_degree && probability_to_copy_from_existing_vertex>=0 && probability_to_copy_from_existing_vertex<=1) 
     {
@@ -429,14 +444,18 @@ void CDLib::generate_vertex_copying_model(graph& g,size_t num_nodes,size_t num_o
                 }
             }
         }
+        g.set_graph_name("vc_" + T2str<size_t>(num_nodes) + "_" + T2str<size_t>(num_of_out_degree) + "_" + T2str<size_t>(num_of_vertices_at_initial) + "_" + T2str<double>(probability_to_copy_from_existing_vertex));
+        return 1;
     }
-    else
-        cout<<"\nnum_of_vertices_at_initial should greater than num_of_out_degree\n";
+    else {
+//        cout<<"\nnum_of_vertices_at_initial should greater than num_of_out_degree\n";
+        return 0;
+    }
 }
 
 /*this model is used to generate graph with high clustering coefficient.
  this model matches sports network like american football league.*/
-void CDLib::generate_small_world_model(graph& g,size_t num_nodes,size_t degree_of_each_vertex,double probability_to_replace_edge)
+bool CDLib::generate_small_world_model(graph& g,size_t num_nodes,size_t degree_of_each_vertex,double probability_to_replace_edge)
 {
     if(probability_to_replace_edge>=0 && probability_to_replace_edge<=1)
     {
@@ -474,10 +493,13 @@ void CDLib::generate_small_world_model(graph& g,size_t num_nodes,size_t degree_o
                 }
             }
         }
-        
+        g.set_graph_name("sw_" + T2str<size_t>(num_nodes) + "_" + T2str<size_t>(degree_of_each_vertex) + "_" + T2str<double>(probability_to_replace_edge));
+        return 1;
     }
-    else
-        cout<<"\nprobability value might be wrong";
+    else {
+//        cout<<"\nprobability value might be wrong";
+        return 0;
+    }
 }
 
 
@@ -710,7 +732,7 @@ double energy(graph& g,double degree_dist_controlling_parameter,id_type nC2,doub
     return Energy;
 }
 
-void CDLib::generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max_failure_allowed,double degree_dist_controlling_parameter,double probability_to_alter_edge,double initial_probability_of_edge)
+bool CDLib::generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max_failure_allowed,double degree_dist_controlling_parameter,double probability_to_alter_edge,double initial_probability_of_edge)
 {
     if(degree_dist_controlling_parameter<=1 && degree_dist_controlling_parameter>=0 && initial_probability_of_edge<=1 && initial_probability_of_edge>=0 && probability_to_alter_edge<=1 && probability_to_alter_edge>=0)
     {
@@ -768,8 +790,12 @@ void CDLib::generate_ferrer_i_cancho_model(graph& g,size_t num_nodes, size_t max
             } else
                 failure++;
         }
+        g.set_graph_name("fic_" + T2str<size_t>(num_nodes) + "_" + T2str<size_t>(max_failure_allowed) + "_" + T2str<double>(degree_dist_controlling_parameter) + "_" + T2str<double>(probability_to_alter_edge) + "_" + T2str<double>(initial_probability_of_edge));
+        return 1;
     }
-    else
-        cout<<"\n last three parameter value should be between 0 and 1";
+    else {
+//        cout<<"\n last three parameter value should be between 0 and 1";
+        return 0;
+    }
     
 }

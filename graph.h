@@ -22,6 +22,7 @@ namespace CDLib
         bool b_weighted;
         bidirectional_label_map blm_labels;
         double_adjacency_map dam_backend;
+        string graph_name;
         
     public:
         
@@ -30,6 +31,8 @@ namespace CDLib
         
         bool is_directed() const;
         bool is_weighted() const;
+        void set_graph_name(string gname);
+        string get_graph_name();
         
         id_type get_num_nodes() const;
         id_type get_num_edges() const;
