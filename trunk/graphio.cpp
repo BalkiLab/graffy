@@ -9,6 +9,23 @@
 #include "centrality.h"
 using namespace CDLib;
 
+string filename(string file)
+{
+    ostringstream oss;
+    size_t found_dot,found_slash;
+    found_dot=file.find_last_of(".");
+    found_slash=file.find_last_of("/");
+    if ((found_dot != string::npos) && (found_slash != string::npos))
+        oss << file.substr(found_slash+1,(found_dot-found_slash-1));
+    else if ((found_dot == string::npos) && (found_slash != string::npos))
+        oss << file.substr(found_slash+1,(file.size()-found_slash-1));
+    else if ((found_dot != string::npos) && (found_slash == string::npos))
+        oss << file.substr(0,found_dot);
+    else
+        oss << file;
+    return oss.str();
+}
+
 bool CDLib::read_edgelist(graph& g,const string& filepath,bool directed, bool weighted)
 {
     if(directed!=g.is_directed() && weighted!=g.is_weighted()) return false;
@@ -31,6 +48,7 @@ bool CDLib::read_edgelist(graph& g,const string& filepath,bool directed, bool we
                 if(!directed)g.add_edge(label2,label1,weight);
             }
         }
+        g.set_graph_name(filename(filepath));
         return true;
     }
     return false;
@@ -52,6 +70,7 @@ bool CDLib::read_matlab_sp(graph& g,const string& filepath){
             }
             g.add_edge(from-1,to-1,weight);
         }
+        g.set_graph_name(filename(filepath));
         return true;
     }
     return false;
@@ -75,23 +94,6 @@ bool CDLib::write_edgelist(graph& g,const string& filepath,bool weights)
         return true;
     }
     return false;
-}
-
-string filename(string file)
-{
-    ostringstream oss;
-    size_t found_dot,found_slash;
-    found_dot=file.find_last_of(".");
-    found_slash=file.find_last_of("/");
-    if ((found_dot != string::npos) && (found_slash != string::npos))
-        oss << file.substr(found_slash+1,(found_dot-found_slash-1));
-    else if ((found_dot == string::npos) && (found_slash != string::npos))
-        oss << file.substr(found_slash+1,(file.size()-found_slash-1));
-    else if ((found_dot != string::npos) && (found_slash == string::npos))
-        oss << file.substr(0,found_dot);
-    else
-        oss << file;
-    return oss.str();
 }
 
 bool CDLib::write_xml(graph& g,const string& filepath,bool weights)
