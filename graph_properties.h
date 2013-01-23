@@ -20,6 +20,7 @@ namespace CDLib
     void get_degree_histogram(const graph& g,vector<id_type>& dist, bool in_degrees);
     void get_degree_distribution(const graph& g,vector<double>& dist,bool in_degrees);
     double get_degree_variance(const graph& g,bool in_degrees);
+    void get_degree_assortativity_coefficient(const graph& g,bool in_degrees,vector<double>& assortativity);
     double get_degree_assortativity_coefficient(const graph& g,bool in_degrees);
     
     double kl_divergence_from_random_graph(const graph& g);

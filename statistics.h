@@ -91,11 +91,12 @@ namespace CDLib
     {
         if (samples.size() <= 1)
             return 0;
-        double sample_mean = mean(samples);
-        double sum=0;
-        for (id_type i=0 ; i<samples.size(); i++)
-            sum += pow((samples[i] - sample_mean),2);
-        return (sum/samples.size());
+        double sum_sq=0,sum=0;
+        for (id_type i=0 ; i<samples.size(); i++) {
+            sum_sq += samples[i] * samples[i];
+            sum += samples[i];
+        }
+        return ((sum_sq/samples.size()) - pow((sum/samples.size()),2));
     }
 
     template <typename T>
@@ -160,6 +161,7 @@ namespace CDLib
         return covariance(sample1,sample2)/(std(sample1) * std(sample2));
     }
     bool is_distribution(const vector<double>& distribution);
+    double distribution_entropy(const vector<double>& distribution);
     double kl_divergence(const vector<double>& distribution1,const vector<double>& distribution2);
     double kl_divergence_symmetric(const vector<double>& distribution1,const vector<double>& distribution2);
     double bhattacharyya_distance(const vector<double>& distribution1,const vector<double>& distribution2);

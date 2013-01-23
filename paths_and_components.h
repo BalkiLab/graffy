@@ -57,9 +57,6 @@ namespace CDLib
     
     double path_entropy(const graph& g);
     id_type hop_distance_matrix(const graph& g, vector< vector<id_type> > & path_mat);
-    
-    
-
 };
 
 #endif	/* COMMUNITY_TOOLS_H */

@@ -15,7 +15,7 @@ bool graph::is_directed() const { return b_directed;}
 bool graph::is_weighted() const { return b_weighted; }
 
 void graph::set_graph_name(string gname) { graph_name = gname; }
-string graph::get_graph_name() { return graph_name; }
+string graph::get_graph_name() const { return graph_name; }
        
 id_type graph::get_num_nodes() const { return dam_backend.num_nodes();}
 id_type graph::get_num_edges() const
