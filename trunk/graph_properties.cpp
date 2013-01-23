@@ -42,6 +42,34 @@ double CDLib::get_degree_variance(const graph& g,bool in_degrees)
     return variance(degrees);
 }
 
+void CDLib::get_degree_assortativity_coefficient(const graph& g,bool in_degrees,vector<double>& assortativity)
+{
+/* Gives the assortativity contributions of each degree sequence */    
+    assortativity.clear();
+    if (g.get_num_nodes() <= 0)
+        return;
+    vector<id_type> degrees;
+    get_degree_sequence(g,degrees,in_degrees);
+    statistics<id_type> stat;
+    compute_statistics<id_type>(degrees,stat);
+    assortativity.assign(stat.max_val+1,0.0);
+    double max_assortative_cov = 0;
+    id_type edge_factor = 2 * g.get_num_edges();    
+    for(id_type i=0;i<g.get_num_nodes();i++) {
+        double local_reduce = 0;
+#pragma omp parallel for schedule(dynamic,10) shared(g,degrees,edge_factor) reduction(+:local_reduce,max_assortative_cov)         
+        for(id_type j=0;j<g.get_num_nodes();j++) {
+            double deg_prod = degrees[i] * degrees[j];
+            local_reduce += (g.get_edge_weight(i,j) - (deg_prod/edge_factor)) * deg_prod;
+            max_assortative_cov += ((degrees[i] * kronecker_delta(degrees[i],degrees[j])) - (deg_prod/edge_factor)) * deg_prod;
+        }
+        assortativity[degrees[i]] = local_reduce;
+    }
+    for(id_type i=0;i<assortativity.size();i++) {
+        assortativity[i] /= max_assortative_cov;
+    }
+}
+
 double CDLib::get_degree_assortativity_coefficient(const graph& g,bool in_degrees)
 {
     if (g.get_num_nodes() <= 0)

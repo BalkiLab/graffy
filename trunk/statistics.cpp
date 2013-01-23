@@ -11,6 +11,19 @@ bool CDLib::is_distribution(const vector<double>& distribution)
     else
         return false;
 }
+double CDLib::distribution_entropy(const vector<double>& distribution)
+{
+    double entropy = 0;
+    if (is_distribution(distribution)) {       
+        for (unsigned int i = 0; i < distribution.size(); i++){
+            if (distribution[i] != 0) { 
+                entropy += distribution[i] * (log(distribution[i])/log(2)); 
+            }
+        }
+        entropy *= -1;
+    }
+    return entropy;
+}
 double CDLib::kl_divergence(const vector<double>& distribution1,const vector<double>& distribution2)
 {
     //        KL-Divergence is not a symmetric fucnction.

@@ -32,7 +32,7 @@ namespace CDLib
         bool is_directed() const;
         bool is_weighted() const;
         void set_graph_name(string gname);
-        string get_graph_name();
+        string get_graph_name() const;
         
         id_type get_num_nodes() const;
         id_type get_num_edges() const;

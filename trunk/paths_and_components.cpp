@@ -68,7 +68,6 @@ double CDLib::single_source_shortest_paths_bfs(const graph& g,id_type source,vec
     q_bfs.push(source);
     distances[source] = 0;
     id_type last_node = source;
-//    int count1 = 0, count2 = 0, count3 = 0;
     while(!q_bfs.empty())
     {
         id_type current  = q_bfs.front();
@@ -78,20 +77,12 @@ double CDLib::single_source_shortest_paths_bfs(const graph& g,id_type source,vec
         {
             if(distances[aeit->first] == numeric_limits<double>::infinity())
             {
-//                if (distances[current] == numeric_limits<double>::infinity())
-//                    cout << "aeit->first = " << aeit->first << "current = " << current << "distances[current] = " << distances[current] << endl;
-//                if (aeit->first == 254)
-//                    cout << "aeit->first = " << aeit->first << endl;
                 distances[aeit->first] = distances[current]+ 1;
-//                preds[aeit->first].push_back(current);
                 q_bfs.push(aeit->first);
-//                count1++;
             }
-//            count2++;
             if(distances[aeit->first] == distances[current]+ 1)
                 preds[aeit->first].push_back(current);
         }
-//        count3++;
     }
     return distances[last_node];
 }
