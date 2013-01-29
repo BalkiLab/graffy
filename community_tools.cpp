@@ -454,6 +454,17 @@ void CDLib::convert_communities_to_labels(vector<node_set>& communities,vector<i
     
 }
 
+void CDLib::reindex_communities(const vector<id_type>& old_comms,vector<id_type>& new_comms){
+    unordered_map<id_type,id_type> labelmap;
+    new_comms.assign(old_comms.size(),0);
+    id_type label_ctr = 0;
+    for(id_type i=0;i<old_comms.size();i++){
+        pair<unordered_map<id_type,id_type>::iterator,bool> ret = labelmap.insert(make_pair(old_comms[i],label_ctr));
+        if(ret.second)label_ctr++;
+        new_comms[i] = ret.first->second;
+    }
+}
+
 bool CDLib::write_partition(const graph& g,const string& filepath,vector<node_set>& communities)
 {
     ofstream ofs(filepath.c_str());
