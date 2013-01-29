@@ -32,6 +32,7 @@
 #include "local_community.h"
 #include "iterators.hpp"
 #include "CSR.hpp"
+#include "bgll.hpp"
 
 
 #endif	/* CDLIB_H */

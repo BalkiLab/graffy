@@ -441,7 +441,7 @@ id_type CDLib::reindex_communities(const vector<id_type>& old_comms,vector<id_ty
     return label_ctr;
 }
 
-void CDLib::convert_labels_to_communities(vector<id_type>& labels,vector<node_set>& communities)
+void CDLib::convert_labels_to_communities(const vector<id_type>& labels,vector<node_set>& communities)
 {
     vector<id_type> newlbls;
     id_type num_comms = reindex_communities(labels,newlbls);
@@ -450,13 +450,13 @@ void CDLib::convert_labels_to_communities(vector<id_type>& labels,vector<node_se
         communities[newlbls[i]].insert(i);
 }
 
-void CDLib::convert_communities_to_labels(vector<node_set>& communities,vector<id_type>& labels)
+void CDLib::convert_communities_to_labels(const vector<node_set>& communities,vector<id_type>& labels)
 {
     id_type num_nodes = 0;
     for(id_type i=0;i<communities.size();i++) num_nodes += communities[i].size();
     labels.assign(num_nodes,0);
     for(id_type i=0;i<communities.size();i++)
-        for(node_set::iterator nit = communities[i].begin();nit!=communities[i].end();nit++)
+        for(node_set::const_iterator nit = communities[i].begin();nit!=communities[i].end();nit++)
             labels[*nit] = i;
 }
 
