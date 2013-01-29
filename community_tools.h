@@ -105,10 +105,10 @@ namespace CDLib
     double nmi(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2);
     double variation_of_information(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2);
     
-    void convert_labels_to_communities(vector<id_type>& labels,vector<node_set>& communities);
+    void convert_labels_to_communities(const vector<id_type>& labels,vector<node_set>& communities);
     bool read_partition(const graph& g,const string& filepath,vector<node_set>& communities);
     
-    void convert_communities_to_labels(vector<node_set>& communities,vector<id_type>& labels);
+    void convert_communities_to_labels(const  vector<node_set>& communities,vector<id_type>& labels);
     
     id_type reindex_communities(const vector<id_type>& old_comms,vector<id_type>& new_comms);
     
