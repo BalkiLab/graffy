@@ -20,6 +20,10 @@ namespace CDLib
         T max_val;
         double mean_val;
         double variance;
+        statistics() {
+            min_val =0;         median_val = 0;         max_val = 0;
+            mean_val = 0;       variance = 0;
+        }
     };
     
     template <typename T1, typename T2>
@@ -71,6 +75,13 @@ namespace CDLib
         statistics<T> stat;
         compute_statistics<T>(vec,stat);
         dist.assign(stat.max_val+1,0);
+        for(id_type i=0;i<vec.size();i++) dist[vec[i]]++;
+    }
+    
+    template <typename T>
+    void get_discrete_distribution_fullvector(const vector<T>& vec,vector<T> & dist)
+    {
+        dist.assign(vec.size(),0);
         for(id_type i=0;i<vec.size();i++) dist[vec[i]]++;
     }
     

@@ -23,14 +23,18 @@ void CDLib::get_degree_histogram(const graph& g,vector<id_type>& dist, bool in_d
     get_discrete_distribution<id_type>(degrees,dist);
 }
 
-void CDLib::get_degree_distribution(const graph& g,vector<double>& dist, bool in_degrees)
+double CDLib::get_degree_distribution(const graph& g,vector<double>& dist, bool in_degrees)
 {
     vector<id_type> degree_hist;
     dist.clear();
+    double expectation = 0;
     get_degree_histogram(g,degree_hist,in_degrees);
     dist.assign(degree_hist.size(),0);
-    for (id_type i=0; i<degree_hist.size(); i++)
+    for (id_type i=0; i<degree_hist.size(); i++) {
         dist[i] = (double)degree_hist[i]/(double)g.get_num_nodes();
+        expectation += i * dist[i];
+    }
+    return expectation;
 }
 
 double CDLib::get_degree_variance(const graph& g,bool in_degrees)
@@ -44,49 +48,91 @@ double CDLib::get_degree_variance(const graph& g,bool in_degrees)
 
 void CDLib::get_degree_assortativity_coefficient(const graph& g,bool in_degrees,vector<double>& assortativity)
 {
-/* Gives the assortativity contributions of each degree sequence */    
+/* Gives the assortativity contributions from each node */    
+/* The calculation is based on Classifying Complex Networks using Unbiased Local Assortativity, 2010 paper by Piraveenan et al. */        
     assortativity.clear();
-    if (g.get_num_nodes() <= 0)
-        return;
-    vector<id_type> degrees;
-    get_degree_sequence(g,degrees,in_degrees);
-    statistics<id_type> stat;
-    compute_statistics<id_type>(degrees,stat);
-    assortativity.assign(stat.max_val+1,0.0);
-    double max_assortative_cov = 0;
-    id_type edge_factor = 2 * g.get_num_edges();    
-    for(id_type i=0;i<g.get_num_nodes();i++) {
-        double local_reduce = 0;
-#pragma omp parallel for schedule(dynamic,10) shared(g,degrees,edge_factor) reduction(+:local_reduce,max_assortative_cov)         
-        for(id_type j=0;j<g.get_num_nodes();j++) {
-            double deg_prod = degrees[i] * degrees[j];
-            local_reduce += (g.get_edge_weight(i,j) - (deg_prod/edge_factor)) * deg_prod;
-            max_assortative_cov += ((degrees[i] * kronecker_delta(degrees[i],degrees[j])) - (deg_prod/edge_factor)) * deg_prod;
-        }
-        assortativity[degrees[i]] = local_reduce;
+    vector<double> degree_distt;
+    double mean = get_degree_distribution(g,degree_distt,in_degrees);
+    vector<double> excess_degree_distt(degree_distt.size()-1,0);
+    double edd_mean = 0,edd_variance = 0;
+    for (id_type i=0;i<excess_degree_distt.size();i++) {
+        excess_degree_distt[i] = ((i+1) * degree_distt[i+1])/mean;
+        double imean = i*excess_degree_distt[i];
+        edd_mean += imean;
+        edd_variance += i*imean;
     }
-    for(id_type i=0;i<assortativity.size();i++) {
-        assortativity[i] /= max_assortative_cov;
+    edd_variance -= (edd_mean*edd_mean);
+    if (edd_variance == 0) {        
+        assortativity.assign(g.get_num_nodes(),(1/g.get_num_nodes()));
+        return;
+    }
+    else {      
+        assortativity.assign(g.get_num_nodes(),0);    
+    }
+    id_type edge_factor = 2 * g.get_num_edges();
+#pragma omp parallel for schedule(dynamic,20) shared(g,assortativity)        
+    for(id_type i=0;i<g.get_num_nodes();i++) {
+        double avg_excess_degree_neighbour = 0;
+        if (in_degrees) {
+            for(adjacent_edges_iterator aeit = g.in_edges_begin(i);aeit != g.in_edges_end(i);aeit++) {
+                avg_excess_degree_neighbour += g.get_node_in_degree(aeit->first);
+            }
+            avg_excess_degree_neighbour = (avg_excess_degree_neighbour/g.get_node_in_degree(i))-1;
+            assortativity[i] = ((g.get_node_in_degree(i) - 1) * g.get_node_in_degree(i) * (avg_excess_degree_neighbour - edd_mean))/(edd_variance * edge_factor);
+        }
+        else {
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++) {
+                avg_excess_degree_neighbour += g.get_node_out_degree(aeit->first);
+            }
+            avg_excess_degree_neighbour = (avg_excess_degree_neighbour/g.get_node_out_degree(i))-1;
+            assortativity[i] = ((g.get_node_out_degree(i) - 1) * g.get_node_out_degree(i) * (avg_excess_degree_neighbour - edd_mean))/(edd_variance * edge_factor);
+        }
     }
 }
 
 double CDLib::get_degree_assortativity_coefficient(const graph& g,bool in_degrees)
 {
+/* The calculation is based on Assortative Mixing in Networks, 2002 paper by MEJ Newman */        
     if (g.get_num_nodes() <= 0)
         return 0;
-    vector<id_type> degrees;
-    get_degree_sequence(g,degrees,in_degrees);
-    double assortative_cov = 0,max_assortative_cov = 0;
     id_type edge_factor = 2 * g.get_num_edges();
-#pragma omp parallel for schedule(dynamic,10) shared(g,degrees,edge_factor) reduction(+:assortative_cov,max_assortative_cov)     
+    double sum=0,prod_sum=0,square_sum=0;
+#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:sum,prod_sum,square_sum)        
     for(id_type i=0;i<g.get_num_nodes();i++) {
-        for(id_type j=0;j<g.get_num_nodes();j++) {
-            double deg_prod = degrees[i] * degrees[j];
-            assortative_cov += (g.get_edge_weight(i,j) - (deg_prod/edge_factor)) * deg_prod;
-            max_assortative_cov += ((degrees[i] * kronecker_delta(degrees[i],degrees[j])) - (deg_prod/edge_factor)) * deg_prod;
+        if (in_degrees) {
+            for(adjacent_edges_iterator aeit = g.in_edges_begin(i);aeit != g.in_edges_end(i);aeit++) {
+                sum += g.get_node_in_degree(i) + g.get_node_in_degree(aeit->first);
+                prod_sum += g.get_node_in_degree(i) * g.get_node_in_degree(aeit->first);
+                square_sum += pow(g.get_node_in_degree(i),2) + pow(g.get_node_in_degree(aeit->first),2);
+            }
+        }
+        else {
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++) {
+                sum += g.get_node_out_degree(i) + g.get_node_out_degree(aeit->first);
+                prod_sum += g.get_node_out_degree(i) * g.get_node_out_degree(aeit->first);
+                square_sum += pow(g.get_node_out_degree(i),2) + pow(g.get_node_out_degree(aeit->first),2);
+            }
         }
     }
-    return (assortative_cov/max_assortative_cov);
+    sum /= edge_factor;             square_sum /= edge_factor;      prod_sum /= g.get_num_edges();
+    double tmp_sq = sum * sum;
+    return (prod_sum - tmp_sq)/(square_sum - tmp_sq);
+}
+
+double CDLib::get_rich_club_coefficient(const graph& g,id_type hub_degree_def)
+{
+/* This implementation is accordance to Detecting rich-club ordering in complex networks, 2006 paper by Colizza et al. */    
+    id_type num_rich_nodes = 0, num_rich_edges = 0;
+#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)         
+    for(id_type i=0;i<g.get_num_nodes();i++) {
+        if (g.get_node_out_degree(i) > hub_degree_def) {
+            num_rich_nodes++;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++) {
+                if (g.get_node_out_degree(aeit->first) > hub_degree_def) num_rich_edges++;
+            }
+        }   
+    }
+    return (double)(2 * num_rich_edges)/(num_rich_nodes * (num_rich_nodes-1));
 }
 
 double CDLib::kl_divergence_from_random_graph(const graph& g)
