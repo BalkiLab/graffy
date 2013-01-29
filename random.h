@@ -182,8 +182,8 @@ namespace CDLib {
         RandomGenerator<size_t> rgl_size;
         RandomGenerator<char> rgc_char;
     public:
-        RandomStringGenerator() : rgl_size(1,2,1), rgc_char('a','z'+1,(bool)1) { }
-        RandomStringGenerator(size_t min_size,size_t max_size,char start_char, char end_char)  : rgl_size(min_size,max_size,1), rgc_char(start_char,end_char+1,1) { }
+        RandomStringGenerator() : rgl_size(1,2,1), rgc_char('a','z'+1,(bool)0) { }
+        RandomStringGenerator(size_t min_size,size_t max_size,char start_char, char end_char)  : rgl_size(min_size,max_size,0), rgc_char(start_char,end_char+1,0) { }
         void next(string& outStr)
         {
             size_t length = rgl_size.next();
