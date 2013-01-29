@@ -429,17 +429,7 @@ double CDLib::variation_of_information(id_type num_nodes,vector<node_set>& comms
     return -(num1 + num2);
 }
 
-void CDLib::convert_labels_to_communities(vector<id_type>& labels,vector<node_set>& communities)
-{
-    communities.clear();
-    unordered_map<id_type,node_set> seen;
-    for(id_type i=0;i<labels.size();i++)
-    {
-        pair<unordered_map<id_type,node_set>::iterator,bool> ret = seen.insert(make_pair(labels[i],node_set()));
-        ret.first->second.insert(i);
-    }
-    for(unordered_map<id_type,node_set>::iterator it = seen.begin(); it!= seen.end(); it++) communities.push_back(it->second);
-}
+
 
 void CDLib::convert_communities_to_labels(vector<node_set>& communities,vector<id_type>& labels)
 {
@@ -454,7 +444,7 @@ void CDLib::convert_communities_to_labels(vector<node_set>& communities,vector<i
     
 }
 
-void CDLib::reindex_communities(const vector<id_type>& old_comms,vector<id_type>& new_comms){
+id_type CDLib::reindex_communities(const vector<id_type>& old_comms,vector<id_type>& new_comms){
     unordered_map<id_type,id_type> labelmap;
     new_comms.assign(old_comms.size(),0);
     id_type label_ctr = 0;
@@ -463,6 +453,16 @@ void CDLib::reindex_communities(const vector<id_type>& old_comms,vector<id_type>
         if(ret.second)label_ctr++;
         new_comms[i] = ret.first->second;
     }
+    return label_ctr;
+}
+
+void CDLib::convert_labels_to_communities(vector<id_type>& labels,vector<node_set>& communities)
+{
+    vector<id_type> newlbls;
+    id_type num_comms = reindex_communities(labels,newlbls);
+    communities.assign(num_comms,node_set());
+    for(id_type i=0;i<newlbls.size();i++)
+        communities[newlbls[i]].insert(i);
 }
 
 bool CDLib::write_partition(const graph& g,const string& filepath,vector<node_set>& communities)

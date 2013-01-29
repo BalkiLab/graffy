@@ -110,7 +110,7 @@ namespace CDLib
     
     void convert_communities_to_labels(vector<node_set>& communities,vector<id_type>& labels);
     
-    void reindex_communities(const vector<id_type>& old_comms,vector<id_type>& new_comms);
+    id_type reindex_communities(const vector<id_type>& old_comms,vector<id_type>& new_comms);
     
     bool write_partition(const graph& g,const string& filepath,vector<node_set>& communities);
     bool write_partition_unlabelled(const graph& g,const string& filepath,vector<node_set>& communities);
