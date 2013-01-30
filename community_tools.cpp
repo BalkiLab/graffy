@@ -441,13 +441,24 @@ id_type CDLib::reindex_communities(const vector<id_type>& old_comms,vector<id_ty
     return label_ctr;
 }
 
+id_type CDLib::reindex_communities(vector<id_type>& labels){
+    unordered_map<id_type,id_type> labelmap;
+    id_type label_ctr = 0;
+    for(id_type i=0;i<labels.size();i++){
+        pair<unordered_map<id_type,id_type>::iterator,bool> ret = labelmap.insert(make_pair(labels[i],label_ctr));
+        if(ret.second)label_ctr++;
+        labels[i] = ret.first->second;
+    }
+    return label_ctr;
+}
+
 void CDLib::convert_labels_to_communities(const vector<id_type>& labels,vector<node_set>& communities)
 {
-    vector<id_type> newlbls;
-    id_type num_comms = reindex_communities(labels,newlbls);
+    vector<id_type> temp_comms;
+    id_type num_comms = reindex_communities(labels,temp_comms);
     communities.assign(num_comms,node_set());
-    for(id_type i=0;i<newlbls.size();i++)
-        communities[newlbls[i]].insert(i);
+    for(id_type i=0;i<temp_comms.size();i++)
+        communities[temp_comms[i]].insert(i);
 }
 
 void CDLib::convert_communities_to_labels(const vector<node_set>& communities,vector<id_type>& labels)
