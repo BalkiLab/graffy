@@ -26,13 +26,10 @@
 #include "graph_summary.h"
 #include "centrality.h"
 #include "divisive_algorithms.h"
-#include "label_propagation.h"
-#include "dynamic_communities.h"
 #include "graph_properties.h"
-#include "local_community.h"
+#include "community.h"
 #include "iterators.hpp"
 #include "CSR.hpp"
-#include "bgll.hpp"
 
 
 #endif	/* CDLIB_H */
