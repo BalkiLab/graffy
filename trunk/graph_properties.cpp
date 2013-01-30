@@ -149,11 +149,18 @@ double CDLib::distance_from_random_graph(const graph& g, bool hellinger)
 {
 //    If bool is set, it return Hellinger Distance of the Degree Distribution from Random Graph of same size,
 //    else it returns Bhattacharyya Distance of the Degree Distribution.
-    graph er_graph(0,0);
-    generate_erdos_renyi_graph(er_graph, g.get_num_nodes(),g.get_num_edges());
     vector<double> distt1, distt2;
+    double lambda = (2 * g.get_num_edges())/g.get_num_nodes();
+    id_type degree = 0;
+    double probability = exp(-1*lambda);
+    double factorial = 1;
+    while (((probability != HUGE_VAL) || (probability != -HUGE_VAL)) && ((degree < lambda) || (probability > 0.001))) {
+        distt2.push_back(probability);
+        degree++;
+        factorial *= degree;
+        probability = (pow(lambda,degree) * exp(-1*lambda))/factorial;
+    }
     get_degree_distribution(g,distt1,0);
-    get_degree_distribution(er_graph,distt2,0);
     if (hellinger)
         return hellinger_distance(distt1,distt2);
     else
