@@ -2170,32 +2170,6 @@ void bgll_collapse_nodes(graph& orig_graph, vector<id_type>& labels) {
         labels[i] = i;
 }
 
-void CDLib::cda_bgll_generic(const graph&g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, bgll_objective& book) {
-    hier_comms.clear();
-    //Initialize the initial_partition
-    vector<id_type> curr_comms(g.get_num_nodes(), 0);
-    if (init_comms.size() == g.get_num_nodes()) copy(init_comms.begin(), init_comms.end(), curr_comms.begin());
-    else for (id_type i = 0; i < g.get_num_nodes(); i++) curr_comms[i] = i;
-    hier_comms.push_back(curr_comms);
-    //Create a copy of the graph
-    graph curr_graph(g);
-    curr_graph.convert_to_weighted();
-    double orig_obj_val = book.objval(curr_graph, curr_comms);
-    //The Main Loop
-    while (1) {
-        id_type curr_graph_size = curr_graph.get_num_nodes();
-        //Initialize the book for the new level
-        book.init(g, hier_comms, curr_graph, curr_comms);
-        //Run the vertex mover optimization
-        double new_obj_val = bgll_vertex_mover_optimizer(curr_graph, curr_comms, book);
-        //Reindex the community memberships
-        bgll_recover_communities(curr_comms, hier_comms);
-        //Shrink the graph
-        bgll_collapse_nodes(curr_graph, curr_comms);
-        if (curr_graph.get_num_nodes() == curr_graph_size || new_obj_val < orig_obj_val) break;
-    }
-}
-
 class bgll_modularity : public bgll_objective {
 private:
     unordered_map<id_type, double> internal_weight;
@@ -2287,6 +2261,32 @@ public:
         }
     }
 };
+
+void CDLib::cda_bgll_generic(const graph&g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, bgll_objective& book) {
+    hier_comms.clear();
+    //Initialize the initial_partition
+    vector<id_type> curr_comms(g.get_num_nodes(), 0);
+    if (init_comms.size() == g.get_num_nodes()) copy(init_comms.begin(), init_comms.end(), curr_comms.begin());
+    else for (id_type i = 0; i < g.get_num_nodes(); i++) curr_comms[i] = i;
+    hier_comms.push_back(curr_comms);
+    //Create a copy of the graph
+    graph curr_graph(g);
+    curr_graph.convert_to_weighted();
+    double orig_obj_val = book.objval(curr_graph, curr_comms);
+    //The Main Loop
+    while (1) {
+        id_type curr_graph_size = curr_graph.get_num_nodes();
+        //Initialize the book for the new level
+        book.init(g, hier_comms, curr_graph, curr_comms);
+        //Run the vertex mover optimization
+        double new_obj_val = bgll_vertex_mover_optimizer(curr_graph, curr_comms, book);
+        //Reindex the community memberships
+        bgll_recover_communities(curr_comms, hier_comms);
+        //Shrink the graph
+        bgll_collapse_nodes(curr_graph, curr_comms);
+        if (curr_graph.get_num_nodes() == curr_graph_size || new_obj_val < orig_obj_val) break;
+    }
+}
 
 void CDLib::cda_bgll_modularity(const graph& g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param) {
     bgll_modularity book(resolution_param);
