@@ -49,6 +49,7 @@ namespace CDLib {
                 num_nodes_moved++;
                 //Insert node into new community
                 book.attach_node(curr_graph, labels, i, new_node_community);
+                //cout << "Moved " << i << " From " << labels[i] << " to " << new_node_community << endl;
                 labels[i] = new_node_community;
             }
         }
@@ -60,8 +61,8 @@ namespace CDLib {
         id_type num_nodes_moved = 0;
         do {
             vector<id_type> temp_comms(labels);
-            curr_objval = book.objval(g, temp_comms);
             num_nodes_moved += bgll_vertex_mover_single_pass(g, temp_comms, book);
+            curr_objval = book.objval(g, temp_comms);
             //Rollback communities and exit if modularity decreases
             if (curr_objval < start_obj_val) return start_obj_val;
             //Commit changes, book should have already been updated
@@ -72,31 +73,30 @@ namespace CDLib {
 
     void bgll_recover_communities(vector<id_type>& labels, vector< vector<id_type> >& hier_comms) {
         vector<node_set> last_comms;
-        convert_labels_to_communities(hier_comms.back(), last_comms);
+        convert_labels_to_communities(hier_comms[hier_comms.size() - 1], last_comms);
         reindex_communities(labels);
-        hier_comms.push_back(vector<id_type > (hier_comms.back().size(), 0));
-        for(id_type i=0;i<labels.size();i++){
-            for(node_set::iterator nit=last_comms[i].begin();nit!=last_comms[i].end();nit++){
-                hier_comms[hier_comms.size()-2][*nit] = labels[i];
+        hier_comms.push_back(vector<id_type > (hier_comms[hier_comms.size() - 1].size(), 0));
+        for (id_type i = 0; i < labels.size(); i++) {
+            for (node_set::iterator nit = last_comms[i].begin(); nit != last_comms[i].end(); nit++) {
+                hier_comms[hier_comms.size() - 1][*nit] = labels[i];
             }
         }
     }
 
     void bgll_collapse_nodes(graph& orig_graph, vector<id_type>& labels) {
-        graph g(0,1);
+        graph g(0, 1);
         for (id_type i = 0; i < labels.size(); i++)
             while (g.get_num_nodes() <= labels[i]) g.add_node();
         for (id_type i = 0; i < orig_graph.get_num_nodes(); i++) {
             id_type node_comm = labels[i];
             for (adjacent_edges_iterator aeit = orig_graph.out_edges_begin(i); aeit != orig_graph.out_edges_end(i); aeit++) {
                 id_type neigh_comm = labels[aeit->first];
-                double new_edge_weight = g.get_edge_weight(node_comm, neigh_comm) + (aeit->second/2);
-                g.set_edge_weight(node_comm, neigh_comm,new_edge_weight);
+                double new_edge_weight = g.get_edge_weight(node_comm, neigh_comm) + ((node_comm != neigh_comm) ? (aeit->second / 2) : aeit->second);
+                g.set_edge_weight(node_comm, neigh_comm, new_edge_weight);
             }
         }
-        cout <<orig_graph.get_num_nodes() << " " << orig_graph.get_total_weight() << " " << g.get_num_nodes() << " "<< g.get_total_weight() <<endl;
         orig_graph.clear();
-        copy_graph(g,orig_graph);
+        copy_graph(g, orig_graph);
         labels.assign(orig_graph.get_num_nodes(), 0);
         for (id_type i = 0; i < orig_graph.get_num_nodes(); i++)
             labels[i] = i;
@@ -136,9 +136,18 @@ namespace CDLib {
         double resolution_param;
         double self_weight;
     public:
-        bgll_modularity () :resolution_param(1) {} 
-        bgll_modularity(double resolution_p) : resolution_param(resolution_p){ }
+
+        bgll_modularity() : resolution_param(1) {
+        }
+
+        bgll_modularity(double resolution_p) : resolution_param(resolution_p) {
+        }
+
         virtual void init(const graph& orig_graph, const vector<vector<id_type> >& hiercomms, const graph& curr_graph, const vector<id_type>& curr_comms) {
+            internal_weight.clear();
+            total_weight.clear();
+            node_link_weights.clear();
+            self_weight = 0;
             for (id_type i = 0; i < curr_graph.get_num_nodes(); i++) {
                 id_type node_comm = curr_comms[i];
                 for (adjacent_edges_iterator aeit = curr_graph.out_edges_begin(i); aeit != curr_graph.out_edges_end(i); aeit++) {
@@ -146,10 +155,12 @@ namespace CDLib {
                     if (node_comm == neigh_comm) {
                         pair < unordered_map<id_type, double>::iterator, bool> ret = internal_weight.insert(make_pair(node_comm, 0));
                         ret.first->second += aeit->second;
+                        //cout << "Updated Internal Weights" << node_comm << " Added " << aeit->second << endl;
                     }
                 }
-                pair < unordered_map<id_type, double>::iterator, bool> ret = internal_weight.insert(make_pair(node_comm, 0));
+                pair < unordered_map<id_type, double>::iterator, bool> ret = total_weight.insert(make_pair(node_comm, 0));
                 ret.first->second += curr_graph.get_node_out_weight(i);
+                //cout << "Updated Total Weights " << node_comm << " Added " << curr_graph.get_node_out_weight(i) << endl;
             }
         }
 
@@ -159,17 +170,19 @@ namespace CDLib {
                 double int_weight = 0;
                 unordered_map<id_type, double>::const_iterator cit = internal_weight.find(it->first);
                 if (cit != internal_weight.end()) int_weight = cit->second;
-                modularity += ((resolution_param * int_weight) - pow(it->second / (2 * curr_graph.get_total_weight()), 2));
+                modularity += (((resolution_param * int_weight) / (2 * curr_graph.get_total_weight())) - pow(it->second / (2 * curr_graph.get_total_weight()), 2));
             }
+            //cout << modularity << endl;
             return modularity;
         }
 
         virtual double compute_gain(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) const {
             unordered_map<id_type, double>::const_iterator it = node_link_weights.find(dst_comm);
             double gain = 0;
-            if (it != node_link_weights.end())gain += resolution_param * 2 * it->second;
+            if (it != node_link_weights.end())gain += (resolution_param * 2 * it->second);
             it = total_weight.find(dst_comm);
             if (it != total_weight.end()) gain -= ((curr_graph.get_node_out_weight(vertex) * it->second) / curr_graph.get_total_weight());
+            //cout << gain << endl;
             return gain;
         }
 
@@ -181,24 +194,28 @@ namespace CDLib {
                 if (labels[aeit->first] != labels[vertex]) {
                     pair < unordered_map<id_type, double>::iterator, bool> ret = node_link_weights.insert(make_pair(labels[aeit->first], 0));
                     ret.first->second += aeit->second;
+                    //cout << "Updated Node Link Weights" << labels[aeit->first] << " Added " << aeit->second << endl;
                 } else if (vertex != aeit->first) {
                     weight_inside += aeit->second;
                 } else self_weight = aeit->second;
             }
             unordered_map<id_type, double>::iterator it1 = total_weight.find(labels[vertex]), it2 = internal_weight.find(labels[vertex]);
-            if (it1 != total_weight.end() && it2 != total_weight.end()) {
-                it1->second -= curr_graph.get_node_out_weight(vertex);
-                it2->second -= (2 * weight_inside + self_weight);
-            }
+            if (it1 != total_weight.end()) it1->second -= curr_graph.get_node_out_weight(vertex);
+            if (it2 != internal_weight.end()) it2->second -= (2 * weight_inside + self_weight);
+            //if (it1 != total_weight.end()) cout << "Sub " << (2 * weight_inside + self_weight) << " From Weight Inside" << endl;
+            //if (it2 != internal_weight.end()) cout << "Sub " << curr_graph.get_node_out_weight(vertex) << " From Total Weight" << endl;
         }
 
         virtual void attach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) {
             if (labels[vertex] != dst_comm) {
                 unordered_map<id_type, double>::iterator it1 = total_weight.find(dst_comm), it2 = internal_weight.find(dst_comm), it3 = node_link_weights.find(dst_comm);
-                if (it1 != total_weight.end() && it2 != total_weight.end() && it3 != node_link_weights.end()) {
-                    it1->second += curr_graph.get_node_out_weight(vertex);
-                    it2->second += (2 * it3->second + self_weight);
-                }
+                it1->second += curr_graph.get_node_out_weight(vertex);
+                double int_wt = self_weight;
+                if (it3 != node_link_weights.end()) int_wt += (2 * it3->second);
+                if (it2 != internal_weight.end()) it2->second += int_wt;
+                else internal_weight.insert(make_pair(dst_comm, int_wt));
+                //cout << "Add " << (2 * it3->second + self_weight) << " From Weight Inside" << endl;
+                //cout << "Add " << curr_graph.get_node_out_weight(vertex) << " From Total Weight" << endl;
             }
         }
     };
