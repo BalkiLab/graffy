@@ -1,20 +1,33 @@
 /* 
- * File:   label_propagation.h
+ * File:   community.h
  * Author: bharath
  *
- * Created on 3 May, 2012, 9:31 AM
+ * Created on 31 January, 2013, 12:24 AM
  */
 
-#ifndef LABEL_PROPAGATION_H
-#define	LABEL_PROPAGATION_H
+#ifndef COMMUNITY_H
+#define	COMMUNITY_H
 
 #include "graph.h"
 #include "community_tools.h"
+#include "graphio.h"
 #include "graph_operations.h"
-using namespace std;
+#include "iterators.hpp"
+#include "CSR.hpp"
+#include "profiler.h"
 
-namespace CDLib
-{
+namespace CDLib {
+
+    bool local_community_clauset(const graph& g, id_type src,size_t k,node_set& output);
+    bool local_community_clauset_modified(const graph& g, id_type src, size_t k, node_set& output);
+    bool LWP_2006(const graph& g, id_type src, node_set& output);
+    void VD_2011(const graph& g, id_type src, node_set& output);
+    bool Bagrow_2007(const graph& g, id_type src, node_set& output);
+    bool My_Algorithm(const graph& g, id_type src, node_set& output);
+    bool CZR(const graph& g, id_type src, node_set& output);
+    bool CZR_Beta(const graph& g, id_type src, node_set& output);
+    
+    
     typedef vector<id_type> max_lplabel_container;
     typedef unordered_map<id_type,double> lplabel_fitness_container;
     class lp_raghavan_2007
@@ -278,8 +291,94 @@ namespace CDLib
     id_type label_propagation_olpa_2010(const graph& g, vector<id_type>&  labels,id_type max_iters,bool synchronous,double hop_att_max);
     id_type label_propagation_dlpa_2010(const graph& g, vector<id_type>&  labels,id_type max_iters,bool synchronous,double hop_att_max);
     id_type label_propagation_track_changes_2012(const graph& g, vector<id_type>&  labels,id_type max_iters,bool synchronous);
-   
-};
+    
+      class evol_label_prop_new : public lp_track_changes
+    {
+    protected:
+        double alpha;
+        id_type num_iters_last;
+        const vector<id_type>::iterator last_num_changes_it;
+        virtual double get_label_fitness_for_edge(const graph& g, id_type from_id, id_type to_id,double edge_weight)
+        {
+            double history_fraction = 1.0-((*(last_num_changes_it + to_id))/num_iters_last);
+            double snapshot_fraction = 1.0 - ((double)num_lplabel_changes[to_id]/(double)(num_iters_current+1));
+            return (alpha*history_fraction + (1-alpha)*snapshot_fraction)*edge_weight;
+        }
+    public:
+        evol_label_prop_new(const graph& g,bool synchronous_val,double alpha,id_type num_iters_last_val, vector<id_type>::iterator last_num_changes_begin) : lp_track_changes(g,synchronous_val),num_iters_last(num_iters_last_val),last_num_changes_it(last_num_changes_begin) {}
+    };
+    
+    class evolutionary_label_propagation : public lp_dyn_hop_att
+    {
+    protected:
+        bool activate_history_cost;
+        bool copy_labels;
+        double alpha;
+        id_type num_iters_last;
+        id_type num_iters_current;
+        vector<id_type> last_num_lplabel_changes;
+        evolutionary_label_propagation();
+        virtual void post_iteration(const graph& g, id_type num_iters)
+        {
+            lp_dyn_hop_att::post_iteration(g,num_iters);
+            num_iters_current = num_iters+1;
+        }
+        virtual double get_label_fitness_for_edge(const graph& g, id_type from_id, id_type to_id,double edge_weight)
+        {
+            if(activate_history_cost)
+            {
+                double history_fraction = 1.0-(last_num_lplabel_changes[to_id]/num_iters_last);
+                double snapshot_fraction = 1.0 - ((double)num_lplabel_changes[to_id]/(double)(num_iters_current+1));
+                return (alpha*history_fraction + (1-alpha)*snapshot_fraction)*edge_weight;
+            }
+            else return edge_weight;
+        }
+    public:
+        evolutionary_label_propagation(const graph& g,bool synchronous_val,bool activate_history_cost_val,bool copy_labels_vals,double alpha_val,id_type num_iters_last_val,vector<id_type>& last_num_lplabel_changes_vec,vector<id_type>& last_labels_vec) 
+            : lp_dyn_hop_att(g,synchronous_val,0),
+            activate_history_cost(activate_history_cost_val),
+            copy_labels(copy_labels_vals),
+            alpha(alpha_val),
+            num_iters_last(num_iters_last_val),
+            num_iters_current(0),
+            last_num_lplabel_changes(last_num_lplabel_changes_vec)
+            {
+                if(copy_labels)copy(last_labels_vec.begin(),last_labels_vec.end(),lplabels.begin());
+            }
+    };
+    
+    struct dynamic_lp_input
+    {
+        bool activate;
+        bool copy_labels;
+        double alpha;
+        dynamic_lp_input(bool activate_val,bool copy_labels_val,double alpha_val) : activate(activate_val),copy_labels(copy_labels_val), alpha(alpha_val) {}
+    };
+    
+    struct dynamic_lp_output
+    {
+       vector<graph> graphs;
+       vector< vector<id_type> > lp_labels;
+       vector<id_type> lp_iters;
+       vector<double> lp_times;
+       vector<double> book_times;
+       vector< vector<id_type> > lp_num_label_changes;
+    };
+    
+    double evolutionary_label_propagation_edgelists(const string& snapshot_filepath,bool directed, bool weighted,dynamic_lp_input& input, dynamic_lp_output& output);
+    void new_evolutionary_label_propagation_edgelists(const string& snapshot_filepath,bool directed, bool weighted,double alpha,bool basic, dynamic_lp_output& output);
+    
+    class bgll_objective {
+    public:
+        virtual void init(const graph& orig_graph, const vector<vector<id_type> >& hiercomms, const graph& curr_graph, const vector<id_type>& curr_comms) = 0;
+        virtual double objval(const graph& curr_graph, const vector<id_type>& curr_comms) const = 0;
+        virtual double compute_gain(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) const = 0;
+        virtual void detach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex) = 0;
+        virtual void attach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) = 0;
+    };
+    void cda_bgll_generic(const graph&g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, bgll_objective& book);
+    void cda_bgll_modularity(const graph& g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param);
+}
 
-#endif	/* LABEL_PROPAGATION_H */
+#endif	/* COMMUNITY_H */
 

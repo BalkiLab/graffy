@@ -1,15 +1,9 @@
-/* 
- * File:   local_community.cpp
- * Author: prashant
- * 
- * Created on June 16, 2012, 12:09 PM
- */
+#include "community.h"
 
-#include "local_community.h"
-//#include "utitlity.h"
-#include "utility.h"
-
+using namespace std;
 using namespace CDLib;
+
+
 
 /*
  * Implements Aaron Clauset, "Finding Local Community Structure in Networks" 2005
@@ -1691,4 +1685,610 @@ bool CDLib::CZR_Beta(const graph& g, id_type src, node_set& output)
     else
         return 0; //comm not found/doesn't exist
     
+}
+
+
+id_type CDLib::label_propagation_run(const graph&g,vector<id_type>& communities,id_type max_iters,lp_raghavan_2007* algoman)
+{
+    id_type num_iters=0;
+    for(num_iters=0;num_iters<max_iters;num_iters++)
+        if(algoman->do_iteration(g,num_iters)) break;
+    algoman->finalize(g,num_iters,communities);
+    return num_iters;
+}
+
+bool lp_raghavan_2007::is_node_lplabel_fixed(id_type node_id) const
+{
+    if(node_id > ids.size()) return false;
+    else return (nodes_with_fixed_lplabels.find(node_id) != nodes_with_fixed_lplabels.end());
+}
+
+bool lp_raghavan_2007::fix_node_lplabel(id_type node_id)
+{
+    if(node_id > ids.size()) return false;
+    nodes_with_fixed_lplabels.insert(node_id);
+    return true;
+}
+
+bool lp_raghavan_2007::free_node_lplabel(id_type node_id)
+{
+    if(node_id > ids.size()) return false;
+    nodes_with_fixed_lplabels.erase(node_id);
+    return true;
+}
+
+bool lp_raghavan_2007::set_node_lplabel(id_type node_id,id_type lplabel)
+{
+    if(node_id > lplabels.size() && lplabel < lplabels.size() && is_node_lplabel_fixed(node_id)) return false;
+    lplabels[node_id] = lplabel;
+    return true;
+}
+
+id_type lp_raghavan_2007::get_node_lplabel(id_type node_id) const
+{
+    if(node_id > lplabels.size()) return lplabels.size();
+    return lplabels[node_id];
+}
+
+void lp_raghavan_2007::post_node_assign(const graph& g, id_type current,id_type new_label,id_type num_iters, max_lplabel_container& max_labels) {}
+
+void lp_raghavan_2007::post_iteration(const graph& g, id_type num_iters) {}
+
+lp_raghavan_2007::lp_raghavan_2007(const graph& g,bool synchronous_val)
+{
+    synchronous = synchronous_val;
+    ids.assign(g.get_num_nodes(),0);
+    positions.assign(g.get_num_nodes(),0);
+    lplabels.assign(g.get_num_nodes(),0);
+    if(synchronous)lpnextlabels.assign(g.get_num_nodes(),0);
+    for(id_type i=0;i<g.get_num_nodes();i++)
+    {
+        ids[i] = i;
+        positions[i] = i;
+        lplabels[i] = i;
+        if(synchronous)lpnextlabels[i] = i;
+    }
+}
+
+void lp_raghavan_2007::finalize(const graph& g,id_type num_iters,vector<id_type>& communities)
+{
+    communities.assign(g.get_num_nodes(),0);
+    copy(lplabels.begin(),lplabels.end(),communities.begin());
+}
+
+
+bool lf_comp(const pair<id_type,double>& lhs,const pair<id_type,double>& rhs) { return lhs.second<rhs.second; }
+
+void lp_raghavan_2007::get_max_lplabels(const graph& g,id_type current_node,max_lplabel_container& max_labels)
+{
+    lplabel_fitness_container lplabel_fitness_values;
+    for(adjacent_edges_iterator aeit = g.in_edges_begin(current_node); aeit != g.in_edges_end(current_node); aeit++)
+    {           
+        double fitness_value = get_node_score(g,aeit->first)*get_label_fitness_for_edge(g,current_node,aeit->first,aeit->second);
+        pair<lplabel_fitness_container::iterator,bool> ret = lplabel_fitness_values.insert(make_pair(lplabels[aeit->first],fitness_value));
+        if(!ret.second) ret.first->second+= fitness_value;
+    }
+    lplabel_fitness_container::iterator mit = max_element(lplabel_fitness_values.begin(),lplabel_fitness_values.end(),lf_comp);
+    double max_val = mit->second;
+    while(mit != lplabel_fitness_values.end() && mit->second == max_val)
+    {
+        max_labels.push_back(mit->first);
+        lplabel_fitness_values.erase(mit->first);
+        mit = max_element(lplabel_fitness_values.begin(),lplabel_fitness_values.end(),lf_comp);
+    }
+}
+
+bool lp_raghavan_2007::check_lplabels(const graph& g)
+{
+    for(id_type i=0; i<g.get_num_nodes(); i++)
+    {
+        vector<id_type> max_labels;
+        get_max_lplabels(g,i,max_labels);
+        if(find(max_labels.begin(),max_labels.end(),lplabels[i]) == max_labels.end())
+            return false;
+    }
+    return true;
+}
+
+id_type lp_raghavan_2007::new_label_break_ties_randomly(const graph& g,id_type current_node,max_lplabel_container& max_labels)
+{
+   get_max_lplabels(g,current_node,max_labels);
+   if(max_labels.empty()) return lplabels[current_node];
+   CDLib::RandomGenerator<id_type> rnd_gen(0,max_labels.size()-1);
+   return max_labels[rnd_gen.next()];
+}
+
+bool lp_raghavan_2007::do_iteration(const graph& g,id_type num_iters)
+{
+    for(vector<id_type>::iterator it=ids.begin(); it != ids.end();it++)
+    {
+        reorder(g,num_iters);
+        max_lplabel_container max_labels;
+        id_type new_label = new_label_break_ties_randomly(g,*it,max_labels);
+        post_node_assign(g,*it,new_label,num_iters,max_labels);
+        if(synchronous) lpnextlabels[*it] = new_label;
+        else lplabels[*it] = new_label;
+    }
+    if(synchronous)
+        for(id_type i=0;i<g.get_num_nodes();i++)
+            lplabels[i] = lpnextlabels[i];
+    post_iteration(g,num_iters);
+    return check_lplabels(g);
+}
+
+void lp_raghavan_2007::reorder(const graph& g,id_type num_iters)
+{
+    random_shuffle(ids.begin(),ids.end());
+    for(vector<id_type>::iterator it=ids.begin();it!=ids.end();it++)
+        positions[*it] = it-ids.begin();
+}
+
+void lp_offensive_lpa::post_node_assign(const graph& g, id_type current,id_type new_label,id_type num_iters, max_lplabel_container& max_labels)
+{
+    lp_dyn_hop_att::post_node_assign(g,current,new_label,num_iters,max_labels);
+    if(lplabels[current] != new_label)
+        probabilities[current] = compute_probability_for_id(g,current,new_label,max_labels);
+    
+}
+
+double lp_offensive_lpa::compute_probability_for_id(const graph& g,id_type current,id_type new_label,max_lplabel_container& max_labels)
+{
+    double prod_num=0;
+    for(adjacent_edges_iterator aeit = g.in_edges_begin(current); aeit !=g.in_edges_end(current);aeit++)
+    {
+        if(lplabels[aeit->first] == new_label)prod_num += probabilities[aeit->first];
+    }
+    return prod_num/g.get_node_in_weight(current);
+}
+
+double lp_offensive_lpa::get_edge_weight_function(const graph&g,id_type from_id,id_type to_id,double edge_weight) { return edge_weight;}
+double lp_offensive_lpa::get_label_fitness_for_edge(const graph& g, id_type from_id, id_type to_id,double edge_weight)
+{
+    return get_node_score(g,to_id)*(1-probabilities[to_id])*get_edge_weight_function(g,from_id,to_id,edge_weight);
+}
+
+double lp_offensive_lpa::get_node_probability(id_type id) const
+{
+    if(id > probabilities.size()) return 0.0;
+    else return probabilities[id];
+}
+
+lp_offensive_lpa::lp_offensive_lpa(const graph& g,bool synchronous_val,double hop_att_max_val) : lp_dyn_hop_att(g,synchronous_val,hop_att_max_val)
+{
+    probabilities.assign(g.get_num_nodes(),(double)1/(double)g.get_num_nodes());
+}
+
+double lp_defensive_lpa::get_label_fitness_for_edge(const graph& g, id_type from_id, id_type to_id,double edge_weight)
+{
+    return get_node_score(g,to_id)*probabilities[to_id]*get_edge_weight_function(g,from_id,to_id,edge_weight);
+}
+
+double lp_defensive_lpa::compute_probability_for_id(const graph& g,id_type current,id_type new_label,max_lplabel_container& max_labels)
+{
+    double prob_denom=0,prod_num=0;
+    for(adjacent_edges_iterator aeit = g.in_edges_begin(current); aeit !=g.in_edges_end(current);aeit++)
+    {
+        if(lplabels[aeit->first] == new_label)
+        {
+            prod_num += probabilities[aeit->first];
+            prob_denom += aeit->second;
+        }
+    }
+    return prod_num/prob_denom;
+}
+
+lp_defensive_lpa::lp_defensive_lpa(const graph& g,bool synchronous_val,double hop_att_max_val) : lp_offensive_lpa(g,synchronous_val,hop_att_max_val) {}
+
+id_type CDLib::label_propagation_raghavan_2007(const graph& g,vector<id_type>& labels,id_type max_iters,bool synchronous)
+{
+    lp_raghavan_2007 algoman(g,synchronous);
+    return label_propagation_run(g,labels,max_iters,&algoman);
+}
+
+id_type CDLib::label_propagation_leung_2009(const graph& g,vector<id_type>& labels,id_type max_iters,bool synchronous,double hop_att)
+{
+    lp_leung_2009 algoman(g,synchronous,hop_att);
+    return label_propagation_run(g,labels,max_iters,&algoman);
+}
+
+
+id_type CDLib::label_propagation_dyn_hop_2010(const graph& g, vector<id_type>& labels,id_type max_iters,bool synchronous,double hop_att_max)
+{
+    lp_dyn_hop_att algoman(g,synchronous,hop_att_max);
+    return label_propagation_run(g,labels,max_iters,&algoman);
+}
+
+id_type CDLib::label_propagation_olpa_2010(const graph& g, vector<id_type>&  labels,id_type max_iters,bool synchronous,double hop_att_max)
+{
+    lp_offensive_lpa algoman(g,synchronous,hop_att_max);
+    return label_propagation_run(g,labels,max_iters,&algoman);
+}
+
+id_type CDLib::label_propagation_dlpa_2010(const graph& g, vector<id_type>&  labels,id_type max_iters,bool synchronous,double hop_att_max)
+{
+    lp_defensive_lpa algoman(g,synchronous,hop_att_max);
+    return label_propagation_run(g,labels,max_iters,&algoman);
+}
+
+id_type CDLib::label_propagation_track_changes_2012(const graph& g, vector<id_type>&  labels,id_type max_iters,bool synchronous)
+{
+    lp_track_changes algoman(g,synchronous);
+    return label_propagation_run(g,labels,max_iters,&algoman);
+}
+
+
+
+    struct dynamic_lp_temp
+    {
+        vector<id_type> labels_to_pass;
+        vector<id_type> label_changes_to_pass;
+    };
+
+void first_snapshot_init(string filepath,bool directed,bool weighted,dynamic_lp_output & output)
+{
+    output.lp_iters.push_back(0);
+    output.lp_times.push_back(0.0);
+    output.book_times.push_back(0.0);
+    output.lp_labels.push_back(vector<id_type>());
+    output.graphs.push_back(graph(directed,weighted));
+    read_edgelist(output.graphs[output.graphs.size()-1],filepath,directed,weighted);
+    output.lp_num_label_changes.push_back(vector<id_type>(output.graphs[output.graphs.size()-1].get_num_nodes(),0));
+}
+
+void subsequent_snapshot_init(string filepath,bool directed,bool weighted,dynamic_lp_output& output, dynamic_lp_temp& temp,bool copy_labels,timer_rt& op_timer)
+{
+    first_snapshot_init(filepath,directed,weighted,output);
+    temp.labels_to_pass.assign(output.graphs[output.graphs.size()-1].get_num_nodes(),0);
+    temp.label_changes_to_pass.assign(output.graphs[output.graphs.size()-1].get_num_nodes(),0);
+    op_timer.start_clock();
+    node_set seen_nodes;
+    id_type max_label_value = 0;
+    for(id_type i=0;i<output.graphs[output.graphs.size()-2].get_num_nodes();i++)
+    {
+        id_type current_node_id = output.graphs[output.graphs.size()-1].get_node_id(output.graphs[output.graphs.size()-2].get_node_label(i));
+        if(current_node_id < output.graphs[output.graphs.size()-1].get_num_nodes()) //Node has been found
+        {
+            temp.labels_to_pass[current_node_id] = output.lp_labels[output.lp_labels.size()-2][i];
+            max_label_value = (output.lp_labels[output.lp_labels.size()-2][i] > max_label_value) ? output.lp_labels[output.lp_labels.size()-2][i] : max_label_value;
+            temp.label_changes_to_pass[current_node_id] = output.lp_num_label_changes[output.lp_num_label_changes.size()-2][i];
+            seen_nodes.insert(current_node_id);
+        }
+    }
+    max_label_value++;
+    for(id_type i=0;i<output.graphs[output.graphs.size()-1].get_num_nodes();i++)
+    {
+        if(seen_nodes.find(i) == seen_nodes.end())
+        {                                              //Unseen Node
+            temp.labels_to_pass[i] =max_label_value + i;
+            temp.label_changes_to_pass[i] = 0;
+        }
+    }
+    op_timer.stop_clock();
+}
+
+void first_run(timer_rt& op_timer,const string& filepath,bool directed, bool weighted,dynamic_lp_output& output)
+{
+    first_snapshot_init(filepath,directed,weighted,output);
+    op_timer.start_clock();
+    lp_dyn_hop_att algoman(output.graphs[output.graphs.size()-1],0,0.0);
+    output.lp_iters[output.lp_iters.size()-1] = label_propagation_run(output.graphs[output.graphs.size()-1],output.lp_labels[output.lp_labels.size()-1],10000,&algoman);
+    op_timer.stop_clock();
+    output.lp_times[output.lp_times.size()-1] = op_timer.run_time();
+    for(id_type i=0;i<output.graphs[output.graphs.size()-1].get_num_nodes();i++)output.lp_num_label_changes[output.lp_num_label_changes.size()-1][i] = algoman.get_node_num_lplabel_changes(i);
+}
+
+void subsequent_run(timer_rt& op_timer,const string& filepath,bool directed, bool weighted,dynamic_lp_input& input, dynamic_lp_output& output)
+{
+    dynamic_lp_temp temp;
+    subsequent_snapshot_init(filepath,directed,weighted,output,temp,input.copy_labels,op_timer);
+    op_timer.start_clock();
+    evolutionary_label_propagation algoman(output.graphs[output.graphs.size()-1],0,input.activate,input.copy_labels,input.alpha,output.lp_iters[output.lp_iters.size()-2],temp.label_changes_to_pass,temp.labels_to_pass);
+    output.lp_iters[output.lp_iters.size()-1] = label_propagation_run(output.graphs[output.graphs.size()-1],output.lp_labels[output.lp_labels.size()-1],10000,&algoman);
+    op_timer.stop_clock();
+    output.lp_times[output.lp_times.size()-1] = op_timer.run_time();
+    for(id_type i=0;i<output.graphs[output.graphs.size()-1].get_num_nodes();i++)output.lp_num_label_changes[output.lp_num_label_changes.size()-1][i] = algoman.get_node_num_lplabel_changes(i);
+}
+
+double CDLib::evolutionary_label_propagation_edgelists(const string& snapshot_filepath,bool directed, bool weighted,dynamic_lp_input& input, dynamic_lp_output& output)
+{
+    ifstream ifs;
+    ifs.open(snapshot_filepath.c_str());
+    timer_rt op_timer;
+    if(ifs.is_open())
+    {
+        string filepath;
+        ifs >> filepath;
+        first_run(op_timer,filepath,directed,weighted,output);
+        while(!ifs.eof()) 
+        {
+            ifs >> filepath;
+            subsequent_run(op_timer,filepath,directed,weighted,input,output);
+        }
+    }
+    return op_timer.total_time();
+}
+
+void pre_run(ifstream& ifs, bool directed, bool weighted,dynamic_lp_output& output)
+{
+        output.lp_iters.push_back(0);
+        output.lp_times.push_back(0.0);
+        output.book_times.push_back(0.0);
+        output.lp_labels.push_back(vector<id_type>());
+        output.graphs.push_back(graph(directed,weighted));
+        string filepath,outfilepath;
+        ifs >> filepath >> outfilepath;
+        read_edgelist(output.graphs[output.graphs.size()-1],filepath,directed,weighted);
+}
+
+double prepare_labels_to_pass(dynamic_lp_output& output,vector<id_type>::const_iterator begin_it,vector<id_type>& temp_changes)
+{
+    timer_rt lp_timer;
+    lp_timer.start_clock();
+    temp_changes.assign(output.graphs[output.graphs.size()-1].get_num_nodes(),0);
+    for(id_type i=0;i<output.graphs[output.graphs.size()-2].get_num_nodes();i++)
+    {
+        id_type current_node_id = output.graphs[output.graphs.size()-1].get_node_id(output.graphs[output.graphs.size()-2].get_node_label(i));
+        if(current_node_id < output.graphs[output.graphs.size()-1].get_num_nodes())
+            temp_changes[current_node_id] = *(begin_it + i);
+    }
+    lp_timer.stop_clock();
+    return lp_timer.run_time();
+}
+
+void new_subsequent_run(ifstream& ifs,bool directed,bool weighted,double alpha,dynamic_lp_output& output,vector<id_type>& temp_changes)
+{
+    timer_rt lp_timer;
+    lp_timer.start_clock();
+    evol_label_prop_new algoman(output.graphs[output.graphs.size()-1],0,alpha,output.lp_iters[output.lp_iters.size()-2], temp_changes.begin());
+    output.lp_iters[output.lp_iters.size()-1] = label_propagation_run(output.graphs[output.graphs.size()-1],output.lp_labels[output.lp_labels.size()-1],10000,&algoman);
+    lp_timer.stop_clock();
+    output.lp_times[output.lp_times.size()-1] = lp_timer.run_time();
+    pre_run(ifs,directed,weighted,output);
+    output.book_times[output.book_times.size()-1] = prepare_labels_to_pass(output,algoman.label_changes_begin(),temp_changes);
+}
+
+void CDLib::new_evolutionary_label_propagation_edgelists(const string& snapshot_filepath,bool directed, bool weighted,double alpha,bool basic, dynamic_lp_output& output)
+{
+    ifstream ifs;
+    ifs.open(snapshot_filepath.c_str());
+
+    if(ifs.is_open())
+    {
+        id_type num_snapshots = 0;
+        vector<id_type> temp_changes;
+        while(!ifs.eof()) 
+        {
+            pre_run(ifs,directed,weighted,output);
+            timer_rt lp_timer;
+            if(!basic)
+            {
+                if(!num_snapshots)
+                {
+                        lp_timer.start_clock();
+                        lp_track_changes algoman(output.graphs[output.graphs.size()-1],0);
+                        output.lp_iters[output.lp_iters.size()-1] = label_propagation_run(output.graphs[output.graphs.size()-1],output.lp_labels[output.lp_labels.size()-1],10000,&algoman);
+                        lp_timer.stop_clock();
+                        output.lp_times[output.lp_times.size()-1] = lp_timer.run_time();
+                        pre_run(ifs,directed,weighted,output);
+                        temp_changes.assign(output.graphs[output.graphs.size()-1].get_num_nodes(),0);
+                        output.book_times[output.book_times.size()-1] = prepare_labels_to_pass(output,algoman.label_changes_begin(),temp_changes);
+                }
+                else new_subsequent_run(ifs,directed,weighted,alpha,output,temp_changes);
+            }
+            else
+            {
+                lp_timer.start_clock();
+                lp_raghavan_2007 algoman(output.graphs[output.graphs.size()-1],0);
+                output.lp_iters[output.lp_iters.size()-1] = label_propagation_run(output.graphs[output.graphs.size()-1],output.lp_labels[output.lp_labels.size()-1],10000,&algoman);
+                lp_timer.stop_clock();
+                output.lp_times[output.lp_times.size()-1] = lp_timer.run_time();
+            }
+        }
+    }
+}
+
+
+id_type bgll_find_best_community_for_node(const graph& curr_graph, const vector<id_type>& labels, const bgll_objective& book, id_type vertex) {
+    double max_node_gain = -numeric_limits<double>::infinity();
+    id_type node_max_gain_comm_index = labels[vertex];
+    for (adjacent_edges_iterator aeit = curr_graph.out_edges_begin(vertex); aeit != curr_graph.out_edges_end(vertex); aeit++) {
+        if (labels[vertex] != labels[aeit->first]) {
+            double curr_node_gain = book.compute_gain(curr_graph, labels, vertex, labels[aeit->first]);
+            if (curr_node_gain > max_node_gain) {
+                max_node_gain = curr_node_gain;
+                node_max_gain_comm_index = labels[aeit->first];
+            }
+        }
+    }
+    //cout << node_max_gain_comm_index << " " << max_node_gain <<endl;
+    return node_max_gain_comm_index;
+}
+
+id_type bgll_vertex_mover_single_pass(const graph& curr_graph, vector<id_type>& labels, bgll_objective& book) {
+    id_type num_nodes_moved = 0;
+    for (id_type i = 0; i < curr_graph.get_num_nodes(); i++) {
+        book.detach_node(curr_graph, labels, i); //Detach node from its community
+        //cout << labels[i] << " ";
+        id_type new_node_community = bgll_find_best_community_for_node(curr_graph, labels, book, i);
+        if (new_node_community != labels[i]) {
+            num_nodes_moved++;
+            //Insert node into new community
+            book.attach_node(curr_graph, labels, i, new_node_community);
+            //cout << "Moved " << i << " From " << labels[i] << " to " << new_node_community << endl;
+            labels[i] = new_node_community;
+        }
+    }
+    return num_nodes_moved;
+}
+
+double bgll_vertex_mover_optimizer(const graph& g, vector<id_type>& labels, bgll_objective& book) {
+    double start_obj_val = book.objval(g, labels), curr_objval = -numeric_limits<double>::infinity();
+    id_type num_nodes_moved = 0;
+    do {
+        vector<id_type> temp_comms(labels);
+        num_nodes_moved += bgll_vertex_mover_single_pass(g, temp_comms, book);
+        curr_objval = book.objval(g, temp_comms);
+        //Rollback communities and exit if modularity decreases
+        if (curr_objval < start_obj_val) return start_obj_val;
+        //Commit changes, book should have already been updated
+        copy(temp_comms.begin(), temp_comms.end(), labels.begin());
+    } while (num_nodes_moved && curr_objval < start_obj_val);
+    return curr_objval;
+}
+
+void bgll_recover_communities(vector<id_type>& labels, vector< vector<id_type> >& hier_comms) {
+    vector<node_set> last_comms;
+    convert_labels_to_communities(hier_comms[hier_comms.size() - 1], last_comms);
+    reindex_communities(labels);
+    hier_comms.push_back(vector<id_type > (hier_comms[hier_comms.size() - 1].size(), 0));
+    for (id_type i = 0; i < labels.size(); i++) {
+        for (node_set::iterator nit = last_comms[i].begin(); nit != last_comms[i].end(); nit++) {
+            hier_comms[hier_comms.size() - 1][*nit] = labels[i];
+        }
+    }
+}
+
+void bgll_collapse_nodes(graph& orig_graph, vector<id_type>& labels) {
+    vector<unordered_map<id_type, double> > edges;
+    for (id_type i = 0; i < labels.size(); i++)
+        while (edges.size() <= labels[i]) edges.push_back(unordered_map<id_type, double>());
+    for (id_type i = 0; i < orig_graph.get_num_nodes(); i++) {
+        id_type node_comm = labels[i];
+        for (adjacent_edges_iterator aeit = orig_graph.out_edges_begin(i); aeit != orig_graph.out_edges_end(i); aeit++) {
+            id_type neigh_comm = labels[aeit->first];
+            pair < unordered_map<id_type, double>::iterator, bool> ret = edges[node_comm].insert(make_pair(neigh_comm, 0));
+            ret.first->second += aeit->second;
+        }
+    }
+    orig_graph.clear();
+    for (id_type i = 0; i < edges.size(); i++) orig_graph.add_node();
+    for (id_type i = 0; i < edges.size(); i++)
+        for (unordered_map<id_type, double>::iterator it = edges[i].begin(); it != edges[i].end(); it++)
+            orig_graph.add_edge(i, it->first, it->second);
+    labels.assign(orig_graph.get_num_nodes(), 0);
+    for (id_type i = 0; i < orig_graph.get_num_nodes(); i++)
+        labels[i] = i;
+}
+
+void CDLib::cda_bgll_generic(const graph&g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, bgll_objective& book) {
+    hier_comms.clear();
+    //Initialize the initial_partition
+    vector<id_type> curr_comms(g.get_num_nodes(), 0);
+    if (init_comms.size() == g.get_num_nodes()) copy(init_comms.begin(), init_comms.end(), curr_comms.begin());
+    else for (id_type i = 0; i < g.get_num_nodes(); i++) curr_comms[i] = i;
+    hier_comms.push_back(curr_comms);
+    //Create a copy of the graph
+    graph curr_graph(g);
+    curr_graph.convert_to_weighted();
+    double orig_obj_val = book.objval(curr_graph, curr_comms);
+    //The Main Loop
+    while (1) {
+        id_type curr_graph_size = curr_graph.get_num_nodes();
+        //Initialize the book for the new level
+        book.init(g, hier_comms, curr_graph, curr_comms);
+        //Run the vertex mover optimization
+        double new_obj_val = bgll_vertex_mover_optimizer(curr_graph, curr_comms, book);
+        //Reindex the community memberships
+        bgll_recover_communities(curr_comms, hier_comms);
+        //Shrink the graph
+        bgll_collapse_nodes(curr_graph, curr_comms);
+        if (curr_graph.get_num_nodes() == curr_graph_size || new_obj_val < orig_obj_val) break;
+    }
+}
+
+class bgll_modularity : public bgll_objective {
+private:
+    unordered_map<id_type, double> internal_weight;
+    unordered_map<id_type, double> total_weight;
+    unordered_map<id_type, double> node_link_weights;
+    double resolution_param;
+    double self_weight;
+public:
+
+    bgll_modularity() : resolution_param(1) {
+    }
+
+    bgll_modularity(double resolution_p) : resolution_param(resolution_p) {
+    }
+
+    virtual void init(const graph& orig_graph, const vector<vector<id_type> >& hiercomms, const graph& curr_graph, const vector<id_type>& curr_comms) {
+        internal_weight.clear();
+        total_weight.clear();
+        node_link_weights.clear();
+        self_weight = 0;
+        for (id_type i = 0; i < curr_graph.get_num_nodes(); i++) {
+            id_type node_comm = curr_comms[i];
+            for (adjacent_edges_iterator aeit = curr_graph.out_edges_begin(i); aeit != curr_graph.out_edges_end(i); aeit++) {
+                id_type neigh_comm = curr_comms[aeit->first];
+                if (node_comm == neigh_comm) {
+                    pair < unordered_map<id_type, double>::iterator, bool> ret = internal_weight.insert(make_pair(node_comm, 0));
+                    ret.first->second += aeit->second;
+                    //cout << "Updated Internal Weights" << node_comm << " Added " << aeit->second << endl;
+                }
+            }
+            pair < unordered_map<id_type, double>::iterator, bool> ret = total_weight.insert(make_pair(node_comm, 0));
+            ret.first->second += curr_graph.get_node_out_weight(i);
+            //cout << "Updated Total Weights " << node_comm << " Added " << curr_graph.get_node_out_weight(i) << endl;
+        }
+    }
+
+    virtual double objval(const graph& curr_graph, const vector<id_type>& curr_comms) const {
+        double modularity = 0;
+        for (unordered_map<id_type, double>::const_iterator it = total_weight.begin(); it != total_weight.end(); it++) {
+            double int_weight = 0;
+            unordered_map<id_type, double>::const_iterator cit = internal_weight.find(it->first);
+            if (cit != internal_weight.end()) int_weight = cit->second;
+            modularity += (((resolution_param * int_weight) / (2 * curr_graph.get_total_weight())) - pow(it->second / (2 * curr_graph.get_total_weight()), 2));
+        }
+        //cout << modularity << endl;
+        return modularity;
+    }
+
+    virtual double compute_gain(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) const {
+        unordered_map<id_type, double>::const_iterator it = node_link_weights.find(dst_comm);
+        double gain = 0;
+        if (it != node_link_weights.end())gain += (resolution_param * ((2 * it->second) + self_weight));
+        it = total_weight.find(dst_comm);
+        if (it != total_weight.end()) gain -= ((curr_graph.get_node_out_weight(vertex) * it->second) / curr_graph.get_total_weight());
+        //cout << gain << endl;
+        return gain;
+    }
+
+    virtual void detach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex) {
+        node_link_weights.clear();
+        self_weight = 0;
+        double weight_inside = 0;
+        for (adjacent_edges_iterator aeit = curr_graph.out_edges_begin(vertex); aeit != curr_graph.out_edges_end(vertex); aeit++) {
+            if (labels[aeit->first] != labels[vertex]) {
+                pair < unordered_map<id_type, double>::iterator, bool> ret = node_link_weights.insert(make_pair(labels[aeit->first], 0));
+                ret.first->second += aeit->second;
+                //cout << "Updated Node Link Weights" << labels[aeit->first] << " Added " << aeit->second << endl;
+            } else if (vertex != aeit->first) {
+                weight_inside += aeit->second;
+            } else self_weight = aeit->second;
+        }
+        unordered_map<id_type, double>::iterator it1 = total_weight.find(labels[vertex]), it2 = internal_weight.find(labels[vertex]);
+        if (it1 != total_weight.end()) it1->second -= curr_graph.get_node_out_weight(vertex);
+        if (it2 != internal_weight.end()) it2->second -= (2 * weight_inside + self_weight);
+        //if (it1 != total_weight.end()) cout << "Sub " << (2 * weight_inside + self_weight) << " From Weight Inside" << endl;
+        //if (it2 != internal_weight.end()) cout << "Sub " << curr_graph.get_node_out_weight(vertex) << " From Total Weight" << endl;
+    }
+
+    virtual void attach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) {
+        if (labels[vertex] != dst_comm) {
+            unordered_map<id_type, double>::iterator it1 = total_weight.find(dst_comm), it2 = internal_weight.find(dst_comm), it3 = node_link_weights.find(dst_comm);
+            it1->second += curr_graph.get_node_out_weight(vertex);
+            double int_wt = self_weight;
+            if (it3 != node_link_weights.end()) int_wt += (2 * it3->second);
+            if (it2 != internal_weight.end()) it2->second += int_wt;
+            else internal_weight.insert(make_pair(dst_comm, int_wt));
+            //cout << "Add " << (2 * it3->second + self_weight) << " From Weight Inside" << endl;
+            //cout << "Add " << curr_graph.get_node_out_weight(vertex) << " From Total Weight" << endl;
+        }
+    }
+};
+
+void CDLib::cda_bgll_modularity(const graph& g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param) {
+    bgll_modularity book(resolution_param);
+    cda_bgll_generic(g, init_comms, hier_comms, static_cast<bgll_objective&>(book));
 }
