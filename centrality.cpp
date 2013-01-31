@@ -6,7 +6,6 @@
  */
 
 #include "centrality.h"
-#include "disjoint_set.h"
 using namespace CDLib;
 
 void do_bfs(const graph& g,id_type i,vector< vector<id_type> >& preds,vector<id_type>& paths, vector<double>& dist, stack<id_type>& s_dist)
