@@ -2211,6 +2211,6 @@ void CDLib::cda_bgll_modularity(const graph& g, const vector<id_type>& init_comm
 }
 
 void CDLib::cda_bgll_int_node_weights(const graph& g,const vector<double>& node_weights, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param){
-    bgll_int_node_wt book(node_weights);
+    bgll_int_node_wt book(node_weights,resolution_param);
     cda_bgll_generic(g, init_comms, hier_comms, static_cast<bgll_objective&> (book));
 }
