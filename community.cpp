@@ -1570,15 +1570,17 @@ bool CDLib::CZR_Beta(const graph& g, id_type src, node_set& output) {
 
 }
 
-
 struct edge_radicchi {
     id_type from_id;
     id_type to_id;
     double ecc;
-    edge_radicchi() : from_id(0), to_id(0), ecc(0) { }
-    edge_radicchi(id_type from, id_type to, double ec) : from_id(from), to_id(to), ecc(ec) { }
-};
 
+    edge_radicchi() : from_id(0), to_id(0), ecc(0) {
+    }
+
+    edge_radicchi(id_type from, id_type to, double ec) : from_id(from), to_id(to), ecc(ec) {
+    }
+};
 
 void CDLib::girvan_newman_2002(const graph& g, dendrogram& dendro) {
     if (is_connected_weakly(g)) {
@@ -1632,7 +1634,6 @@ void CDLib::radicchi_et_al_2004(const graph& g, dendrogram& dendro) {
         }
     }
 }
-
 
 id_type CDLib::label_propagation_run(const graph&g, vector<id_type>& communities, id_type max_iters, lp_raghavan_2007* algoman) {
     id_type num_iters = 0;
@@ -2096,28 +2097,28 @@ public:
     bgll_modularity(double resolution_p) : bgll_objective_w_internal(resolution_p) {
     }
 
-    virtual void init(const graph& orig_graph, const vector<vector<id_type> >& hiercomms, const graph& curr_graph, const vector<id_type>& curr_comms) {
+    void init(const graph& orig_graph, const vector<vector<id_type> >& hiercomms, const graph& curr_graph, const vector<id_type>& curr_comms) {
         init_internal_params();
         total_weight.clear();
         for (id_type i = 0; i < curr_graph.get_num_nodes(); i++) {
             fill_internal_edges_for_vertex(curr_graph, curr_comms, i);
-            map_insert_and_increment<id_type,double>(total_weight, curr_comms[i], curr_graph.get_node_out_weight(i));
+            map_insert_and_increment<id_type, double>(total_weight, curr_comms[i], curr_graph.get_node_out_weight(i));
         }
     }
 
-    virtual void detach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex) {
+    void detach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex) {
         update_internal_edges_on_vertex_detach(curr_graph, labels, vertex);
-        map_find_and_modify<id_type,double>(total_weight, labels[vertex], -curr_graph.get_node_out_weight(vertex));
+        map_find_and_modify<id_type, double>(total_weight, labels[vertex], -curr_graph.get_node_out_weight(vertex));
     }
 
-    virtual void attach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) {
+    void attach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) {
         if (labels[vertex] != dst_comm) {
             update_internal_edges_on_vertex_attach(dst_comm);
-            map_find_and_modify<id_type,double>(total_weight, dst_comm, curr_graph.get_node_out_weight(vertex));
+            map_find_and_modify<id_type, double>(total_weight, dst_comm, curr_graph.get_node_out_weight(vertex));
         }
     }
 
-    virtual double objval(const graph& curr_graph, const vector<id_type>& curr_comms) const {
+    double objval(const graph& curr_graph, const vector<id_type>& curr_comms) const {
         double modularity = 0;
         for (unordered_map<id_type, double>::const_iterator it = total_weight.begin(); it != total_weight.end(); it++) {
             modularity += objval_internal_term_running(curr_graph, it->first);
@@ -2126,7 +2127,7 @@ public:
         return modularity;
     }
 
-    virtual double compute_gain(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) const {
+    double compute_gain(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) const {
         double gain = 0;
         gain += gain_internal_term(dst_comm);
         unordered_map<id_type, double>::const_iterator it = total_weight.find(dst_comm);
@@ -2136,7 +2137,80 @@ public:
 
 };
 
+class bgll_int_node_wt : public bgll_objective_w_internal {
+private:
+    unordered_map<id_type, double> total_weight;
+    vector<double> node_weights;
+    bgll_int_node_wt() {}
+    void adjust_node_weights(const vector<vector<id_type> >& hiercomms){
+        vector<node_set> comms;
+        convert_labels_to_communities(hiercomms[hiercomms.size()-1],comms);
+        vector<double> temp_node_weights(comms.size(),0);
+        for(id_type i=0;i<comms.size();i++)
+            for(node_set::iterator nit=comms[i].begin();nit!=comms[i].end();nit++)
+                temp_node_weights[i] += node_weights[*nit];
+        node_weights.assign(temp_node_weights.size(),0);
+        copy(temp_node_weights.begin(),temp_node_weights.end(),node_weights.begin());
+    }
+    void init_node_weights(const vector<double>& node_wt){
+        node_weights.assign(node_wt.size(),0);
+        copy(node_wt.begin(),node_wt.end(),node_weights.begin());
+    }
+public:
+    bgll_int_node_wt(const vector<double>& node_wt) : bgll_objective_w_internal() {
+        init_node_weights(node_wt);
+    }
+    
+    bgll_int_node_wt(const vector<double>& node_wt,double resolution_p) : bgll_objective_w_internal(resolution_p) {
+        init_node_weights(node_wt);
+    }
+
+    void init(const graph& orig_graph, const vector<vector<id_type> >& hiercomms, const graph& curr_graph, const vector<id_type>& curr_comms) {
+        init_internal_params();
+        adjust_node_weights(hiercomms);
+        total_weight.clear();
+        for (id_type i = 0; i < curr_graph.get_num_nodes(); i++) {
+            fill_internal_edges_for_vertex(curr_graph, curr_comms, i);
+            map_insert_and_increment<id_type, double>(total_weight, curr_comms[i], node_weights[i]);
+        }
+    }
+
+    void detach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex) {
+        update_internal_edges_on_vertex_detach(curr_graph, labels, vertex);
+        map_find_and_modify<id_type, double>(total_weight, labels[vertex], -node_weights[vertex]);
+    }
+
+    void attach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) {
+        if (labels[vertex] != dst_comm) {
+            update_internal_edges_on_vertex_attach(dst_comm);
+            map_find_and_modify<id_type, double>(total_weight, dst_comm, node_weights[vertex]);
+        }
+    }
+
+    double objval(const graph& curr_graph, const vector<id_type>& curr_comms) const {
+        double modularity = 0;
+        for (unordered_map<id_type, double>::const_iterator it = total_weight.begin(); it != total_weight.end(); it++) {
+            modularity += objval_internal_term_running(curr_graph, it->first);
+            modularity -= (pow(it->second, 2));
+        }
+        return modularity;
+    }
+
+    double compute_gain(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) const {
+        double gain = 0;
+        gain += (gain_internal_term(dst_comm)/curr_graph.get_total_weight());
+        unordered_map<id_type, double>::const_iterator it = total_weight.find(dst_comm);
+        if (it != total_weight.end()) gain -= ((node_weights[vertex] * it->second));
+        return gain;
+    }
+};
+
 void CDLib::cda_bgll_modularity(const graph& g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param) {
     bgll_modularity book(resolution_param);
+    cda_bgll_generic(g, init_comms, hier_comms, static_cast<bgll_objective&> (book));
+}
+
+void CDLib::cda_bgll_int_node_weights(const graph& g,const vector<double>& node_weights, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param){
+    bgll_int_node_wt book(node_weights);
     cda_bgll_generic(g, init_comms, hier_comms, static_cast<bgll_objective&> (book));
 }
