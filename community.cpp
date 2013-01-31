@@ -2011,7 +2011,7 @@ id_type bgll_vertex_mover_single_pass(const graph& curr_graph, vector<id_type>& 
     return num_nodes_moved;
 }
 
-double bgll_vertex_mover_optimizer(const graph& g, vector<id_type>& labels, bgll_objective& book) {
+double CDLib::bgll_vertex_mover_optimizer(const graph& g, vector<id_type>& labels, bgll_objective& book) {
     double start_obj_val = book.objval(g, labels), curr_objval = -numeric_limits<double>::infinity();
     id_type num_nodes_moved = 0;
     do {
@@ -2137,80 +2137,8 @@ public:
 
 };
 
-class bgll_int_node_wt : public bgll_objective_w_internal {
-private:
-    unordered_map<id_type, double> total_weight;
-    vector<double> node_weights;
-    bgll_int_node_wt() {}
-    void adjust_node_weights(const vector<vector<id_type> >& hiercomms){
-        vector<node_set> comms;
-        convert_labels_to_communities(hiercomms[hiercomms.size()-1],comms);
-        vector<double> temp_node_weights(comms.size(),0);
-        for(id_type i=0;i<comms.size();i++)
-            for(node_set::iterator nit=comms[i].begin();nit!=comms[i].end();nit++)
-                temp_node_weights[i] += node_weights[*nit];
-        node_weights.assign(temp_node_weights.size(),0);
-        copy(temp_node_weights.begin(),temp_node_weights.end(),node_weights.begin());
-    }
-    void init_node_weights(const vector<double>& node_wt){
-        node_weights.assign(node_wt.size(),0);
-        copy(node_wt.begin(),node_wt.end(),node_weights.begin());
-    }
-public:
-    bgll_int_node_wt(const vector<double>& node_wt) : bgll_objective_w_internal() {
-        init_node_weights(node_wt);
-    }
-    
-    bgll_int_node_wt(const vector<double>& node_wt,double resolution_p) : bgll_objective_w_internal(resolution_p) {
-        init_node_weights(node_wt);
-    }
-
-    void init(const graph& orig_graph, const vector<vector<id_type> >& hiercomms, const graph& curr_graph, const vector<id_type>& curr_comms) {
-        init_internal_params();
-        adjust_node_weights(hiercomms);
-        total_weight.clear();
-        for (id_type i = 0; i < curr_graph.get_num_nodes(); i++) {
-            fill_internal_edges_for_vertex(curr_graph, curr_comms, i);
-            map_insert_and_increment<id_type, double>(total_weight, curr_comms[i], node_weights[i]);
-        }
-    }
-
-    void detach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex) {
-        update_internal_edges_on_vertex_detach(curr_graph, labels, vertex);
-        map_find_and_modify<id_type, double>(total_weight, labels[vertex], -node_weights[vertex]);
-    }
-
-    void attach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) {
-        if (labels[vertex] != dst_comm) {
-            update_internal_edges_on_vertex_attach(dst_comm);
-            map_find_and_modify<id_type, double>(total_weight, dst_comm, node_weights[vertex]);
-        }
-    }
-
-    double objval(const graph& curr_graph, const vector<id_type>& curr_comms) const {
-        double modularity = 0;
-        for (unordered_map<id_type, double>::const_iterator it = total_weight.begin(); it != total_weight.end(); it++) {
-            modularity += objval_internal_term_running(curr_graph, it->first);
-            modularity -= (pow(it->second, 2));
-        }
-        return modularity;
-    }
-
-    double compute_gain(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) const {
-        double gain = 0;
-        gain += (gain_internal_term(dst_comm)/curr_graph.get_total_weight());
-        unordered_map<id_type, double>::const_iterator it = total_weight.find(dst_comm);
-        if (it != total_weight.end()) gain -= ((node_weights[vertex] * it->second));
-        return gain;
-    }
-};
-
 void CDLib::cda_bgll_modularity(const graph& g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param) {
     bgll_modularity book(resolution_param);
     cda_bgll_generic(g, init_comms, hier_comms, static_cast<bgll_objective&> (book));
 }
 
-void CDLib::cda_bgll_int_node_weights(const graph& g,const vector<double>& node_weights, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param){
-    bgll_int_node_wt book(node_weights,resolution_param);
-    cda_bgll_generic(g, init_comms, hier_comms, static_cast<bgll_objective&> (book));
-}

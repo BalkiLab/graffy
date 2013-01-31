@@ -471,10 +471,9 @@ namespace CDLib {
         virtual void detach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex) = 0;
         virtual void attach_node(const graph& curr_graph, const vector<id_type>& labels, id_type vertex, id_type dst_comm) = 0;
     };
-    
+    double bgll_vertex_mover_optimizer(const graph& g, vector<id_type>& labels, bgll_objective& book);
     void cda_bgll_generic(const graph&g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, bgll_objective& book);
     void cda_bgll_modularity(const graph& g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param);
-    void cda_bgll_int_node_weights(const graph& g,const vector<double>& node_weights, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param);
 }
 
 #endif	/* COMMUNITY_H */
