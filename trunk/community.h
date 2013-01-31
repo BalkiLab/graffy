@@ -474,6 +474,7 @@ namespace CDLib {
     
     void cda_bgll_generic(const graph&g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, bgll_objective& book);
     void cda_bgll_modularity(const graph& g, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param);
+    void cda_bgll_int_node_weights(const graph& g,const vector<double>& node_weights, const vector<id_type>& init_comms, vector< vector<id_type> >& hier_comms, double resolution_param);
 }
 
 #endif	/* COMMUNITY_H */
