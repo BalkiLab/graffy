@@ -9,8 +9,7 @@
 #define	PATHS_AND_COMPONENTS_H
 
 #include "graph.h"
-#include "disjoint_set.h"
-#include "binary_heap.h"
+#include "datastructures.h"
 
 using namespace std;
 

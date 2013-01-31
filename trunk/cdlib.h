@@ -12,10 +12,7 @@
 #include "statistics.h"
 #include "utility.h"
 #include "profiler.h"
-#include "bidirectional_label_map.h"
-#include "double_adjacency_map.h"
-#include "binary_heap.h"
-#include "disjoint_set.h"
+#include "datastructures.h"
 #include "random.h"
 #include "graph.h"
 #include "graphio.h"
@@ -25,11 +22,8 @@
 #include "community_tools.h"
 #include "graph_summary.h"
 #include "centrality.h"
-#include "divisive_algorithms.h"
 #include "graph_properties.h"
 #include "community.h"
-#include "iterators.hpp"
-#include "CSR.hpp"
 
 
 #endif	/* CDLIB_H */

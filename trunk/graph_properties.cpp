@@ -6,7 +6,6 @@
  */
 
 #include "graph_properties.h"
-#include "divisive_algorithms.h"
 
 void CDLib::get_degree_sequence(const graph& g,vector<id_type>& degrees, bool in_degrees)
 {

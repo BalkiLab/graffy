@@ -9,7 +9,7 @@
 #define	CENTRALITY_H
 #include "typedefs.h"
 #include "graph.h"
-#include "binary_heap.h"
+#include "datastructures.h"
 #include "paths_and_components.h"
 
 using namespace std;
