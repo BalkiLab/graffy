@@ -28,13 +28,26 @@ string T2str(T val) {
 }
 
 template <typename T>
-vector<T> split(const string& s, const char delim) {
-    vector<T> elems;
+void split(const string& s, const char delim, vector<T>& elems) {
+    elems.clear();
     stringstream ss(s);
     string item;
-    while (getline(ss, item, delim))
-        elems.push_back(str2T<T > (item));
-    return elems;
+    while (getline(ss, item, delim)) {
+        if (item.length()) elems.push_back(str2T<T > (item));
+        item.clear();
+    }    
+}
+
+template <typename T>
+void split(const string& s, vector<T>& elems) {
+    elems.clear();
+    stringstream ss(s);
+    string item;
+    while (!ss.eof()) {
+        ss >> item;
+        if (item.length()) elems.push_back(str2T<T > (item));
+        item.clear();
+    }
 }
 
 template <typename T>
@@ -268,6 +281,23 @@ template <typename K,typename V>
 inline void map_find_and_modify(unordered_map<K, V>& data, const K& key, const V& value) {
     typename unordered_map<K, V>::iterator it = data.find(key);
     if (it != data.end()) it->second += value;
+}
+
+inline string filename(string file)
+{
+    ostringstream oss;
+    size_t found_dot,found_slash;
+    found_dot=file.find_last_of(".");
+    found_slash=file.find_last_of("/");
+    if ((found_dot != string::npos) && (found_slash != string::npos))
+        oss << file.substr(found_slash+1,(found_dot-found_slash-1));
+    else if ((found_dot == string::npos) && (found_slash != string::npos))
+        oss << file.substr(found_slash+1,(file.size()-found_slash-1));
+    else if ((found_dot != string::npos) && (found_slash == string::npos))
+        oss << file.substr(0,found_dot);
+    else
+        oss << file;
+    return oss.str();
 }
 
 #endif	/* UTITLITY_H */

@@ -83,8 +83,10 @@ void CDLib::get_degree_assortativity_coefficient(const graph& g,bool in_degrees,
             for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++) {
                 avg_excess_degree_neighbour += g.get_node_out_degree(aeit->first);
             }
-            avg_excess_degree_neighbour = (avg_excess_degree_neighbour/g.get_node_out_degree(i))-1;
-            assortativity[i] = ((g.get_node_out_degree(i) - 1) * g.get_node_out_degree(i) * (avg_excess_degree_neighbour - edd_mean))/(edd_variance * edge_factor);
+            if (g.get_node_out_degree(i) > 0) {
+                avg_excess_degree_neighbour = (avg_excess_degree_neighbour/g.get_node_out_degree(i))-1;
+                assortativity[i] = ((g.get_node_out_degree(i) - 1) * g.get_node_out_degree(i) * (avg_excess_degree_neighbour - edd_mean))/(edd_variance * edge_factor);
+            }
         }
     }
 }
@@ -118,16 +120,53 @@ double CDLib::get_degree_assortativity_coefficient(const graph& g,bool in_degree
     return (prod_sum - tmp_sq)/(square_sum - tmp_sq);
 }
 
-double CDLib::get_rich_club_coefficient(const graph& g,id_type hub_degree_def)
+double CDLib::get_rich_club_coefficient(const graph& g,id_type start_hub_degree_def)
+{
+/* This implementation is accordance to The rich-club phenomenon in the Internet topology, 2004 paper by S. Zhou and R. J. Mondragon */    
+    id_type num_rich_nodes = 0, num_rich_edges = 0;
+#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)         
+    for(id_type i=0;i<g.get_num_nodes();i++) {
+        if (g.get_node_out_degree(i) >= start_hub_degree_def) {
+            num_rich_nodes++;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++) {
+                if (g.get_node_out_degree(aeit->first) >= start_hub_degree_def) num_rich_edges++;
+            }
+        }   
+    }
+    return (double)(2 * num_rich_edges)/(num_rich_nodes * (num_rich_nodes-1));
+}
+
+double CDLib::normalized_rich_club_coefficient(const graph& g,id_type start_hub_degree_def)
+{
+/* This implementation is accordance to Detecting rich-club ordering in complex networks, 2006 paper by Colizza et al. */        
+    if (start_hub_degree_def <= 0)      start_hub_degree_def = 1;
+    id_type num_rich_nodes = 0, num_rich_edges = 0;
+    double rich_club_uncorrelated = 0, rich_club = 0;
+#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)         
+    for(id_type i=0;i<g.get_num_nodes();i++) {
+        rich_club_uncorrelated += g.get_node_out_degree(i);
+        if (g.get_node_out_degree(i) >= start_hub_degree_def) {
+            num_rich_nodes++;
+            for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++) {
+                if (g.get_node_out_degree(aeit->first) >= start_hub_degree_def) num_rich_edges++;
+            }
+        }   
+    }
+    rich_club = (double)(2 * num_rich_edges)/(num_rich_nodes * (num_rich_nodes-1));
+    rich_club_uncorrelated = (start_hub_degree_def * start_hub_degree_def) / rich_club_uncorrelated;
+    return rich_club/rich_club_uncorrelated;
+}
+
+double CDLib::get_poor_club_coefficient(const graph& g,id_type start_hub_degree_def)
 {
 /* This implementation is accordance to Detecting rich-club ordering in complex networks, 2006 paper by Colizza et al. */    
     id_type num_rich_nodes = 0, num_rich_edges = 0;
 #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)         
     for(id_type i=0;i<g.get_num_nodes();i++) {
-        if (g.get_node_out_degree(i) > hub_degree_def) {
+        if (g.get_node_out_degree(i) < start_hub_degree_def) {
             num_rich_nodes++;
             for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++) {
-                if (g.get_node_out_degree(aeit->first) > hub_degree_def) num_rich_edges++;
+                if (g.get_node_out_degree(aeit->first) < start_hub_degree_def) num_rich_edges++;
             }
         }   
     }
