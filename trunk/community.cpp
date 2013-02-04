@@ -1846,7 +1846,7 @@ void first_snapshot_init(string filepath, bool directed, bool weighted, dynamic_
     output.book_times.push_back(0.0);
     output.lp_labels.push_back(vector<id_type > ());
     output.graphs.push_back(graph(directed, weighted));
-    read_edgelist(output.graphs[output.graphs.size() - 1], filepath, directed, weighted);
+    read_edgelist(output.graphs[output.graphs.size() - 1], filepath);
     output.lp_num_label_changes.push_back(vector<id_type > (output.graphs[output.graphs.size() - 1].get_num_nodes(), 0));
 }
 
@@ -1922,7 +1922,7 @@ void pre_run(ifstream& ifs, bool directed, bool weighted, dynamic_lp_output& out
     output.graphs.push_back(graph(directed, weighted));
     string filepath, outfilepath;
     ifs >> filepath >> outfilepath;
-    read_edgelist(output.graphs[output.graphs.size() - 1], filepath, directed, weighted);
+    read_edgelist(output.graphs[output.graphs.size() - 1], filepath);
 }
 
 double prepare_labels_to_pass(dynamic_lp_output& output, vector<id_type>::const_iterator begin_it, vector<id_type>& temp_changes) {

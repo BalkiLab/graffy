@@ -14,11 +14,13 @@
 #include "graph.h"
 #include "paths_and_components.h"
 #include "graph_operations.h"
+#include "utility.h"
 using namespace std;
 
 namespace CDLib
 {
-        bool read_edgelist(graph& g,const string& filepath,bool directed, bool weighted);
+        bool read_edgelist(graph& g,const string& filepath);
+        bool read_adjacencylist(graph& g,const string& filepath);
         bool read_matlab_sp(graph& g,const string& filepath);
         bool write_edgelist(graph& g,const string& filepath,bool weights);
         bool write_xml(graph& g,const string& filepath,bool weights);

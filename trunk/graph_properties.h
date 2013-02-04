@@ -23,6 +23,8 @@ namespace CDLib
     void get_degree_assortativity_coefficient(const graph& g,bool in_degrees,vector<double>& assortativity);
     double get_degree_assortativity_coefficient(const graph& g,bool in_degrees);
     double get_rich_club_coefficient(const graph& g,id_type start_hub_degree);
+    double normalized_rich_club_coefficient(const graph& g,id_type start_hub_degree_def);
+    double get_poor_club_coefficient(const graph& g,id_type start_hub_degree);
     
     double kl_divergence_from_random_graph(const graph& g);
     double distance_from_random_graph(const graph& g, bool hellinger);  // Hellinger and Bhattacharyya Distance of Degree Distribution
