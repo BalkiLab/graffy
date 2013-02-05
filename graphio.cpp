@@ -65,12 +65,14 @@ bool CDLib::read_adjacencylist(graph& g, const string& filepath) {
             getline(ifs, line);
             vector<id_type> units;
             split(line, units);
-            if ((type == 0) || (type == 1)) nid = units[0];
-            else nid++;
-            g.add_node(to_string(nid));
-            for (id_type i = estart; i < units.size(); i++) {
-                g.add_node(to_string(units[i]));
-                g.add_edge(to_string(nid), to_string(units[i]),1);
+            if (units.size() > 0) {
+                if ((type == 0) || (type == 1)) nid = units[0];
+                else nid++;
+                g.add_node(to_string(nid));
+                for (id_type i = estart; i < units.size(); i++) {
+                    g.add_node(to_string(units[i]));
+                    g.add_edge(to_string(nid), to_string(units[i]),1);
+                }
             }
         }
         g.set_graph_name(filename(filepath));
