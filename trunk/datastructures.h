@@ -22,7 +22,7 @@ namespace CDLib {
         forward_map fm_labels;
         reverse_map rm_ids;
     public:
-
+        bool swap_labels(id_type old_id,id_type new_id);
         id_type size() const;
         node_label_iterator begin() const;
         node_label_iterator end() const;

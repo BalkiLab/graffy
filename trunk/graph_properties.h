@@ -16,7 +16,8 @@ using namespace std;
 
 namespace CDLib 
 {
-    void get_degree_sequence(const graph& g,vector<id_type>& degrees, bool in_degrees);
+    template <typename T>
+    void get_degree_sequence(const graph& g,vector<T>& degrees, bool in_degrees);
     void get_degree_histogram(const graph& g,vector<id_type>& dist, bool in_degrees);
     double get_degree_distribution(const graph& g,vector<double>& dist,bool in_degrees);
     double get_degree_variance(const graph& g,bool in_degrees);

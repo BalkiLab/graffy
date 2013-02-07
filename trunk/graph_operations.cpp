@@ -32,7 +32,8 @@ id_type CDLib::extract_subgraph(const graph& g, node_set& nodes, graph& sg)
 
 id_type CDLib::copy_graph(const graph& src, graph& dst){
     dst.clear();
-    for(id_type i=0;i<src.get_num_nodes();i++) dst.add_node();
+    dst.set_graph_name(src.get_graph_name());
+    for(id_type i=0;i<src.get_num_nodes();i++) dst.add_node(src.get_node_label(i));
     for(id_type i=0;i<src.get_num_nodes();i++)
         for(adjacent_edges_iterator aeit=src.out_edges_begin(i);aeit != src.out_edges_end(i);aeit++)
             dst.add_edge(i,aeit->first,aeit->second);

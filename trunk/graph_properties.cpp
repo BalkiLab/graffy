@@ -7,7 +7,8 @@
 
 #include "graph_properties.h"
 
-void CDLib::get_degree_sequence(const graph& g,vector<id_type>& degrees, bool in_degrees)
+template <typename T>
+void CDLib::get_degree_sequence(const graph& g,vector<T>& degrees, bool in_degrees)
 {
     degrees.clear();
     degrees.assign(g.get_num_nodes(),0);

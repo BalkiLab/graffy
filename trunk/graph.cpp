@@ -5,6 +5,8 @@
 * Created on April 1, 2012, 12:00 PM
 */
 
+#include <assert.h>
+
 #include "graph.h"
 using namespace CDLib;
 
@@ -114,9 +116,13 @@ wt_t graph::add_edge(const string& from_label, const string& to_label,wt_t weigh
 
 bool graph::remove_node(id_type id) 
 { 
-    if(blm_labels.erase(id)) return dam_backend.delete_node(id);
-    return false;
+    if(id>=get_num_nodes()) return false;
+    blm_labels.swap_labels(id,get_num_nodes()-1);
+    dam_backend.delete_node(id);
+    blm_labels.erase(get_num_nodes()-1);
+    return true;
 }
+
 bool graph::remove_node(const string& label) { return remove_node(get_node_id(label));}
 
 id_type graph::remove_nodes(const node_set& nodes)
