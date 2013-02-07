@@ -14,6 +14,7 @@ node_label_iterator bidirectional_label_map::end() const {
     return fm_labels.end();
 }
 
+
 string bidirectional_label_map::get_label(id_type id) const {
     unordered_map<id_type, string>::const_iterator it = rm_ids.find(id);
     if (it != rm_ids.end()) return it->second;
@@ -58,6 +59,19 @@ bool bidirectional_label_map::erase(id_type id) {
     }
     return false;
 }
+
+bool bidirectional_label_map::swap_labels(id_type old_id,id_type new_id){
+    unordered_map<id_type, string>::iterator rit_new = rm_ids.find(new_id);
+    unordered_map<id_type, string>::iterator rit_old = rm_ids.find(old_id);
+    if(rit_new == rm_ids.end() || rit_old == rm_ids.end()) return false;
+    unordered_map<string, id_type>::iterator fit_new = fm_labels.find(rit_new->second);
+    unordered_map<string, id_type>::iterator fit_old = fm_labels.find(rit_old->second);
+    if(fit_new == fm_labels.end() || fit_old == fm_labels.end()) return false;
+    swap(rit_new->second,rit_old->second);
+    swap(fit_new->second,fit_old->second);
+    return true;
+}
+
 
 bool bidirectional_label_map::clear() {
     if (!fm_labels.size()) return false;
@@ -167,7 +181,6 @@ bool double_adjacency_map::insert_edge(id_type from_id, id_type to_id, wt_t weig
 
 bool double_adjacency_map::delete_edge(id_type from_id, id_type to_id) {
     wt_t weight = edge_weight(from_id, to_id);
-    if (!weight) return false;
     am_in_edges[to_id].erase(from_id);
     am_out_edges[from_id].erase(to_id);
     st_num_edges--;
@@ -178,7 +191,8 @@ bool double_adjacency_map::delete_edge(id_type from_id, id_type to_id) {
         st_num_self_edges--;
         wt_self_edge_wt -= weight;
     }
-    return true;
+    if(weight)return true;
+    else return false;
 }
 
 wt_t double_adjacency_map::set_edge_wt(id_type from_id, id_type to_id, wt_t weight) {
@@ -208,11 +222,13 @@ bool double_adjacency_map::delete_node(id_type id) {
         for (adjacent_edges_iterator aeit = am_out_edges[id].begin(); aeit != am_out_edges[id].end(); aeit++)
             edges_to_delete.push_back(make_pair(id, aeit->first));
         for (adjacent_edges_iterator aeit = am_in_edges[last_id].begin(); aeit != am_in_edges[last_id].end(); aeit++) {
-            if (aeit->first != id)edges_to_add.push_back(make_pair(make_pair(aeit->first, id), aeit->second));
+            if (aeit->first == last_id)edges_to_add.push_back(make_pair(make_pair(id, id), aeit->second));
+            else if (aeit->first != id)edges_to_add.push_back(make_pair(make_pair(aeit->first, id), aeit->second));
             edges_to_delete.push_back(make_pair(aeit->first, last_id));
         }
         for (adjacent_edges_iterator aeit = am_out_edges[last_id].begin(); aeit != am_out_edges[last_id].end(); aeit++) {
-            if (aeit->first != id)edges_to_add.push_back(make_pair(make_pair(id, aeit->first), aeit->second));
+            if(aeit->first == last_id) edges_to_add.push_back(make_pair(make_pair(id, id), aeit->second));
+            else if (aeit->first != id)edges_to_add.push_back(make_pair(make_pair(id, aeit->first), aeit->second));
             edges_to_delete.push_back(make_pair(last_id, aeit->first));
         }
     } else {

@@ -647,49 +647,75 @@ void CDLib::get_all_paths(const graph& g,id_type source, id_type dest,vector<id_
 //            return 0;
 //}
 
-double CDLib::efficiency_sw_global(const graph& g)
-{
-    /* Returning Global Efficiency of a Small World Network according to 2001 paper 
-     *  function in this library. The chunk size of dynamic scheduling in OpenMP is set to 10. */
-    if (g.get_num_nodes() > 1)
-    {
-        const id_type control = 70000;        // This controls the memory requirement. 70000 x 70000 x 8 = 36.51GB
+double efficiency_undirected_unweighted(const graph& g) {
+    if (g.get_num_nodes() > 1) {
         double efficiency = 0;
-        double ideal = 1 / g.minimum_weight();
-        if (g.get_num_nodes() < control)
-        {
-            vector< vector<double> > path_matrix;
-            all_pairs_shortest_paths(g,path_matrix);
-#pragma omp parallel for schedule(dynamic,10) shared(g,path_matrix) reduction(+:efficiency)
-            for (unsigned long i = 0 ; i < g.get_num_nodes(); i++)
-            {
-                for (unsigned long j = 0 ; j < g.get_num_nodes(); j++)
-                    if (i != j)
-                        efficiency = efficiency + (1/path_matrix[i][j]);
+//#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:efficiency)
+        for (id_type i = 0; i < g.get_num_nodes(); i++) {
+            vector<double> distances(g.get_num_nodes(), numeric_limits<double>::infinity());
+            queue<id_type> q_bfs;
+            q_bfs.push(i);
+            distances[i] = 0;
+            while (!q_bfs.empty()) {
+                id_type current = q_bfs.front();
+                q_bfs.pop();
+                for (adjacent_edges_iterator aeit = g.out_edges_begin(current); aeit != g.out_edges_end(current); aeit++) {
+                    if (distances[aeit->first] == numeric_limits<double>::infinity()) {
+                        distances[aeit->first] = distances[current] + 1;
+                        q_bfs.push(aeit->first);
+                        efficiency += (1 / distances[aeit->first]);
+                    }
+                }
             }
         }
-        else {
-#pragma omp parallel for schedule(dynamic,10) shared(g) reduction(+:efficiency)
-            for (unsigned long i = 0 ; i < g.get_num_nodes(); i++)
-            {
-                vector< vector<id_type> > preds;
-                vector<double> distance;
-                single_source_shortest_paths_djikstra(g,i,distance,preds);
-                for (unsigned long j = 0 ; j < g.get_num_nodes(); j++)
-                    if (i != j)
-                        efficiency = efficiency + (1/distance[j]);
-            } 
-        }
-        
-//        cout << "\nIdeal :" << ideal << "\tEfficiency :" << efficiency << endl;
-        efficiency = efficiency / (g.get_num_nodes() * (g.get_num_nodes() - 1));
-        efficiency /= ideal;
+        efficiency /= g.get_num_nodes() * (g.get_num_nodes() - 1);
         return efficiency;
-    }
-    else if (g.get_num_nodes() == 1)
-            return 1;
+    } else if (g.get_num_nodes() == 1)
+        return 1;
     else
+        return 0;
+}
+
+double CDLib::efficiency_sw_global(const graph& g) {
+    /* Returning Global Efficiency of a Small World Network according to 2001 paper 
+     *  function in this library. The chunk size of dynamic scheduling in OpenMP is set to 10. */
+    if (!g.is_directed() && !g.is_weighted()) {
+        return efficiency_undirected_unweighted(g);
+    } else {
+        if (g.get_num_nodes() > 1) {
+            const id_type control = 70000; // This controls the memory requirement. 70000 x 70000 x 8 = 36.51GB
+            double efficiency = 0;
+            double ideal = 1 / g.minimum_weight();
+            if (g.get_num_nodes() < control) {
+                vector< vector<double> > path_matrix;
+                all_pairs_shortest_paths(g, path_matrix);
+#pragma omp parallel for schedule(dynamic,20) shared(g,path_matrix) reduction(+:efficiency)
+                for (unsigned long i = 0; i < g.get_num_nodes(); i++) {
+                    for (unsigned long j = 0; j < g.get_num_nodes(); j++)
+                        if (i != j)
+                            efficiency = efficiency + (1 / path_matrix[i][j]);
+                }
+            } else {
+#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:efficiency)
+                for (unsigned long i = 0; i < g.get_num_nodes(); i++) {
+                    vector< vector<id_type> > preds;
+                    vector<double> distance;
+                    single_source_shortest_paths_djikstra(g, i, distance, preds);
+                    for (unsigned long j = 0; j < g.get_num_nodes(); j++)
+                        if (i != j)
+                            efficiency = efficiency + (1 / distance[j]);
+                }
+            }
+
+            //        cout << "\nIdeal :" << ideal << "\tEfficiency :" << efficiency << endl;
+            efficiency = efficiency / (g.get_num_nodes() * (g.get_num_nodes() - 1));
+            efficiency /= ideal;
+            return efficiency;
+        } else if (g.get_num_nodes() == 1)
+            return 1;
+        else
             return 0;
+    }
 }
 
 double CDLib::path_entropy(const graph& g)
