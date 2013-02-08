@@ -650,7 +650,7 @@ void CDLib::get_all_paths(const graph& g,id_type source, id_type dest,vector<id_
 double efficiency_undirected_unweighted(const graph& g) {
     if (g.get_num_nodes() > 1) {
         double efficiency = 0;
-//#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:efficiency)
+#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:efficiency)
         for (id_type i = 0; i < g.get_num_nodes(); i++) {
             vector<double> distances(g.get_num_nodes(), numeric_limits<double>::infinity());
             queue<id_type> q_bfs;
