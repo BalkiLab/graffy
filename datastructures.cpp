@@ -183,16 +183,18 @@ bool double_adjacency_map::delete_edge(id_type from_id, id_type to_id) {
     wt_t weight = edge_weight(from_id, to_id);
     am_in_edges[to_id].erase(from_id);
     am_out_edges[from_id].erase(to_id);
-    st_num_edges--;
-    wt_total_wt -= weight;
-    vw_in_degree[to_id] -= weight;
-    vw_out_degree[from_id] -= weight;
-    if (from_id == to_id) {
-        st_num_self_edges--;
-        wt_self_edge_wt -= weight;
+    if(weight){
+        st_num_edges--;
+        wt_total_wt -= weight;
+        vw_in_degree[to_id] -= weight;
+        vw_out_degree[from_id] -= weight;
+        if (from_id == to_id) {
+                st_num_self_edges--;
+                wt_self_edge_wt -= weight;
+        }
+        return true;
     }
-    if(weight)return true;
-    else return false;
+    return false;
 }
 
 wt_t double_adjacency_map::set_edge_wt(id_type from_id, id_type to_id, wt_t weight) {
@@ -291,7 +293,6 @@ pair<id_type, wt_type> binary_heap::top() const {
 void binary_heap::heapify_up(id_type pos) {
     while (pos > 0 && compare(vpiw_heap[pos], vpiw_heap[(pos - 1) / 2])) {
         swap(umis_pos[vpiw_heap[pos].first], umis_pos[vpiw_heap[(pos - 1) / 2].first]);
-        //cout << "Heapify_Up("<< pos <<") Swapping (" << vpiw_heap[pos].first << "," << vpiw_heap[pos].second << ") and (" << vpiw_heap[(pos-1)/2].first << "," << vpiw_heap[(pos-1)/2].second << ")" <<endl;
         swap(vpiw_heap[pos], vpiw_heap[(pos - 1) / 2]);
         pos = (pos - 1) / 2;
     }

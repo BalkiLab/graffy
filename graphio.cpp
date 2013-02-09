@@ -24,7 +24,8 @@ bool CDLib::read_edgelist(graph& g, const string& filepath) {
             if (units.size() != 0) {
                 if ((units.size() < 2) || (units.size() > 3)) return false;
                 if (units.size() == 3) weight = str2T<double>(units[2]);
-                g.add_node(units[0]);       g.add_node(units[1]);
+                g.add_node(units[0]);       
+                g.add_node(units[1]);
                 g.add_edge(units[0],units[1],weight);
             }
         }
