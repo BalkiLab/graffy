@@ -58,6 +58,14 @@ void cumsum(const vector<T>& v_in, vector<T>& v_out) {
         v_out[i] = v_out[i - 1] + v_in[i];
 }
 
+template <class Container>
+id_type num_unique_elements_seqential(const Container &c){
+    unordered_set<typename Container::value_type> test;
+    for(typename Container::const_iterator it=c.begin();it!=c.end();it++)
+        test.insert(*it);
+    return test.size();
+}
+
 template <class Element, class Val>
 class max_label_picker {
 private:
@@ -275,6 +283,13 @@ template <typename K,typename V>
 inline void map_insert_and_increment(unordered_map<K, V>& data, const K& key, const V& value) {
     pair < typename unordered_map<K, V>::iterator, bool> ret = data.insert(make_pair(key, 0));
     ret.first->second += value;
+}
+
+template <typename K,typename V>
+inline V map_find_value_or_zero(const unordered_map<K, V>& data, const K& key) {
+    typename unordered_map<K, V>::const_iterator ret = data.find(key);
+    if(ret != data.end()) return ret->second;
+    return 0;
 }
 
 template <typename K,typename V>

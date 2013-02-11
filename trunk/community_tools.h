@@ -104,7 +104,7 @@ namespace CDLib
     double dongen_index(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2);
     double nmi(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2);
     double variation_of_information(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2);
-    
+    id_type get_num_of_communities(const vector<id_type>& labels);
     void convert_labels_to_communities(const vector<id_type>& labels,vector<node_set>& communities);
     bool read_partition(const graph& g,const string& filepath,vector<node_set>& communities);
     
