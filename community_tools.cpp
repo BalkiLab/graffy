@@ -471,6 +471,10 @@ void CDLib::convert_communities_to_labels(const vector<node_set>& communities,ve
             labels[*nit] = i;
 }
 
+id_type CDLib::get_num_of_communities(const vector<id_type>& labels){
+    return num_unique_elements_seqential(labels);
+}
+
 bool CDLib::write_partition(const graph& g,const string& filepath,vector<node_set>& communities)
 {
     ofstream ofs(filepath.c_str());
