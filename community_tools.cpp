@@ -700,3 +700,35 @@ void CDLib::compute_confusion_matrix_global(const graph&g, vector<node_set>& obs
                     cmat[i][j]++;
  
 }
+    void CDLib::componentize_and_reindex_labels(const graph& g,const vector<id_type>& templabels, vector<id_type>& labels){
+        labels.assign(templabels.size(),0);
+        id_type lbl_idx = 0;
+        unordered_map<id_type,id_type> lbl_map;
+        vector<node_set> comms,new_comms;
+        for(id_type i=0;i<templabels.size();i++)
+        {
+            pair<unordered_map<id_type,id_type>::iterator,bool> ret = lbl_map.insert(make_pair(templabels[i],lbl_idx));
+            if(ret.second){
+                lbl_idx++;
+                comms.push_back(node_set());
+            }
+            labels[i] = ret.first->second;
+            comms[ret.first->second].insert(i);
+        }
+        for(id_type i=0;i<comms.size();i++){
+            graph sg(0,0);
+            extract_subgraph(g,comms[i],sg);
+            vector<node_set> comps;
+            get_connected_components_undirected(sg,comps);
+            for(id_type j=0;j<comps.size();j++){
+                if(comps[j].size()){
+                        new_comms.push_back(node_set());
+                        for(node_set::iterator nit = comps[j].begin();nit != comps[j].end();nit++)
+                                new_comms[new_comms.size()-1].insert(g.get_node_id(sg.get_node_label(*nit)));
+                }
+            }
+        }
+        for(id_type i=0;i<new_comms.size();i++)
+            for(node_set::iterator nit=new_comms[i].begin();nit!=new_comms[i].end();nit++)
+                labels[*nit] = i;
+    }

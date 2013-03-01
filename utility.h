@@ -66,6 +66,30 @@ id_type num_unique_elements_seqential(const Container &c){
     return test.size();
 }
 
+template<typename T>
+void read_vector_1D(const string& infile,vector<T>& data){
+    ifstream ifs(infile);
+    copy(istream_iterator<T> (ifs), istream_iterator<T> (), back_inserter(data));
+    ifs.close();
+}
+
+template<typename T>
+void read_vector_of_vector(const string& infile,vector< vector<T> >& data){
+    ifstream ifs(infile);
+    while(!ifs.eof()){
+        string line;
+        getline(ifs, line);
+        istringstream iss(line);
+        data.push_back(vector<T>());
+        while(!iss.eof()){
+            T val;
+            iss >> val;
+            data.back().push_back(val);
+        }
+    }
+    ifs.close();
+}
+
 template <class Element, class Val>
 class max_label_picker {
 private:
@@ -296,6 +320,13 @@ template <typename K,typename V>
 inline void map_find_and_modify(unordered_map<K, V>& data, const K& key, const V& value) {
     typename unordered_map<K, V>::iterator it = data.find(key);
     if (it != data.end()) it->second += value;
+}
+
+template <typename K,typename V>
+inline void map_find_and_modify_force(unordered_map<K, V>& data, const K& key, const V& value) {
+    typename unordered_map<K, V>::iterator it = data.find(key);
+    if (it != data.end()) it->second += value;
+    else map_insert_and_increment<K,V>(data, key, value) ;
 }
 
 inline string filename(string file)

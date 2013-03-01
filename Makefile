@@ -11,7 +11,7 @@ libcdlib.so : $(OBJS)
 	$(CC) -std=c++0x -shared -o libcdlib_d.so $(OBJS_D) $(LIBS)
 	
 
-community_tools.o : graph.o graph_operations.o statistics.o
+community_tools.o : graph.o graph_operations.o statistics.o paths_and_components.o
 	$(CC) $(CFLAGS) -o community_tools.o  -c community_tools.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o community_tools_d.o  -c community_tools.cpp $(LIBS)
 	
