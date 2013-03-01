@@ -10,6 +10,7 @@
 
 #include "graph.h"
 #include "graph_operations.h"
+#include "paths_and_components.h"
 #include "statistics.h"
 
 using namespace std;
@@ -132,6 +133,7 @@ namespace CDLib
     void compute_confusion_matrix_local(const graph& g,node_set& observed, node_set& truth,confusion_matrix_local& res);
     
     void compute_confusion_matrix_global(const graph&g, vector<node_set>& observed,vector<node_set>& truth,vector< vector<id_type> >& cmat);
+    void componentize_and_reindex_labels(const graph& g,const vector<id_type>& templabels, vector<id_type>& labels);
 };
 
 #endif	/* COMMUNITY_TOOLS_H */
