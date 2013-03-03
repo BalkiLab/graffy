@@ -144,14 +144,32 @@ void CDLib::generate_chord_graph(graph& g,id_type num_nodes)
 
 void CDLib::generate_LEET_chord_graph(graph& g, id_type num_nodes)
 {
+//    init_empty_graph(g,num_nodes);
+//    id_type cluster_size = log2(g.get_num_nodes());
+//    for (id_type i=0; i<g.get_num_nodes(); i++) 
+//    {       
+//        g.add_edge(i,(i-1) %  g.get_num_nodes(),1);
+//        g.add_edge(i,(i+1) %  g.get_num_nodes(),1);
+//        id_type id_in_cluster = g.get_num_nodes() % static_cast<id_type>(cluster_size);
+//        g.add_edge(i,id_in_cluster*(1+static_cast<id_type>(cluster_size)),1);
+//    }
     init_empty_graph(g,num_nodes);
-    id_type cluster_size = log2(g.get_num_nodes());
-    for (id_type i=0; i<g.get_num_nodes(); i++) 
-    {       
-        g.add_edge(i,(i-1) %  g.get_num_nodes(),1);
-        g.add_edge(i,(i+1) %  g.get_num_nodes(),1);
-        id_type id_in_cluster = g.get_num_nodes() % static_cast<id_type>(cluster_size);
-        g.add_edge(i,id_in_cluster*(1+static_cast<id_type>(cluster_size)),1);
+    id_type num_clusters = num_nodes/log2(num_nodes);
+    id_type num_nodes_per_cluster = static_cast<id_type>(log2(num_nodes));
+    for(id_type i=0;i<num_clusters;i++)
+    {
+        id_type start_id = i*num_nodes_per_cluster;
+        //Adding the individual Clusters
+        for(id_type j=0;j<num_nodes_per_cluster;j++){
+            g.add_edge(start_id + j,start_id + ((j-1) % num_nodes_per_cluster) ,1);
+            for(id_type k=1; k<=num_nodes_per_cluster/2; k*=2 )
+                g.add_edge(start_id  + j,start_id  + ((j+k) % num_nodes_per_cluster),1);
+        }
+        //Adding the long range links
+        for(id_type j=log2(num_clusters)-1,k=0;j>=0;j++,k++){
+            id_type next_cluster_id = ((i+j)%num_clusters)*num_nodes_per_cluster;
+            g.add_edge(start_id + (k%num_nodes_per_cluster),next_cluster_id+(j%num_nodes_per_cluster),1);
+        }
     }
     g.set_graph_name("leet_chord_" + T2str<id_type>(num_nodes));
 }
