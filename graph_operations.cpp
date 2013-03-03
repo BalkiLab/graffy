@@ -27,6 +27,7 @@ id_type CDLib::extract_subgraph(const graph& g, node_set& nodes, graph& sg)
             }
         }
     }
+    sg.set_graph_name(g.get_graph_name() + "_sg");
     return sg.get_num_edges();
 }
 
