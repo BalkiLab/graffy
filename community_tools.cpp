@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   community_tools.cpp
  * Author: bharath
- * 
+ *
  * Created on 5 April, 2012, 2:27 AM
  */
 
@@ -9,7 +9,7 @@
 
 using namespace CDLib;
 
-CDLib::cluster_edges::cluster_edges() : 
+CDLib::cluster_edges::cluster_edges() :
     num_inter_cluster_edges(0),
     num_intra_cluster_edges(0),
     num_expected_inter_cluster_edges(0.0),
@@ -47,7 +47,7 @@ CDLib::cluster_edges::cluster_edges(const graph& g,node_set& comm)
         {
             double wt_expected = (g.get_node_out_weight(*it)*g.get_node_in_weight(aeit->first))/(2*g.get_total_weight());
             double num_expected = (double)(g.get_node_out_degree(*it)*g.get_node_in_degree(aeit->first)/(double)(2*g.get_num_edges()));
-            if(comm.find(aeit->first) != comm.end() ) 
+            if(comm.find(aeit->first) != comm.end() )
             {
                 node_intra_cluster_edges+=aeit->second;
                 num_intra_cluster_edges++;
@@ -63,7 +63,7 @@ CDLib::cluster_edges::cluster_edges(const graph& g,node_set& comm)
                 wt_inter_cluster_edges += aeit->second;
                 wt_expected_inter_cluster_edges += wt_expected;
             }
-            
+
         }
         if(node_inter_cluster_edges > node_intra_cluster_edges) is_strong_radicchi_community = false;
         double odf = node_inter_cluster_edges/g.get_node_out_degree(*it);
@@ -178,7 +178,7 @@ double CDLib::partition_quality(const graph& g,vector<node_set>& comms,double (*
     double mod_val =0;
     for(id_type i=0;i<comms.size();i++)
         mod_val += func(g,comms[i]);
-    return mod_val;  
+    return mod_val;
 }
 
 double CDLib::modularity(const graph& g, vector<node_set>& comms)
@@ -189,7 +189,7 @@ double CDLib::modularity(const graph& g, vector<node_set>& comms)
         cluster_edges ce(g,comms[i]);
         mod_val += (ce.wt_intra_cluster_edges - ce.wt_expected_intra_cluster_edges);
     }
-    return mod_val/(2*g.get_total_weight());      
+    return mod_val/(2*g.get_total_weight());
 }
 
 double CDLib::modularity_density(const graph& g, vector<node_set>& comms)
@@ -200,7 +200,7 @@ double CDLib::modularity_density(const graph& g, vector<node_set>& comms)
         cluster_edges ce(g,comms[i]);
         mod_val += (ce.wt_intra_cluster_edges/ce.wt_expected_intra_cluster_edges);
     }
-    return mod_val;      
+    return mod_val;
 }
 
 double CDLib::community_score(const graph& g, vector<node_set>& comms)
@@ -211,7 +211,7 @@ double CDLib::community_score(const graph& g, vector<node_set>& comms)
         cluster_edges ce(g,comms[i]);
         mod_val += pow((2*ce.wt_intra_cluster_edges)/comms[i].size(),2);
     }
-    return mod_val;      
+    return mod_val;
 }
 
 double npr(id_type n, id_type r)
@@ -220,8 +220,8 @@ double npr(id_type n, id_type r)
     for(id_type i=0;i<r;i++)ret_val *= (n-i);
     return ret_val;
 }
-double ncr(id_type n, id_type r) 
-{ 
+double ncr(id_type n, id_type r)
+{
     double ret_val_num=npr(n,r),ret_val_denom = 1;
     for(id_type i=0;i<r;i++)ret_val_denom *= i;
     return ret_val_num/ret_val_denom;
@@ -283,9 +283,9 @@ void CDLib::compute_all_metrics_partition(const graph& g, vector<node_set>& comm
         metrics[10] += ce.flake_odf/comms[i].size();
         metrics[11] += (1/4*(g.get_total_weight())*(ce.wt_intra_cluster_edges - ce.wt_expected_intra_cluster_edges)); //Modularity
         metrics[12] += (ce.wt_intra_cluster_edges/ce.wt_expected_intra_cluster_edges); //Modularity Density
-        metrics[13] += pow((2*ce.wt_intra_cluster_edges)/comms[i].size(),2);        
+        metrics[13] += pow((2*ce.wt_intra_cluster_edges)/comms[i].size(),2);
     }
-    metrics[11]/=(4*g.get_total_weight());  
+    metrics[11]/=(4*g.get_total_weight());
 }
 
 void CDLib::compute_community_metrics(const graph& g, node_set& comm,community_metrics& metrics)
@@ -399,7 +399,7 @@ double CDLib::nmi(id_type num_nodes, vector<node_set>& comms1, vector<node_set>&
 {
     if(!num_nodes || !comms1.size() || !comms2.size()) return 0;
     double num=0,denom1=0,denom2=0;
-    for(id_type i=0; i< comms1.size(); i++)    
+    for(id_type i=0; i< comms1.size(); i++)
         if(comms1[i].size())denom1 += ((double)comms1[i].size()/(double)num_nodes)*log((double)comms1[i].size()/(double)num_nodes);
     for(id_type i=0; i< comms2.size(); i++)
         if(comms2[i].size())denom2 += ((double)comms2[i].size()/(double)num_nodes)*log((double)comms2[i].size()/(double)num_nodes);
@@ -605,7 +605,7 @@ bool CDLib::is_member_of(id_type id, node_set& ns)
 bool CDLib::in_same_comm(id_type i,id_type j,vector<node_set>& comms)
 {
     for(id_type k=0;k<comms.size();k++)
-        if(is_member_of(i,comms[k]) && is_member_of(j,comms[k])) 
+        if(is_member_of(i,comms[k]) && is_member_of(j,comms[k]))
             return true;
     return false;
 }
@@ -629,19 +629,6 @@ double CDLib::degree_homogenity_test(graph& g, node_set & ns)
     return static_cast<double>(degstats.variance)/static_cast<double>(degstats.mean_val);
 }
 
-double CDLib::kl_divergence(vector<double>& p,vector<double>& q)
-{
-    if(p.size() == q.size())
-    {
-        double kl_div = 0;
-        for(id_type i=0;i<p.size();i++)
-            if(p[i] && q[i]) 
-                kl_div += p[i]*log(p[i]/q[i]);
-        return kl_div;
-    }
-    return 1;
-}
-
 double CDLib::entropy_comparision_test(const graph& g,node_set& ns)
 {
     graph subg(g.is_directed(),g.is_weighted());
@@ -657,7 +644,7 @@ void CDLib::get_community_graph(const graph&g, vector<node_set>& comms,graph& co
     comm_graph.clear();
     vector<id_type> labels;
     convert_communities_to_labels(comms,labels);
-    for(id_type i=0;i<comms.size();i++)comm_graph.add_node();   
+    for(id_type i=0;i<comms.size();i++)comm_graph.add_node();
     for(id_type i=0;i<comms.size();i++)
         for(node_set::iterator nit = comms[i].begin();nit!=comms[i].end();nit++)
             for(adjacent_edges_iterator aeit = g.out_edges_begin(*nit); aeit != g.out_edges_end(*nit); aeit++)
@@ -698,7 +685,7 @@ void CDLib::compute_confusion_matrix_global(const graph&g, vector<node_set>& obs
             for(id_type j=0;j<truth.size();j++)
                 if(is_member_of(*nit,truth[j]))
                     cmat[i][j]++;
- 
+
 }
     void CDLib::componentize_and_reindex_labels(const graph& g,const vector<id_type>& templabels, vector<id_type>& labels){
         labels.assign(templabels.size(),0);
