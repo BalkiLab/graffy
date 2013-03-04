@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   community_tools.h
  * Author: bharath
  *
@@ -17,7 +17,7 @@ using namespace std;
 
 namespace CDLib
 {
-    
+
     struct confusion_matrix_local
     {
         id_type true_positives;
@@ -34,7 +34,7 @@ namespace CDLib
         double recall;
         double f_score;
     };
-    
+
     struct community_metrics
     {
         id_type size;
@@ -52,21 +52,21 @@ namespace CDLib
         double degree_entropy;
         double rwalk_entropy;
     };
-    
+
     struct cluster_edges
     {
         id_type num_inter_cluster_edges;
         id_type num_intra_cluster_edges;
-        
+
         double num_expected_inter_cluster_edges;
         double num_expected_intra_cluster_edges;
-        
+
         double wt_inter_cluster_edges;
         double wt_intra_cluster_edges;
-        
+
         double wt_expected_inter_cluster_edges;
         double wt_expected_intra_cluster_edges;
-        
+
         double max_odf;
         double avg_odf;
         double flake_odf;
@@ -87,12 +87,12 @@ namespace CDLib
     double max_odf_comm(const graph& g, node_set& comm);
     double avg_odf_comm(const graph& g, node_set& comm);
     double flake_odf_comm(const graph& g, node_set& comm);
-    bool radicchi_community(const graph& g, node_set& comm,bool strong);        
+    bool radicchi_community(const graph& g, node_set& comm,bool strong);
     double modularity_comm(const graph& g, node_set& comm);
     double modularity_density_comm(const graph& g, node_set& comm);
     double ratio_assoc_comm(const graph& g, node_set& comm);
     double normalized_assoc_comm(const graph& g, node_set& comm);
-    
+
     double partition_quality(const graph& g,vector<node_set>& comms,double (*func)(const graph& g,node_set& comm));
     double modularity(const graph& g, vector<node_set>& comms);
     double modularity_density(const graph& g, vector<node_set>& comms);
@@ -108,30 +108,29 @@ namespace CDLib
     id_type get_num_of_communities(const vector<id_type>& labels);
     void convert_labels_to_communities(const vector<id_type>& labels,vector<node_set>& communities);
     bool read_partition(const graph& g,const string& filepath,vector<node_set>& communities);
-    
+
     void convert_communities_to_labels(const  vector<node_set>& communities,vector<id_type>& labels);
-    
+
     id_type reindex_communities(const vector<id_type>& old_comms,vector<id_type>& new_comms);
     id_type reindex_communities(vector<id_type>& labels);
-    
+
     bool write_partition(const graph& g,const string& filepath,vector<node_set>& communities);
     bool write_partition_unlabelled(const graph& g,const string& filepath,vector<node_set>& communities);
-    
-    
+
+
     double evolutionary_cluster_validation(const graph& g1, const graph& g2,vector<node_set>& comms1,vector<node_set>& comms2,double (*func)(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2));
     double evolutionary_cluster_validation_union(const graph& g1, const graph& g2,vector<node_set>& comms1,vector<node_set>& comms2,double (*func)(id_type num_nodes, vector<node_set>& comms1, vector<node_set>& comms2));
-    
+
     bool is_member_of(id_type id, node_set& ns);
     bool in_same_comm(id_type i,id_type j,vector<node_set>& comms);
     id_type in_comm(id_type i, vector<node_set>& comms);
     double degree_homogenity_test(graph& g, node_set & ns);
-    double kl_divergence(vector<double>& p,vector<double>& q);
     double entropy_comparision_test(const graph& g,node_set& ns);
-    
+
     void get_community_graph(const graph&g, vector<node_set>& comms,graph& comm_graph);
-    
+
     void compute_confusion_matrix_local(const graph& g,node_set& observed, node_set& truth,confusion_matrix_local& res);
-    
+
     void compute_confusion_matrix_global(const graph&g, vector<node_set>& observed,vector<node_set>& truth,vector< vector<id_type> >& cmat);
     void componentize_and_reindex_labels(const graph& g,const vector<id_type>& templabels, vector<id_type>& labels);
 };

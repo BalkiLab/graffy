@@ -54,7 +54,7 @@ double CDLib::get_degree_assortativity_coefficient(const graph& g, vector<double
     assortativity.clear();
     double assortativity_coef = 0;
     vector<double> degree_distt;
-    double mean = get_degree_distribution(g, degree_distt, 1);         // For undirected graph, both in_degrees and out_degrees.
+    double mean = get_degree_distribution(g, degree_distt, 1); // For undirected graph, both in_degrees and out_degrees.
     vector<double> excess_degree_distt(degree_distt.size() - 1, 0);
     double edd_mean = 0, edd_variance = 0;
     for (id_type i = 0; i < excess_degree_distt.size(); i++) {
@@ -74,13 +74,13 @@ double CDLib::get_degree_assortativity_coefficient(const graph& g, vector<double
 #pragma omp parallel for schedule(dynamic,20) shared(g,assortativity)
     for (id_type i = 0; i < g.get_num_nodes(); i++) {
         double avg_excess_degree_neighbour = 0;
-            for (adjacent_edges_iterator aeit = g.in_edges_begin(i); aeit != g.in_edges_end(i); aeit++) {
-                avg_excess_degree_neighbour += g.get_node_in_degree(aeit->first);
-            }
-            if (g.get_node_in_degree(i) > 0) {
-                avg_excess_degree_neighbour = (avg_excess_degree_neighbour / g.get_node_in_degree(i)) - 1;
-                assortativity[i] = ((g.get_node_in_degree(i) - 1) * g.get_node_in_degree(i) * (avg_excess_degree_neighbour - edd_mean)) / (edd_variance * edge_factor);
-            }
+        for (adjacent_edges_iterator aeit = g.in_edges_begin(i); aeit != g.in_edges_end(i); aeit++) {
+            avg_excess_degree_neighbour += g.get_node_in_degree(aeit->first);
+        }
+        if (g.get_node_in_degree(i) > 0) {
+            avg_excess_degree_neighbour = (avg_excess_degree_neighbour / g.get_node_in_degree(i)) - 1;
+            assortativity[i] = ((g.get_node_in_degree(i) - 1) * g.get_node_in_degree(i) * (avg_excess_degree_neighbour - edd_mean)) / (edd_variance * edge_factor);
+        }
         assortativity_coef += assortativity[i];
     }
     return assortativity_coef;
@@ -93,7 +93,7 @@ double CDLib::unbiased_assortativity(const graph& g) {
     vector<double> degree_distt;
     get_degree_assortativity_coefficient(g, assortativity_node);
     get_degree_distribution(g, degree_distt, 0);
-    vector<double> assortativity(degree_distt.size(),0);
+    vector<double> assortativity(degree_distt.size(), 0);
     for (id_type i = 0; i < assortativity_node.size(); i++)
         assortativity[g.get_node_in_degree(i)] += assortativity_node[i];
     for (id_type i = 1; i < degree_distt.size(); i++)
