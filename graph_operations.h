@@ -11,21 +11,24 @@
 #include "graph.h"
 
 namespace CDLib {
+    
+    
+    
     id_type extract_subgraph(const graph& g, node_set& nodes, graph& sg);
     void sample_graph(const graph&g, node_set& seeds, id_type hop_dist, graph& sample);
     // Naive implementation to Copy a graph. May be inefficient
     id_type copy_graph(const graph& src, graph& dst);
     double remove_edges_randomly(graph& g,double percentage);
-    void multiply_vector_transform(const graph& g, vector<double>& invec, double (*wt_transform_func)(const graph&g, id_type, id_type, double), vector<double>& outvec);
-    void random_walk(const graph& g, vector<double>& invec, id_type t, double (*wt_transform_func)(const graph&g, id_type, id_type, double), vector<double>& outvec);
+    void multiply_vector_transform(const graph& g,double (*wt_transform_func)(const graph&g,id_type,id_type,double),bool left,const vector<double>& invec,vector<double>& outvec);
+    void run_random_walks(const graph& g,const vector<double>& invec,id_type t,vector<double>& outvec);
     double transform_func_nop(const graph& g, id_type i, id_type j, double wt);
     double transform_func_row_stochastic(const graph& g, id_type i, id_type j, double wt);
     double transform_func_column_stochastic(const graph& g, id_type i, id_type j, double wt);
     double transform_func_max_rowcol_stochastic(const graph& g, id_type i, id_type j, double wt);
     double transform_func_min_rowcol(const graph& g, id_type i, id_type j, double wt);
     double transform_func_laplacian(const graph& g, id_type i, id_type j, double wt);
-    double transform_func_normalized_laplacian(const graph& g, id_type i, id_type j, double wt);
-    double transform_func_modularity(const graph& g, id_type i, id_type j, double wt);
+    double transform_func_normalized_laplacian_row(const graph& g, id_type i, id_type j, double wt);
+    double transform_func_normalized_laplacian_col(const graph& g, id_type i, id_type j, double wt);
 
     template<typename AssociativeContainer>
     void get_neighbor_assoc_cont(const graph&g, id_type node_id, bool out, AssociativeContainer& cont) {

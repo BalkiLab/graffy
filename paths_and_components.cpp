@@ -356,7 +356,9 @@ void CDLib::all_pairs_shortest_paths(const graph& g, vector< vector<double> >& p
 void CDLib::all_pairs_shortest_paths_djikshtra(const graph& g, vector< vector<double> >& path_matrix)
 {
     path_matrix.assign(g.get_num_nodes(),vector<double>());
-#pragma omp parallel for shared(g,path_matrix)
+#ifdef ENABLE_MULTITHREADING
+        #pragma omp parallel for shared(g,path_matrix)
+#endif
     for(id_type i=0;i<g.get_num_nodes();i++)
     {
         vector< vector<id_type> > preds;
@@ -380,7 +382,9 @@ void CDLib::all_pairs_shortest_paths_floyd_warshal(const graph& g, vector< vecto
         prev[i][i] = 0;
     }
     for(id_type k=0;k<g.get_num_nodes();k++){
-#pragma omp parallel for schedule(dynamic,10) shared(k,next,g)       
+#ifdef ENABLE_MULTITHREADING
+        #pragma omp parallel for schedule(dynamic,10) shared(k,next,g)       
+#endif
         for(id_type i=0;i<g.get_num_nodes();i++){
             for(id_type j=0;j<g.get_num_nodes();j++){
                 next[i][j] = ((prev[i][j] < (prev[i][k] + prev[k][j])) ? prev[i][j] : (prev[i][k] + prev[k][j]));
@@ -650,7 +654,9 @@ void CDLib::get_all_paths(const graph& g,id_type source, id_type dest,vector<id_
 double efficiency_undirected_unweighted(const graph& g) {
     if (g.get_num_nodes() > 1) {
         double efficiency = 0;
-#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:efficiency)
+#ifdef ENABLE_MULTITHREADING
+        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:efficiency)
+#endif
         for (id_type i = 0; i < g.get_num_nodes(); i++) {
             vector<double> distances(g.get_num_nodes(), numeric_limits<double>::infinity());
             queue<id_type> q_bfs;
@@ -689,14 +695,18 @@ double CDLib::efficiency_sw_global(const graph& g) {
             if (g.get_num_nodes() < control) {
                 vector< vector<double> > path_matrix;
                 all_pairs_shortest_paths(g, path_matrix);
-#pragma omp parallel for schedule(dynamic,20) shared(g,path_matrix) reduction(+:efficiency)
+#ifdef ENABLE_MULTITHREADING
+        #pragma omp parallel for schedule(dynamic,20) shared(g,path_matrix) reduction(+:efficiency)
+#endif
                 for (unsigned long i = 0; i < g.get_num_nodes(); i++) {
                     for (unsigned long j = 0; j < g.get_num_nodes(); j++)
                         if (i != j)
                             efficiency = efficiency + (1 / path_matrix[i][j]);
                 }
             } else {
-#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:efficiency)
+#ifdef ENABLE_MULTITHREADING
+        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:efficiency)
+#endif
                 for (unsigned long i = 0; i < g.get_num_nodes(); i++) {
                     vector< vector<id_type> > preds;
                     vector<double> distance;

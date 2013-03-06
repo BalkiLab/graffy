@@ -65,7 +65,9 @@ void CDLib::betweeness_centralities(const graph& g, vector<double>& bc)
 //    Parallel calculation of betweenness centrality. 
 //    Parallelism is automatically controlled to number of available CPU's
 //    Mutual Exclusion of variable bc is not required as only one addition is performed on that variable.
+#ifdef ENABLE_MULTITHREADING
 #pragma omp parallel for
+#endif
     for(id_type i=0; i<g.get_num_nodes();i++)
     {
         vector< vector<id_type> > preds(g.get_num_nodes(),vector<id_type>());
@@ -87,7 +89,9 @@ void CDLib::betweeness_centralities(const graph& g, vector<double>& bc)
         }
     }
     if(!g.is_directed())
-#pragma omp parallel for
+#ifdef ENABLE_MULTITHREADING
+        #pragma omp parallel for
+#endif
         for(id_type i=0;i<bc.size();i++) bc[i] /= 2;
 }
 
@@ -188,7 +192,9 @@ void CDLib::node_clustering_coefficient(const graph&g, vector<double>& nodes)
 {
     nodes.clear();
     nodes.assign(g.get_num_nodes(),0);
-#pragma omp parallel for
+#ifdef ENABLE_MULTITHREADING
+        #pragma omp parallel for
+#endif
     for(id_type i=0; i<g.get_num_nodes();i++)
         nodes[i] = node_clustering_coefficient(g,i);
 }
