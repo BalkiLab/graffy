@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   utitlity.h
  * Author: bharath
  *
@@ -35,7 +35,7 @@ void split(const string& s, const char delim, vector<T>& elems) {
     while (getline(ss, item, delim)) {
         if (item.length()) elems.push_back(str2T<T > (item));
         item.clear();
-    }    
+    }
 }
 
 template <typename T>
@@ -59,32 +59,34 @@ void cumsum(const vector<T>& v_in, vector<T>& v_out) {
 }
 
 template <class Container>
-id_type num_unique_elements_seqential(const Container &c){
+id_type num_unique_elements_seqential(const Container &c) {
     unordered_set<typename Container::value_type> test;
-    for(typename Container::const_iterator it=c.begin();it!=c.end();it++)
+    for (typename Container::const_iterator it = c.begin(); it != c.end(); it++)
         test.insert(*it);
     return test.size();
 }
 
 template<typename T>
-void read_vector_1D(const string& infile,vector<T>& data){
+void read_vector_1D(const string& infile, vector<T>& data) {
     ifstream ifs(infile);
-    copy(istream_iterator<T> (ifs), istream_iterator<T> (), back_inserter(data));
+    copy(istream_iterator<T > (ifs), istream_iterator<T > (), back_inserter(data));
     ifs.close();
 }
 
 template<typename T>
-void read_vector_of_vector(const string& infile,vector< vector<T> >& data){
+void read_vector_of_vector(const string& infile, vector< vector<T> >& data) {
     ifstream ifs(infile);
-    while(!ifs.eof()){
+    while (!ifs.eof()) {
         string line;
         getline(ifs, line);
-        istringstream iss(line);
-        data.push_back(vector<T>());
-        while(!iss.eof()){
-            T val;
-            iss >> val;
-            data.back().push_back(val);
+        if(line != "" && line[0] != ' ' && line[0] != '\t' && line[0] != '\n'){
+            istringstream iss(line);
+            data.push_back(vector<T > ());
+            while (!iss.eof()) {
+                T val;
+                iss >> val;
+                data.back().push_back(val);
+            }
         }
     }
     ifs.close();
@@ -303,47 +305,118 @@ public:
 typedef hash_heap<id_type, double, min_heap<id_type, double> > id_dbl_min_heap;
 typedef hash_heap<id_type, double, max_heap<id_type, double> > id_dbl_max_heap;
 
-template <typename K,typename V>
+template <typename K, typename V>
 inline void map_insert_and_increment(unordered_map<K, V>& data, const K& key, const V& value) {
     pair < typename unordered_map<K, V>::iterator, bool> ret = data.insert(make_pair(key, 0));
     ret.first->second += value;
 }
 
-template <typename K,typename V>
+template <typename K, typename V>
 inline V map_find_value_or_zero(const unordered_map<K, V>& data, const K& key) {
     typename unordered_map<K, V>::const_iterator ret = data.find(key);
-    if(ret != data.end()) return ret->second;
+    if (ret != data.end()) return ret->second;
     return 0;
 }
 
-template <typename K,typename V>
+template <typename K, typename V>
 inline void map_find_and_modify(unordered_map<K, V>& data, const K& key, const V& value) {
     typename unordered_map<K, V>::iterator it = data.find(key);
     if (it != data.end()) it->second += value;
 }
 
-template <typename K,typename V>
+template <typename K, typename V>
 inline void map_find_and_modify_force(unordered_map<K, V>& data, const K& key, const V& value) {
     typename unordered_map<K, V>::iterator it = data.find(key);
     if (it != data.end()) it->second += value;
-    else map_insert_and_increment<K,V>(data, key, value) ;
+    else map_insert_and_increment<K, V > (data, key, value);
 }
 
-inline string filename(string file)
-{
+inline string filename(string file) {
     ostringstream oss;
-    size_t found_dot,found_slash;
-    found_dot=file.find_last_of(".");
-    found_slash=file.find_last_of("/");
+    size_t found_dot, found_slash;
+    found_dot = file.find_last_of(".");
+    found_slash = file.find_last_of("/");
     if ((found_dot != string::npos) && (found_slash != string::npos))
-        oss << file.substr(found_slash+1,(found_dot-found_slash-1));
+        oss << file.substr(found_slash + 1, (found_dot - found_slash - 1));
     else if ((found_dot == string::npos) && (found_slash != string::npos))
-        oss << file.substr(found_slash+1,(file.size()-found_slash-1));
+        oss << file.substr(found_slash + 1, (file.size() - found_slash - 1));
     else if ((found_dot != string::npos) && (found_slash == string::npos))
-        oss << file.substr(0,found_dot);
+        oss << file.substr(0, found_dot);
     else
         oss << file;
     return oss.str();
+}
+
+inline void progress(int i, string comments) {
+    cout << "\rProcessed " << i << " " << comments;
+    fflush(stdout);
+}
+
+inline string change_extension(string file, string ext) {
+    ostringstream oss;
+    size_t found;
+    found = file.find_last_of(".");
+    if (found != string::npos)
+        oss << file.substr(0, found) << "." << ext;
+    else
+        oss << file << "." << ext;
+    return oss.str();
+}
+
+inline string get_extension(string file) {
+    ostringstream oss;
+    size_t found;
+    found = file.find_last_of(".");
+    if (found != string::npos)
+        oss << file.substr(found + 1, string::npos);
+    else
+        oss << "";
+    return oss.str();
+}
+
+inline string print_1d_vector(const vector<double>& mats, const string separator) {
+    ostringstream oss;
+    oss << endl;
+    for (id_type i = 0; i < mats.size(); i++) {
+        oss << fixed << mats[i] << separator;
+    }
+    return oss.str();
+}
+
+inline string print_2d_vector(const vector< vector<double> >& mats) {
+    ostringstream oss;
+    oss << endl;
+    for (id_type i = 0; i < mats.size(); i++) {
+        for (id_type j = 0; j < mats[i].size(); j++)
+            oss << fixed << mats[i][j] << "\t";
+        oss << endl;
+    }
+    return oss.str();
+}
+
+template <typename T1, typename T2>
+bool compare_second_asc(const pair<T1, T2>& i, const pair<T1, T2>& j) {
+    return i.second < j.second;
+}
+
+template <typename T1, typename T2>
+bool compare_second_desc(const pair<T1, T2>& i, const pair<T1, T2>& j) {
+    return i.second > j.second;
+}
+
+inline void sorting(vector< pair<id_type, double> >& unified, bool asc) {
+    //    Sorts the pair in ascending order of the second value when bool asc is set else descending.
+    if (asc)
+        sort(unified.begin(), unified.end(), compare_second_asc<id_type, double>);
+    else
+        sort(unified.begin(), unified.end(), compare_second_desc<id_type, double>);
+}
+
+inline void delete_files(string location, vector<string>& files) {
+    for (unsigned int i = 0; i < files.size(); i++) {
+        string rem = location + files[i];
+        remove(rem.c_str());
+    }
 }
 
 #endif	/* UTITLITY_H */
