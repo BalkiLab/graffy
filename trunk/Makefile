@@ -2,7 +2,7 @@ OBJS = datastructures.o random_graph.o centrality.o community_tools.o graph_oper
 OBJS_D = datastructures_d.o random_graph_d.o centrality_d.o community_tools_d.o graph_operations_d.o paths_and_components_d.o graphio_d.o graph_d.o graph_properties_d.o statistics_d.o graph_summary_d.o community_d.o
 
 CC = g++
-CFLAGS = -O3 -fPIC -fopenmp -std=c++0x -DNDEBUG
+CFLAGS = -O3 -fPIC -fopenmp -std=c++0x -DNDEBUG -DENABLE_MULTITHREADING
 CFLAGS_D = -g -fPIC -fopenmp -std=c++0x -Wall
 LIBS = -lm -lgomp -lrt -lpthread
 

@@ -73,21 +73,32 @@ double CDLib::remove_edges_randomly(graph& g, double percentage) {
     removed = (double) (num_edges - removed) / num_edges;
     return removed;
 }
-
-void CDLib::multiply_vector_transform(const graph& g, vector<double>& invec, double (*wt_transform_func)(const graph&g, id_type, id_type, double), vector<double>& outvec) {
-    if (invec.size() == g.get_num_nodes()) {
-        outvec.assign(g.get_num_nodes(), 0);
-        for (id_type i = 0; i < g.get_num_nodes(); i++)
-            for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++)
-                outvec[i] += invec[aeit->first] * wt_transform_func(g, i, aeit->first, aeit->second);
+    
+void CDLib::multiply_vector_transform(const graph& g,double (*wt_transform_func)(const graph&g,id_type,id_type,double),bool left,const vector<double>& invec,vector<double>& outvec){
+    if(invec.size()==g.get_num_nodes())
+    {
+        outvec.assign(g.get_num_nodes(),0);
+#ifdef ENABLE_MULTITHREADING
+        #pragma omp parallel for shared(outvec,left,invec)
+#endif
+        for(id_type i=0;i<g.get_num_nodes();i++){
+            adjacent_edges_iterator it_beg=g.in_edges_begin(i),it_end=g.in_edges_end(i);
+            if(left) it_beg=g.out_edges_begin(i),it_end=g.out_edges_end(i);
+            for(adjacent_edges_iterator aeit = it_beg;aeit != it_end;aeit++)
+                outvec[i] += invec[aeit->first]*wt_transform_func(g,i,aeit->first,aeit->second);
+        }
     }
 }
 
-void CDLib::random_walk(const graph& g, vector<double>& invec, id_type t, double (*wt_transform_func)(const graph&g, id_type, id_type, double), vector<double>& outvec) {
-    if (invec.size() == g.get_num_nodes() && t >= 0) {
+void CDLib::run_random_walks(const graph& g,const vector<double>& invec,id_type t,vector<double>& outvec)
+{
+    if(invec.size()==g.get_num_nodes() && t>=0)
+    {
         vector<double> qtemp(invec);
-        for (id_type i = 0; i < t; i++) {
-            multiply_vector_transform(g, qtemp, wt_transform_func, outvec);
+        for(id_type i=0;i<t;i++)
+        {
+            if(left)multiply_vector_transform(g,transform_func_column_stochastic,true,qtemp,outvec);
+            else multiply_vector_transform(g,transform_func_row_stochastic,false,qtemp,outvec);
             qtemp = outvec;
         }
     }
@@ -117,11 +128,11 @@ double CDLib::transform_func_laplacian(const graph& g, id_type i, id_type j, dou
     if (i == j) return g.get_node_out_degree(i) - wt;
     else return -wt;
 }
-
-double CDLib::transform_func_normalized_laplacian(const graph& g, id_type i, id_type j, double wt) {
-    return 1 - wt / g.get_node_out_degree(i);
+double CDLib::transform_func_normalized_laplacian_row(const graph& g, id_type i,id_type j, double wt) 
+{ 
+    return 1 - wt/g.get_node_out_degree(i);
 }
-
-double CDLib::transform_func_modularity(const graph& g, id_type i, id_type j, double wt) {
-    return wt - ((g.get_node_out_degree(i) * g.get_node_in_degree(j)) / (2 * g.get_num_edges()));
+double CDLib::transform_func_normalized_laplacian_col(const graph& g, id_type i,id_type j, double wt) 
+{ 
+    return 1 - wt/g.get_node_out_degree(j);
 }
