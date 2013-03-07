@@ -715,3 +715,24 @@ void CDLib::compute_confusion_matrix_global(const graph&g, vector<node_set>& obs
             for(node_set::iterator nit=new_comms[i].begin();nit!=new_comms[i].end();nit++)
                 labels[*nit] = i;
     }
+    
+    void CDLib::componentize_and_reindex_labels(const graph& g,vector<id_type>& labels){
+        vector<node_set> comms,new_comms;
+        convert_labels_to_communities(labels,comms);
+        for(id_type i=0;i<comms.size();i++){
+            graph sg(0,0);
+            extract_subgraph(g,comms[i],sg);
+            vector<node_set> comps;
+            get_connected_components_undirected(sg,comps);
+            for(id_type j=0;j<comps.size();j++){
+                if(comps[j].size()){
+                        new_comms.push_back(node_set());
+                        for(node_set::iterator nit = comps[j].begin();nit != comps[j].end();nit++)
+                                new_comms[new_comms.size()-1].insert(g.get_node_id(sg.get_node_label(*nit)));
+                }
+            }
+        }
+        for(id_type i=0;i<new_comms.size();i++)
+            for(node_set::iterator nit=new_comms[i].begin();nit!=new_comms[i].end();nit++)
+                labels[*nit] = i;
+    }
