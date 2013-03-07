@@ -11,7 +11,9 @@ using namespace CDLib;
 id_type CDLib::extract_subgraph(const graph& g, node_set& nodes, graph& sg) {
     sg.clear();
     if (sg.is_directed() != g.is_directed() && sg.is_weighted() != g.is_weighted()) return 0;
+    id_type min_node_id = g.get_num_nodes();
     for (node_set::iterator nit = nodes.begin(); nit != nodes.end(); nit++) {
+        if(*nit < min_node_id) min_node_id = *nit;
         string first_label = g.get_node_label(*nit);
         sg.add_node(first_label);
         for (adjacent_edges_iterator aeit = g.out_edges_begin(*nit); aeit != g.out_edges_end(*nit); aeit++) {
@@ -22,7 +24,7 @@ id_type CDLib::extract_subgraph(const graph& g, node_set& nodes, graph& sg) {
             }
         }
     }
-    sg.set_graph_name(g.get_graph_name() + "_sg");
+    sg.set_graph_name(g.get_graph_name() + "_sg_" + g.get_node_label(min_node_id));
     return sg.get_num_edges();
 }
 
