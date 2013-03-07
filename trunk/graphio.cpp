@@ -237,19 +237,17 @@ bool CDLib::write_UEL(graph& g, const string& filepath, bool weights) {
 }
 
 bool CDLib::write_matlab_sp(graph& g, const string& filepath) {
-    ofstream file, file2;
+    ofstream file;
     string graphfilename = filepath + ".spel";
-    string labelfilename = filepath + ".spel_labels";
     file.open(graphfilename.c_str());
-    file2.open(labelfilename.c_str());
-    if (file.is_open() && file2.is_open()) {
+    if (file.is_open()) {
         for (id_type i = 0; i < g.get_num_nodes(); i++) {
-            file2 << i + 1 << " " << g.get_node_label(i) << endl;
             for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++)
                 file << i + 1 << " " << aeit->first + 1 << " " << aeit->second << endl;
         }
         return 1;
-    } else return 0;
+    }
+    return 0;
 }
 
 bool CDLib::write_dimacs_max_flow(graph& g, const string& filepath) {
