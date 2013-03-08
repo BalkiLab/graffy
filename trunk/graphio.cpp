@@ -236,7 +236,7 @@ bool CDLib::write_UEL(graph& g, const string& filepath, bool weights) {
     } else return 0;
 }
 
-bool CDLib::write_matlab_sp(graph& g, const string& filepath) {
+bool CDLib::write_matlab_sp(const graph& g, const string& filepath) {
     ofstream file;
     string graphfilename = filepath + ".spel";
     file.open(graphfilename.c_str());

@@ -28,7 +28,7 @@ namespace CDLib
         bool write_SNAP(graph& g,const string& filepath,bool weights);
         bool write_SMAT(graph& g,const string& filepath,bool weights);
         bool write_UEL(graph& g,const string& filepath,bool weights);
-        bool write_matlab_sp(graph& g,const string& filepath);
+        bool write_matlab_sp(const graph& g,const string& filepath);
         bool write_dimacs_max_flow(graph& g, const string& filepath);
         bool write_lcc_and_props(graph& g,const string& filepath,bool start_with_one);
 };
