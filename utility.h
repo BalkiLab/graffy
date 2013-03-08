@@ -83,9 +83,14 @@ void read_vector_of_vector(const string& infile, vector< vector<T> >& data) {
             istringstream iss(line);
             data.push_back(vector<T > ());
             while (!iss.eof()) {
-                T val;
-                iss >> val;
-                data.back().push_back(val);
+                string sval;
+                iss >> sval;
+                if (sval.size() > 0) {
+                    if (sval != "" && sval[0] != ' ' && sval[0] != '\t' && sval[0] != '\n') {
+                        T val = str2T<T>(sval);
+                        data.back().push_back(val);
+                    }
+                }
             }
         }
     }
