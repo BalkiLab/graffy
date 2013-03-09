@@ -74,7 +74,7 @@ double CDLib::get_degree_assortativity_coefficient(const graph& g, vector<double
 #ifdef ENABLE_MULTITHREADING
         #pragma omp parallel for schedule(dynamic,20) shared(g,assortativity)
 #endif
-    for(id_type i=0;i<g.get_num_nodes();i++) {
+    for (id_type i = 0; i < g.get_num_nodes(); i++) {
         double avg_excess_degree_neighbour = 0;
         for (adjacent_edges_iterator aeit = g.in_edges_begin(i); aeit != g.in_edges_end(i); aeit++) {
             avg_excess_degree_neighbour += g.get_node_in_degree(aeit->first);
@@ -146,7 +146,9 @@ double newman_assortativity_directed(const graph& g) {
             joint_distt[g.get_node_out_degree(i) - 1][g.get_node_in_degree(aeit->first) - 1] += 1 / edge_factor;
         }
     }
+#ifdef ENABLE_MULTITHREADING
 #pragma omp parallel for schedule(dynamic,20) shared(g,excess_degree_out,excess_degree_in,joint_distt) reduction(+:assortaivity_coefficient)
+#endif
     //    Loop from 1 as 0 doesn't add to any contribution to assortativity_coefficient.
     for (id_type j = 1; j < excess_degree_out.size(); j++) {
         for (id_type k = 1; k < excess_degree_in.size(); k++) {
@@ -180,8 +182,11 @@ double newman_assortativity_undirected(const graph& g) {
             joint_distt[g.get_node_out_degree(i) - 1][g.get_node_out_degree(aeit->first) - 1] += 1 / edge_factor;
         }
     }
+        //    Loop from 1 as 0 doesn't add to any contribution to assortativity_coefficient.
+#ifdef ENABLE_MULTITHREADING
 #pragma omp parallel for schedule(dynamic,20) shared(g,excess_degree,joint_distt) reduction(+:assortaivity_coefficient)
-    //    Loop from 1 as 0 doesn't add to any contribution to assortativity_coefficient.
+#endif
+
     for (id_type j = 1; j < excess_degree.size(); j++) {
         for (id_type k = 1; k < excess_degree.size(); k++) {
             assortaivity_coefficient += j * k * (joint_distt[j][k]-(excess_degree[j] * excess_degree[k]));
@@ -207,7 +212,7 @@ double CDLib::get_rich_club_coefficient(const graph& g, id_type start_hub_degree
 #ifdef ENABLE_MULTITHREADING
         #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
 #endif
-    for(id_type i=0;i<g.get_num_nodes();i++) {
+    for (id_type i = 0; i < g.get_num_nodes(); i++) {
         if (g.get_node_out_degree(i) >= start_hub_degree_def) {
             num_rich_nodes++;
             for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++) {
@@ -226,7 +231,7 @@ double CDLib::normalized_rich_club_coefficient(const graph& g, id_type start_hub
 #ifdef ENABLE_MULTITHREADING
         #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
 #endif
-    for(id_type i=0;i<g.get_num_nodes();i++) {
+    for (id_type i = 0; i < g.get_num_nodes(); i++) {
         rich_club_uncorrelated += g.get_node_out_degree(i);
         if (g.get_node_out_degree(i) >= start_hub_degree_def) {
             num_rich_nodes++;
@@ -246,7 +251,7 @@ double CDLib::get_poor_club_coefficient(const graph& g, id_type start_hub_degree
 #ifdef ENABLE_MULTITHREADING
         #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
 #endif
-    for(id_type i=0;i<g.get_num_nodes();i++) {
+    for (id_type i = 0; i < g.get_num_nodes(); i++) {
         if (g.get_node_out_degree(i) < start_hub_degree_def) {
             num_rich_nodes++;
             for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++) {

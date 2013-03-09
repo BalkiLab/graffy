@@ -307,7 +307,9 @@ void CDLib::eigenvector_centralities(const graph& g, vector<double>& eigenvector
         iteration_count++;
         outvector.clear();
         outvector.assign(g.get_num_nodes(),0);
+#ifdef ENABLE_MULTITHREADING        
 #pragma omp parallel for
+#endif
         for(id_type i=0;i<g.get_num_nodes();i++){
             for(adjacent_edges_iterator aeit = g.out_edges_begin(i);aeit != g.out_edges_end(i);aeit++){
                 outvector[i] += aeit->second * invector[aeit->first];
@@ -317,7 +319,9 @@ void CDLib::eigenvector_centralities(const graph& g, vector<double>& eigenvector
         if (norm > 0)
             norm = sqrt(norm);
         sum_inv = 0;            sum_outv = 0;
+        #ifdef ENABLE_MULTITHREADING
 #pragma omp parallel for
+#endif
         for(id_type i=0;i<g.get_num_nodes();i++){
             sum_inv += invector[i];
             invector[i] = outvector[i]/norm;

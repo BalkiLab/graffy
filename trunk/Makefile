@@ -3,7 +3,7 @@ OBJS_D = datastructures_d.o random_graph_d.o centrality_d.o community_tools_d.o 
 
 CC = g++
 CFLAGS = -O3 -fPIC -fopenmp -std=c++0x -DNDEBUG -DENABLE_MULTITHREADING
-CFLAGS_D = -g -fPIC -fopenmp -std=c++0x -Wall
+CFLAGS_D = -g -fPIC -fopenmp -DENABLE_MULTITHREADING -std=c++0x -Wall
 LIBS = -lm -lgomp -lrt -lpthread
 
 libcdlib.so : $(OBJS)
