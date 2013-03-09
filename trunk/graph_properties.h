@@ -30,6 +30,7 @@ namespace CDLib
     double get_degree_variance(const graph& g,bool in_degrees);
     double get_degree_assortativity_coefficient(const graph& g,vector<double>& assortativity);
     double unbiased_assortativity(const graph& g);
+    double difference_assortativity(const graph& g);
     double get_degree_assortativity_coefficient(const graph& g);
     double get_rich_club_coefficient(const graph& g,id_type start_hub_degree);
     double normalized_rich_club_coefficient(const graph& g,id_type start_hub_degree_def);

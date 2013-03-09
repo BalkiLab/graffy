@@ -72,7 +72,7 @@ double CDLib::get_degree_assortativity_coefficient(const graph& g, vector<double
     }
     id_type edge_factor = 2 * g.get_num_edges();
 #ifdef ENABLE_MULTITHREADING
-        #pragma omp parallel for schedule(dynamic,20) shared(g,assortativity)        
+        #pragma omp parallel for schedule(dynamic,20) shared(g,assortativity)
 #endif
     for(id_type i=0;i<g.get_num_nodes();i++) {
         double avg_excess_degree_neighbour = 0;
@@ -101,6 +101,17 @@ double CDLib::unbiased_assortativity(const graph& g) {
     for (id_type i = 1; i < degree_distt.size(); i++)
         weighted_assortativity += degree_distt[i] * assortativity[i];
     return weighted_assortativity;
+}
+
+double CDLib::difference_assortativity(const graph& g) {
+    double harmonic = 0;
+#ifdef ENABLE_MULTITHREADING
+    #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:harmonic)
+#endif
+    for (id_type i = 0; i < g.get_num_nodes(); i++)
+        for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++)
+            harmonic += 1 /(1 +  abs(g.get_node_out_weight(i) - g.get_node_in_weight(aeit->first)));
+    return harmonic/(2*g.get_total_weight());
 }
 
 double newman_assortativity_directed(const graph& g) {
@@ -194,7 +205,7 @@ double CDLib::get_rich_club_coefficient(const graph& g, id_type start_hub_degree
     /* This implementation is accordance to The rich-club phenomenon in the Internet topology, 2004 paper by S. Zhou and R. J. Mondragon */
     id_type num_rich_nodes = 0, num_rich_edges = 0;
 #ifdef ENABLE_MULTITHREADING
-        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)         
+        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
 #endif
     for(id_type i=0;i<g.get_num_nodes();i++) {
         if (g.get_node_out_degree(i) >= start_hub_degree_def) {
@@ -213,7 +224,7 @@ double CDLib::normalized_rich_club_coefficient(const graph& g, id_type start_hub
     id_type num_rich_nodes = 0, num_rich_edges = 0;
     double rich_club_uncorrelated = 0, rich_club = 0;
 #ifdef ENABLE_MULTITHREADING
-        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)         
+        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
 #endif
     for(id_type i=0;i<g.get_num_nodes();i++) {
         rich_club_uncorrelated += g.get_node_out_degree(i);
@@ -233,7 +244,7 @@ double CDLib::get_poor_club_coefficient(const graph& g, id_type start_hub_degree
     /* This implementation is accordance to Detecting rich-club ordering in complex networks, 2006 paper by Colizza et al. */
     id_type num_rich_nodes = 0, num_rich_edges = 0;
 #ifdef ENABLE_MULTITHREADING
-        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)         
+        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
 #endif
     for(id_type i=0;i<g.get_num_nodes();i++) {
         if (g.get_node_out_degree(i) < start_hub_degree_def) {
