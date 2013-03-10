@@ -74,6 +74,13 @@ void read_vector_1D(const string& infile, vector<T>& data) {
 }
 
 template<typename T>
+void write_vector_1D(const string& outfile,const vector<T>& data, const char* delim) {
+    ofstream ofs(outfile);
+    copy(data.begin(),data.end(),ostream_iterator<T>(ofs,delim));
+    ofs.close();
+}
+
+template<typename T>
 void read_vector_of_vector(const string& infile, vector< vector<T> >& data) {
     ifstream ifs(infile);
     while (!ifs.eof()) {
