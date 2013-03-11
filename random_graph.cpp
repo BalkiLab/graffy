@@ -166,12 +166,13 @@ void CDLib::generate_LEET_chord_graph(graph& g, id_type num_nodes)
                 g.add_edge(start_id  + j,start_id  + ((j+k) % num_nodes_per_cluster),1);
         }
         //Adding the long range links
-        for(id_type j=log2(num_clusters)-1,k=0;j>=0;j++,k++){
+        for(id_type j=log2(num_clusters)-1,k=0;j>0;j--,k++){
             id_type next_cluster_id = ((i+j)%num_clusters)*num_nodes_per_cluster;
             g.add_edge(start_id + (k%num_nodes_per_cluster),next_cluster_id+(j%num_nodes_per_cluster),1);
         }
     }
     g.set_graph_name("leet_chord_" + T2str<id_type>(num_nodes));
+    g.remove_isolates();
 }
 
 bool cmp(const vector<id_type>& lhs, const vector<id_type>& rhs) { return lhs.size() < rhs.size();}
