@@ -97,7 +97,7 @@ void CDLib::run_random_walks(const graph& g,const vector<double>& invec,id_type 
     if(invec.size()==g.get_num_nodes() && t>=0)
     {
         vector<double> qtemp(invec);
-        for(id_type i=0;i<t;i++)
+        for(id_type i=0;i<=t;i++)
         {
             if(left)multiply_vector_transform(g,transform_func_column_stochastic,true,qtemp,outvec);
             else multiply_vector_transform(g,transform_func_row_stochastic,false,qtemp,outvec);
