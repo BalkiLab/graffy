@@ -13,16 +13,30 @@ void CDLib::get_degree_histogram(const graph& g, vector<id_type>& dist, bool in_
     get_discrete_distribution<id_type > (degrees, dist);
 }
 
+//double CDLib::get_degree_distribution(const graph& g, vector<double>& dist, bool in_degrees) {
+//    vector<id_type> degree_hist;
+//    dist.clear();
+//    double expectation = 0;
+//    get_degree_histogram(g, degree_hist, in_degrees);
+//    dist.assign(degree_hist.size(), 0);
+//    for (id_type i = 0; i < degree_hist.size(); i++) {
+//        dist[i] = (double) degree_hist[i] / (double) g.get_num_nodes();
+//        expectation += i * dist[i];
+//    }
+//    return expectation;
+//}
+
 double CDLib::get_degree_distribution(const graph& g, vector<double>& dist, bool in_degrees) {
-    vector<id_type> degree_hist;
     dist.clear();
     double expectation = 0;
-    get_degree_histogram(g, degree_hist, in_degrees);
-    dist.assign(degree_hist.size(), 0);
-    for (id_type i = 0; i < degree_hist.size(); i++) {
-        dist[i] = (double) degree_hist[i] / (double) g.get_num_nodes();
-        expectation += i * dist[i];
+    for (id_type i = 0; i < g.get_num_nodes(); i++) {
+        id_type deg = ((in_degrees) ? g.get_node_in_degree(i) : g.get_node_out_degree(i));
+        if (dist.size() <= deg) dist.resize(deg + 1, 0);
+        dist[deg] += (1.0 / g.get_num_nodes());
+        expectation += deg;
     }
+    expectation = ((g.get_num_nodes()) ? expectation / g.get_num_nodes() : 0);
+    assert((expectation * g.get_num_nodes()) != (2.0 * g.get_num_edges()));
     return expectation;
 }
 
@@ -72,7 +86,7 @@ double CDLib::get_degree_assortativity_coefficient(const graph& g, vector<double
     }
     id_type edge_factor = 2 * g.get_num_edges();
 #ifdef ENABLE_MULTITHREADING
-        #pragma omp parallel for schedule(dynamic,20) shared(g,assortativity)
+#pragma omp parallel for shared(g,assortativity) reduction(+:assortativity_coef)
 #endif
     for (id_type i = 0; i < g.get_num_nodes(); i++) {
         double avg_excess_degree_neighbour = 0;
@@ -103,15 +117,18 @@ double CDLib::unbiased_assortativity(const graph& g) {
     return weighted_assortativity;
 }
 
-double CDLib::difference_assortativity(const graph& g) {
+double CDLib::regularity(const graph& g) {
     double harmonic = 0;
 #ifdef ENABLE_MULTITHREADING
-    #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:harmonic)
+#pragma omp parallel for shared(g) reduction(+:harmonic)
 #endif
     for (id_type i = 0; i < g.get_num_nodes(); i++)
         for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++)
-            harmonic += 1 /(1 +  abs(g.get_node_out_weight(i) - g.get_node_in_weight(aeit->first)));
-    return harmonic/(2*g.get_total_weight());
+            harmonic += 1 / (1 + abs(g.get_node_out_weight(i) - g.get_node_in_weight(aeit->first)));
+    if (g.get_total_weight())
+        return harmonic / (2 * g.get_total_weight());
+    else
+        return 1;
 }
 
 double newman_assortativity_directed(const graph& g) {
@@ -210,7 +227,7 @@ double CDLib::get_rich_club_coefficient(const graph& g, id_type start_hub_degree
     /* This implementation is accordance to The rich-club phenomenon in the Internet topology, 2004 paper by S. Zhou and R. J. Mondragon */
     id_type num_rich_nodes = 0, num_rich_edges = 0;
 #ifdef ENABLE_MULTITHREADING
-        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
+#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
 #endif
     for (id_type i = 0; i < g.get_num_nodes(); i++) {
         if (g.get_node_out_degree(i) >= start_hub_degree_def) {
@@ -229,7 +246,7 @@ double CDLib::normalized_rich_club_coefficient(const graph& g, id_type start_hub
     id_type num_rich_nodes = 0, num_rich_edges = 0;
     double rich_club_uncorrelated = 0, rich_club = 0;
 #ifdef ENABLE_MULTITHREADING
-        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
+#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
 #endif
     for (id_type i = 0; i < g.get_num_nodes(); i++) {
         rich_club_uncorrelated += g.get_node_out_degree(i);
@@ -249,7 +266,7 @@ double CDLib::get_poor_club_coefficient(const graph& g, id_type start_hub_degree
     /* This implementation is accordance to Detecting rich-club ordering in complex networks, 2006 paper by Colizza et al. */
     id_type num_rich_nodes = 0, num_rich_edges = 0;
 #ifdef ENABLE_MULTITHREADING
-        #pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
+#pragma omp parallel for schedule(dynamic,20) shared(g) reduction(+:num_rich_nodes,num_rich_edges)
 #endif
     for (id_type i = 0; i < g.get_num_nodes(); i++) {
         if (g.get_node_out_degree(i) < start_hub_degree_def) {
@@ -295,17 +312,17 @@ double CDLib::distance_from_random_graph(const graph& g, bool hellinger) {
 
 double CDLib::connectivity_entropy(const graph& g) {
     // Connective Entropy of the Network or Information Entropy of the Network
-    double entropy = 0;
-    if ((2 * g.get_num_edges()) > 0) {
+    /* Ortiz-Arroyo, D. (2010). Discovering Sets of Key Players in Social Networks. Computational Social Network Analysis (pp. 27–47). Springer London. doi:10.1007/978-1-84882-229-0_2 */
+    double entropy = 0, prob = 0;
+    if (g.get_num_edges()) {
         for (id_type i = 0; i < g.get_num_nodes(); i++) {
-            double prob = (double) g.get_node_out_degree(i) / (2 * g.get_num_edges());
-            if (prob != 0) {
-                entropy += prob * (log(prob) / log(2));
-            }
+            prob = (double) g.get_node_out_degree(i) / (2 * g.get_num_edges());
+            if (prob != 0)
+                entropy += prob * log2(prob);
         }
         entropy *= -1;
     }
-    entropy /= log(g.get_num_nodes()) / log(2); // Normalization of Entropy
+    entropy /= log2(g.get_num_nodes()); // Normalization of Entropy
     return entropy;
 }
 

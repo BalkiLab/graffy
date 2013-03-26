@@ -39,15 +39,27 @@ void split(const string& s, const char delim, vector<T>& elems) {
 }
 
 template <typename T>
-void split(const string& s, vector<T>& elems) {
+void split(const string& line, vector<T>& elems) {
     elems.clear();
-    stringstream ss(s);
-    string item;
-    while (!ss.eof()) {
-        ss >> item;
-        if (item.length()) elems.push_back(str2T<T > (item));
-        item.clear();
+    if (line != "" && line[0] != ' ' && line[0] != '\t' && line[0] != '\n') {
+        istringstream ss(line);
+        string item;
+        while (!ss.eof()) {
+            ss >> item;
+            if (item.size()) {
+                if (item != "" && item[0] != ' ' && item[0] != '\t' && item[0] != '\n')
+                    elems.push_back(str2T<T > (item));
+            }
+            item.clear();
+        }
     }
+}
+
+template <typename T>
+inline void stream_line_to_vector(istream& is, vector<T>& elements) {
+    string line;
+    getline(is, line);
+    split(line, elements);
 }
 
 template <typename T>
@@ -86,7 +98,7 @@ void read_vector_of_vector(const string& infile, vector< vector<T> >& data) {
     while (!ifs.eof()) {
         string line;
         getline(ifs, line);
-        if(line != "" && line[0] != ' ' && line[0] != '\t' && line[0] != '\n'){
+        if (line != "" && line[0] != ' ' && line[0] != '\t' && line[0] != '\n') {
             istringstream iss(line);
             data.push_back(vector<T > ());
             while (!iss.eof()) {
@@ -94,7 +106,7 @@ void read_vector_of_vector(const string& infile, vector< vector<T> >& data) {
                 iss >> sval;
                 if (sval.size() > 0) {
                     if (sval != "" && sval[0] != ' ' && sval[0] != '\t' && sval[0] != '\n') {
-                        T val = str2T<T>(sval);
+                        T val = str2T<T > (sval);
                         data.back().push_back(val);
                     }
                 }
@@ -386,9 +398,10 @@ inline string get_extension(string file) {
     return oss.str();
 }
 
-inline string print_1d_vector(const vector<double>& mats, const string separator) {
+template <typename T>
+inline string print_1d_vector(const vector<T>& mats, const string separator) {
     ostringstream oss;
-    oss << endl;
+    oss.precision(6);
     for (id_type i = 0; i < mats.size(); i++) {
         oss << fixed << mats[i] << separator;
     }
@@ -397,6 +410,7 @@ inline string print_1d_vector(const vector<double>& mats, const string separator
 
 inline string print_2d_vector(const vector< vector<double> >& mats) {
     ostringstream oss;
+    oss.precision(6);
     oss << endl;
     for (id_type i = 0; i < mats.size(); i++) {
         for (id_type j = 0; j < mats[i].size(); j++)
@@ -416,12 +430,23 @@ bool compare_second_desc(const pair<T1, T2>& i, const pair<T1, T2>& j) {
     return i.second > j.second;
 }
 
-inline void sorting(vector< pair<id_type, double> >& unified, bool asc) {
+template <typename T1, typename T2>
+inline void sort(vector< pair<T1, T2> >& unified, bool asc) {
     //    Sorts the pair in ascending order of the second value when bool asc is set else descending.
     if (asc)
-        sort(unified.begin(), unified.end(), compare_second_asc<id_type, double>);
+        sort(unified.begin(), unified.end(), compare_second_asc<T1, T2>);
     else
-        sort(unified.begin(), unified.end(), compare_second_desc<id_type, double>);
+        sort(unified.begin(), unified.end(), compare_second_desc<T1, T2>);
+}
+
+template <typename T1, typename T2, class ForwardIterator>
+inline ForwardIterator max_element(vector< pair<T1, T2> >& list) {
+    return max_element(list.begin(), list.end(), compare_second_asc<T1, T2>);
+}
+
+template <typename T1, typename T2, class ForwardIterator>
+inline ForwardIterator min_element(vector< pair<T1, T2> >& list) {
+    return min_element(list.begin(), list.end(), compare_second_asc<T1, T2>);
 }
 
 inline void delete_files(string location, vector<string>& files) {

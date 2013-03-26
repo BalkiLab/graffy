@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   cdlib.h
  * Author: bharath
  *
@@ -24,6 +24,7 @@
 #include "centrality.h"
 #include "graph_properties.h"
 #include "community.h"
+#include "robustness.h"
 
 
 #endif	/* CDLIB_H */

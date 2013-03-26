@@ -202,6 +202,11 @@ namespace CDLib {
             return 0;
         return covariance(sample1, sample2) / (std(sample1) * std(sample2));
     }
+
+    template <typename T1, typename T2>
+    double l2norm_2d(const pair<T1, T2>& left, const pair<T1, T2>& right) {
+        return sqrt(pow((left.first - right.first), 2) + pow((left.second - right.second), 2));
+    }
     void normalize_data(vector<double>& samples);
     bool is_distribution(const vector<double>& distribution);
     double distribution_entropy(const vector<double>& distribution);
