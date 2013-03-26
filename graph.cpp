@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   graph.cpp
  * Author: bharath
- * 
+ *
  * Created on April 1, 2012, 12:00 PM
  */
 
@@ -194,7 +194,7 @@ bool graph::remove_node(const string& label) {
 }
 
 id_type graph::remove_nodes(const node_set& nodes) {
-    //  Returns the number of nodes removed.    
+    //  Returns the number of nodes removed.
     set<string> to_remove;
     for (node_set::const_iterator it = nodes.begin(); it != nodes.end(); it++)
         to_remove.insert(get_node_label(*it));
@@ -202,7 +202,7 @@ id_type graph::remove_nodes(const node_set& nodes) {
 }
 
 id_type graph::remove_nodes(const set<string>& nodes) {
-    //  Returns the number of nodes removed.    
+    //  Returns the number of nodes removed.
     id_type number_of_removed = 0;
     for (set<string>::iterator it = nodes.begin(); it != nodes.end(); it++) {
         if (remove_node(*it)) {
@@ -245,6 +245,49 @@ id_type graph::remove_adjacent_edges(id_type id) {
 
 id_type graph::remove_adjacent_edges(const string& label) {
     return remove_adjacent_edges(get_node_id(label));
+}
+
+bool graph::isolate_node(id_type id) {
+    if (id >= get_num_nodes())
+        return 0;
+    if (is_directed()) {
+        if (get_node_out_degree(id) || get_node_in_degree(id)) {
+            remove_adjacent_edges(id);
+        }
+    }
+    else {
+        if (get_node_out_degree(id))
+            remove_adjacent_edges(id);
+    }
+    return 1;
+}
+
+id_type graph::isolate_nodes(const node_set& nodes) {
+    id_type isolated = 0;
+    for (node_set::const_iterator it = nodes.begin(); it != nodes.end(); it++) {
+        if (isolate_node(*it))
+            isolated++;
+    }
+    return isolated;
+}
+
+bool graph::isolate_node(const string& label) {
+    id_type id = get_node_id(label);
+    if (id >= get_num_nodes())
+        return 0;
+    return isolate_node(id);
+}
+
+id_type graph::isolate_nodes(const set<string>& labels) {
+    id_type isolated = 0;
+    for (set<string>::const_iterator it = labels.begin(); it != labels.end(); it++) {
+        id_type id = get_node_id(*it);
+        if (id < get_num_nodes()) {
+            isolate_node(id);
+            isolated++;
+        }
+    }
+    return isolated;
 }
 
 wt_t graph::remove_edge(const string& from_label, const string& to_label) {

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   typedefs.h
  * Author: bharath
  *
@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <deque>
 #include <cstdlib>
+#include <cassert>
 #include <cstdio>
 #include <cmath>
 #include <ctime>
@@ -57,7 +58,7 @@ namespace CDLib
     //Paths and Components, Community Detection Algorithms
     typedef unordered_set<id_type> node_set;
     typedef unordered_set<string> node_set_string;
-    
+
 };
 
 

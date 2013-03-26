@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   graph.h
  * Author: bharath
  *
@@ -93,6 +93,11 @@ namespace CDLib {
         id_type remove_adjacent_edges(const string& label);
         id_type remove_edges(vector<pair<id_type, id_type> >& edges);
         id_type remove_edges(vector<pair<string, string> >& edges);
+
+        bool isolate_node(id_type id);
+        bool isolate_node(const string& label);
+        id_type isolate_nodes(const node_set& nodes);
+        id_type isolate_nodes(const set<string>& labels);
 
         bool set_edge_weight(id_type from_id, id_type to_id, wt_t weight);
         wt_t set_edge_weight(const string& from_label, const string& to_label, wt_t weight);

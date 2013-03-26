@@ -56,14 +56,20 @@ double CDLib::kl_divergence_symmetric(const vector<double>& distribution1, const
 double CDLib::bhattacharyya_distance(const vector<double>& distribution1, const vector<double>& distribution2) {
     if (!(is_distribution(distribution1) && is_distribution(distribution2)))
         return -9999; // Reporting invalid distribution error
-    double sum = 0;
+    double bc_pq = 0;
     id_type min = (distribution1.size() <= distribution2.size()) ? distribution1.size() : distribution2.size();
     for (id_type i = 0; i < min; i++)
-        sum += sqrt(distribution1[i] * distribution2[i]);
-    return sum;
+        bc_pq += sqrt(distribution1[i] * distribution2[i]);
+    return (-1 * log(bc_pq));
 }
 
 double CDLib::hellinger_distance(const vector<double>& distribution1, const vector<double>& distribution2) {
-    return sqrt(1 - bhattacharyya_distance(distribution1, distribution2));
+    if (!(is_distribution(distribution1) && is_distribution(distribution2)))
+        return -9999; // Reporting invalid distribution error
+    double bc_pq = 0;
+    id_type min = (distribution1.size() <= distribution2.size()) ? distribution1.size() : distribution2.size();
+    for (id_type i = 0; i < min; i++)
+        bc_pq += sqrt(distribution1[i] * distribution2[i]);
+    return sqrt(1 - bc_pq);
 }
 
