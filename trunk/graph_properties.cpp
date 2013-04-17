@@ -192,6 +192,8 @@ double newman_assortativity_undirected(const graph& g) {
     }
     excess_degree.erase(excess_degree.end() - 1);
     double variance_excess = second_moment_excess - (first_moment_excess * first_moment_excess);
+    if (variance_excess == 0)
+        return 1;
     vector< vector<double> > joint_distt(excess_degree.size(), vector<double>(excess_degree.size(), 0));
     for (id_type i = 0; i < g.get_num_nodes(); i++) {
         for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++) {
@@ -199,7 +201,7 @@ double newman_assortativity_undirected(const graph& g) {
             joint_distt[g.get_node_out_degree(i) - 1][g.get_node_out_degree(aeit->first) - 1] += 1 / edge_factor;
         }
     }
-        //    Loop from 1 as 0 doesn't add to any contribution to assortativity_coefficient.
+    //    Loop from 1 as 0 doesn't add to any contribution to assortativity_coefficient.
 #ifdef ENABLE_MULTITHREADING
 #pragma omp parallel for schedule(dynamic,20) shared(g,excess_degree,joint_distt) reduction(+:assortaivity_coefficient)
 #endif
@@ -210,6 +212,10 @@ double newman_assortativity_undirected(const graph& g) {
         }
     }
     assortaivity_coefficient /= variance_excess;
+    if (assortaivity_coefficient > 1)
+        assortaivity_coefficient = 1;
+    else if (assortaivity_coefficient < -1)
+        assortaivity_coefficient = -1;
     return assortaivity_coefficient;
 }
 
