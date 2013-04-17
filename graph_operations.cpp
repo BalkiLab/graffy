@@ -8,11 +8,11 @@
 #include "graph_operations.h"
 using namespace CDLib;
 
-id_type CDLib::extract_subgraph(const graph& g, node_set& nodes, graph& sg) {
+id_type CDLib::extract_subgraph(const graph& g, const node_set& nodes, graph& sg) {
     sg.clear();
     if (sg.is_directed() != g.is_directed() && sg.is_weighted() != g.is_weighted()) return 0;
     id_type min_node_id = g.get_num_nodes();
-    for (node_set::iterator nit = nodes.begin(); nit != nodes.end(); nit++) {
+    for (node_set::const_iterator nit = nodes.begin(); nit != nodes.end(); nit++) {
         if(*nit < min_node_id) min_node_id = *nit;
         string first_label = g.get_node_label(*nit);
         sg.add_node(first_label);
