@@ -176,7 +176,7 @@ double CDLib::node_clustering_coefficient(const graph&g, id_type node) {
     return edge_count;
 }
 
-//Overloaded funtion for all nodes.
+//Overloaded function for all nodes.
 
 void CDLib::node_clustering_coefficient(const graph&g, vector<double>& nodes) {
     nodes.clear();
