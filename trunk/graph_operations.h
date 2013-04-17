@@ -14,7 +14,7 @@ namespace CDLib {
     
     
     
-    id_type extract_subgraph(const graph& g, node_set& nodes, graph& sg);
+    id_type extract_subgraph(const graph& g, const node_set& nodes, graph& sg);
     void sample_graph(const graph&g, node_set& seeds, id_type hop_dist, graph& sample);
     // Naive implementation to Copy a graph. May be inefficient
     id_type copy_graph(const graph& src, graph& dst);
