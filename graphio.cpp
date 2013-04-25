@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   graphio.cpp
  * Author: bharath
- * 
+ *
  * Created on April 2, 2012, 11:46 AM
  */
 
@@ -20,13 +20,15 @@ bool CDLib::read_edgelist(graph& g, const string& filepath) {
             weight = 1;
             string line;
             getline(ifs, line);
-            split(line, units);
-            if (units.size() != 0) {
-                if ((units.size() < 2) || (units.size() > 3)) return false;
-                if (units.size() == 3) weight = str2T<double>(units[2]);
-                g.add_node(units[0]);       
-                g.add_node(units[1]);
-                g.add_edge(units[0],units[1],weight);
+            if ((line.size() > 0) && (line[0] != '#')) {
+                split(line, units);
+                if (units.size() != 0) {
+                    if ((units.size() < 2) || (units.size() > 3)) return false;
+                    if (units.size() == 3) weight = str2T<double>(units[2]);
+                    g.add_node(units[0]);
+                    g.add_node(units[1]);
+                    g.add_edge(units[0], units[1], weight);
+                }
             }
         }
         g.set_graph_name(filename(filepath));
@@ -59,7 +61,7 @@ bool CDLib::read_adjacencylist(graph& g, const string& filepath) {
         g.add_node(to_string(nid));
         for (id_type i = estart; i < units.size(); i++) {
             g.add_node(to_string(units[i]));
-            g.add_edge(to_string(nid), to_string(units[i]),1);
+            g.add_edge(to_string(nid), to_string(units[i]), 1);
         }
         while (!ifs.eof()) {
             string line;
@@ -72,7 +74,7 @@ bool CDLib::read_adjacencylist(graph& g, const string& filepath) {
                 g.add_node(to_string(nid));
                 for (id_type i = estart; i < units.size(); i++) {
                     g.add_node(to_string(units[i]));
-                    g.add_edge(to_string(nid), to_string(units[i]),1);
+                    g.add_edge(to_string(nid), to_string(units[i]), 1);
                 }
             }
         }

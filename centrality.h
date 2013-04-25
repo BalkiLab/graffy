@@ -32,6 +32,7 @@ namespace CDLib {
     double node_clustering_coefficient(const graph&g, id_type node);
     void node_clustering_coefficient(const graph&g, vector<double>& nodes);
     void node_clustering_coefficient_normalized(const graph& g, vector<double>& nodes);
+    double average_clustering_coefficient(const graph& g);
     double closeness_centrality_original(const graph& g, id_type node);
     void closeness_centralities_original(const graph& g, vector<double>& closeness);
     double closeness_centrality(const graph& g, id_type node);
@@ -41,6 +42,7 @@ namespace CDLib {
     void eigenvector_centralities_normalized(const graph& g, vector<double>& eigenvector);
     double efficiency_centrality(const graph& g, id_type node);
     void efficiency_centralities(const graph& g, vector<double>& centralities);
+    // Below functions return <node label, value> pair
     pair<string, double> get_max_degree_node(const graph & g);
     pair<string, double> get_max_degree_node(const graph & g, const node_set_string& elements);
     pair<string, double> get_max_betweenness_node(const graph & g);

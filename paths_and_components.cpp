@@ -665,6 +665,23 @@ double CDLib::efficiency_sw_global(const graph& g) {
     }
 }
 
+double CDLib::characteristics_path_length(const graph& g) {
+    if (g.get_num_nodes() < 2)
+        return 0;
+    double average_path_length = 0;
+    vector< vector<double> > path_matrix;
+    all_pairs_shortest_paths(g, path_matrix);
+#ifdef ENABLE_MULTITHREADING
+#pragma omp parallel for shared(g,path_matrix) reduction(+:average_path_length)
+#endif
+    for (unsigned long i = 0; i < g.get_num_nodes(); i++) {
+        for (unsigned long j = 0; j < g.get_num_nodes(); j++)
+            average_path_length += path_matrix[i][j];
+    }
+    average_path_length /= g.get_num_nodes() * (g.get_num_nodes() - 1);
+    return average_path_length;
+}
+
 double CDLib::path_entropy(const graph& g) {
     // Centrality Entropy of the Graph based on shortest path connectivity, as in Borgatti paper
     double entropy = 0;

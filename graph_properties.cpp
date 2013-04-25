@@ -36,7 +36,7 @@ double CDLib::get_degree_distribution(const graph& g, vector<double>& dist, bool
         expectation += deg;
     }
     expectation = ((g.get_num_nodes()) ? expectation / g.get_num_nodes() : 0);
-    assert((expectation * g.get_num_nodes()) != (2.0 * g.get_num_edges()));
+    assert(abs((expectation * g.get_num_nodes()) - (2.0 * g.get_num_edges())) < 0.001 );
     return expectation;
 }
 
@@ -44,7 +44,7 @@ double CDLib::get_excess_degree_distribution(const graph& g, vector<double>& dis
     dist.clear();
     double expectation = 0;
     double mean = get_degree_distribution(g, dist, in_degrees);
-    id_type excess_max = dist.size() - 1;
+    id_type excess_max = dist.size() - 1;	
     for (id_type i = 0; i < excess_max; i++) {
         dist[i] = ((i + 1) * dist[i + 1]) / mean;
         expectation += i * dist[i];
@@ -129,6 +129,30 @@ double CDLib::regularity(const graph& g) {
         return harmonic / (2 * g.get_total_weight());
     else
         return 1;
+}
+
+double CDLib::regularity(const graph& g, vector<double>& node_regularity) {
+    // This function is based on node degree and does not consider weights
+    double harmonic = 0;
+    double normalization = 2 * g.get_num_edges();
+    node_regularity.clear();
+    if (normalization == 0) {
+        node_regularity.assign(g.get_num_nodes(),(double)1/g.get_num_nodes());
+        return 1;
+    }
+    else
+        node_regularity.assign(g.get_num_nodes(),0);
+#ifdef ENABLE_MULTITHREADING
+#pragma omp parallel for shared(g) reduction(+:harmonic)
+#endif
+    for (id_type i = 0; i < g.get_num_nodes(); i++) {
+        for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++) {
+            node_regularity[i] += 1/(1+abs(g.get_node_out_degree(i) - g.get_node_in_degree(aeit->first)));
+        }
+        node_regularity[i] /= normalization;
+        harmonic += node_regularity[i];
+    }
+    return harmonic;
 }
 
 double newman_assortativity_directed(const graph& g) {
