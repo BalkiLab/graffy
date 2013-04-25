@@ -52,6 +52,7 @@ namespace CDLib {
     //    double efficiency_sw_global_monte_carlo(graph& g);
     //    double efficiency_sw_global(const graph& g, bool type);
     double efficiency_sw_global(const graph& g);
+    double characteristics_path_length(const graph& g);
 
     double path_entropy(const graph& g);
     id_type hop_distance_matrix(const graph& g, vector< vector<id_type> > & path_mat);

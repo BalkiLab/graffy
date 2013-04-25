@@ -197,6 +197,18 @@ void CDLib::node_clustering_coefficient_normalized(const graph& g, vector<double
         nodes[i] /= sum_norm;
 }
 
+double CDLib::average_clustering_coefficient(const graph& g) {
+    if (g.get_num_nodes() < 1)
+        return 0;
+    double avg_cc = 0;
+    vector<double> nodes;
+    node_clustering_coefficient(g, nodes);
+    for (id_type i = 0; i < nodes.size(); i++)
+        avg_cc += nodes[i];
+    avg_cc /= g.get_num_nodes();
+    return avg_cc;
+}
+
 double CDLib::closeness_centrality_original(const graph& g, id_type node) {
     if ((node <= g.get_num_nodes()) && (node >= 0)) {
         return -1; // Reporting node out of range error.
