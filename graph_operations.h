@@ -19,8 +19,8 @@ namespace CDLib {
     // Naive implementation to Copy a graph. May be inefficient
     id_type copy_graph(const graph& src, graph& dst);
     double remove_edges_randomly(graph& g,double percentage);
-    void multiply_vector_transform(const graph& g,double (*wt_transform_func)(const graph&g,id_type,id_type,double),bool left,const vector<double>& invec,vector<double>& outvec);
-    void run_random_walks(const graph& g,const vector<double>& invec,id_type t,vector<double>& outvec);
+    void multiply_vector_transform(const graph& g,double (*wt_transform_func)(const graph&g,id_type,id_type,double),bool right,const vector<double>& invec,vector<double>& outvec);
+    void run_random_walks(const graph& g,const vector<double>& invec,id_type t,bool right,vector<double>& outvec);
     double transform_func_nop(const graph& g, id_type i, id_type j, double wt);
     double transform_func_row_stochastic(const graph& g, id_type i, id_type j, double wt);
     double transform_func_column_stochastic(const graph& g, id_type i, id_type j, double wt);
