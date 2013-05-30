@@ -329,7 +329,7 @@ void CDLib::compute_community_metrics(const graph& g, node_set& comm,community_m
     metrics.degree_entropy = 0;
     for(id_type i=0;i<out_degrees.size();i++) if(out_degrees[i])metrics.degree_entropy +=(out_degrees[i]/denom)*log(out_degrees[i]/denom);
     vector<double> qinit(cg.get_num_nodes(),1/static_cast<double>(cg.get_num_nodes())),qfinal;
-    run_random_walks(cg,qinit,static_cast<id_type>(log(cg.get_num_nodes())/log(2)),qfinal);
+    run_random_walks(cg,qinit,static_cast<id_type>(log(cg.get_num_nodes())/log(2)),0,qfinal);
     qinit.assign(cg.get_num_nodes(),1/static_cast<double>(cg.get_num_nodes()));
     metrics.rwalk_entropy = 0;
     if(cg.get_num_nodes()>=2)for(id_type i=0;i<cg.get_num_nodes();i++) if(qfinal[i] && qinit[i]) metrics.rwalk_entropy += qinit[i]*log(qinit[i]/qfinal[i]);
@@ -631,7 +631,7 @@ double CDLib::entropy_comparision_test(const graph& g,node_set& ns)
     extract_subgraph(g,ns,subg);
     vector<double> qinit(subg.get_num_nodes(),1/static_cast<double>(subg.get_num_nodes())),outvec;
     id_type t = static_cast<id_type>(log(subg.get_num_nodes())/log(2));
-    run_random_walks(subg,qinit,t,outvec);
+    run_random_walks(subg,qinit,t,0,outvec);
     return kl_divergence(qinit,outvec);
 }
 

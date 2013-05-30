@@ -76,30 +76,35 @@ double CDLib::remove_edges_randomly(graph& g, double percentage) {
     return removed;
 }
     
-void CDLib::multiply_vector_transform(const graph& g,double (*wt_transform_func)(const graph&g,id_type,id_type,double),bool left,const vector<double>& invec,vector<double>& outvec){
+void CDLib::multiply_vector_transform(const graph& g,double (*wt_transform_func)(const graph&g,id_type,id_type,double),bool right,const vector<double>& invec,vector<double>& outvec){
     if(invec.size()==g.get_num_nodes())
     {
         outvec.assign(g.get_num_nodes(),0);
 #ifdef ENABLE_MULTITHREADING
-        #pragma omp parallel for shared(outvec,left,invec)
+        #pragma omp parallel for shared(outvec,invec)
 #endif
         for(id_type i=0;i<g.get_num_nodes();i++){
             adjacent_edges_iterator it_beg=g.in_edges_begin(i),it_end=g.in_edges_end(i);
-            if(left) it_beg=g.out_edges_begin(i),it_end=g.out_edges_end(i);
-            for(adjacent_edges_iterator aeit = it_beg;aeit != it_end;aeit++)
-                outvec[i] += invec[aeit->first]*wt_transform_func(g,i,aeit->first,aeit->second);
+            if(right){
+                it_beg=g.out_edges_begin(i);
+                it_end=g.out_edges_end(i);
+            }
+            for(adjacent_edges_iterator aeit = it_beg;aeit != it_end;aeit++){
+                if(right)outvec[i] += invec[aeit->first]*wt_transform_func(g,i,aeit->first,aeit->second);
+                else outvec[i] += invec[aeit->first]*wt_transform_func(g,aeit->first,i,aeit->second);
+            }
         }
     }
 }
 
-void CDLib::run_random_walks(const graph& g,const vector<double>& invec,id_type t,vector<double>& outvec)
+void CDLib::run_random_walks(const graph& g,const vector<double>& invec,id_type t,bool right,vector<double>& outvec)
 {
     if(invec.size()==g.get_num_nodes() && t>=0)
     {
         vector<double> qtemp(invec);
         for(id_type i=0;i<=t;i++)
         {
-            if(left)multiply_vector_transform(g,transform_func_column_stochastic,true,qtemp,outvec);
+            if(right)multiply_vector_transform(g,transform_func_column_stochastic,true,qtemp,outvec);
             else multiply_vector_transform(g,transform_func_row_stochastic,false,qtemp,outvec);
             qtemp = outvec;
         }

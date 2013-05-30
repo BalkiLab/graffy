@@ -85,7 +85,9 @@ namespace CDLib {
             vector<double>avg_nei_deg(g.get_num_nodes(), 0);
             double normalization = g.get_num_nodes() * (g.get_num_nodes() - 1);
             double norm_edges = 2 * g.get_num_edges();
+            #ifdef ENABLE_MULTITHREADING
 #pragma omp parallel for shared(g,total_distance,reachability_distt,has_node_visited,components,avg_nei_deg,degree_distt) reduction(+:all_sources,loc_eff,loc_cc, loc_reg, excess_mean, excess_variance,number_of_isolates,deg_mean)
+#endif
             for (id_type i = 0; i < g.get_num_nodes(); i++) {
                 deg_mean += g.get_node_out_degree(i);
                 if (!g.get_node_out_degree(i))
@@ -121,7 +123,9 @@ namespace CDLib {
                 loc_cc += node_clustering_coefficient(g, i);
                 if (g.get_node_out_degree(i) > 0)
                     avg_nei_deg[i] = (avg_nei_deg[i] / g.get_node_out_degree(i)) - 1;
+                #ifdef ENABLE_MULTITHREADING
 #pragma omp critical
+#endif
                 {
                     max_degree = (max_degree < g.get_node_out_degree(i)) ? g.get_node_out_degree(i) : max_degree;
                     degree_distt[g.get_node_out_degree(i)]++;
