@@ -104,7 +104,7 @@ bool CDLib::read_matlab_sp(graph& g, const string& filepath) {
     return false;
 }
 
-bool CDLib::write_edgelist(graph& g, const string& filepath, bool weights) {
+bool CDLib::write_edgelist(const graph& g, const string& filepath, bool weights) {
     ofstream ofs;
     ofs.open(filepath.c_str());
     if (ofs.is_open()) {
@@ -120,7 +120,7 @@ bool CDLib::write_edgelist(graph& g, const string& filepath, bool weights) {
     return false;
 }
 
-bool CDLib::write_xml(graph& g, const string& filepath, bool weights) {
+bool CDLib::write_xml(const graph& g, const string& filepath, bool weights) {
     ofstream ofs;
     string fp = filepath + ".xml";
     ofs.open(fp.c_str());
@@ -154,7 +154,7 @@ bool CDLib::write_xml(graph& g, const string& filepath, bool weights) {
     return false;
 }
 
-bool CDLib::write_METIS(graph& g, const string& filepath, bool weights) {
+bool CDLib::write_METIS(const graph& g, const string& filepath, bool weights) {
     ofstream file, file2;
     string graphfilename = filepath + ".metis";
     string labelfilename = filepath + ".metis_labels";
@@ -181,7 +181,7 @@ bool CDLib::write_METIS(graph& g, const string& filepath, bool weights) {
     } else return 0;
 }
 
-bool CDLib::write_SNAP(graph& g, const string& filepath, bool weights) {
+bool CDLib::write_SNAP(const graph& g, const string& filepath, bool weights) {
     ofstream file, file2;
     string graphfilename = filepath + ".snap";
     string labelfilename = filepath + ".snap_labels";
@@ -198,7 +198,7 @@ bool CDLib::write_SNAP(graph& g, const string& filepath, bool weights) {
     } else return 0;
 }
 
-bool CDLib::write_SMAT(graph& g, const string& filepath, bool weights) {
+bool CDLib::write_SMAT(const graph& g, const string& filepath, bool weights) {
     ofstream file, file2;
     string graphfilename = filepath + ".smat";
     string labelfilename = filepath + ".smat_labels";
@@ -219,7 +219,7 @@ bool CDLib::write_SMAT(graph& g, const string& filepath, bool weights) {
     } else return 0;
 }
 
-bool CDLib::write_UEL(graph& g, const string& filepath, bool weights) {
+bool CDLib::write_UEL(const graph& g, const string& filepath, bool weights) {
     ofstream file, file2;
     string graphfilename = filepath + ".net";
     string labelfilename = filepath + ".net_labels";
@@ -252,7 +252,7 @@ bool CDLib::write_matlab_sp(const graph& g, const string& filepath) {
     return 0;
 }
 
-bool CDLib::write_dimacs_max_flow(graph& g, const string& filepath) {
+bool CDLib::write_dimacs_max_flow(const graph& g, const string& filepath) {
     ofstream file, file2;
     string graphfilename = filepath + ".dimacsflow";
     string labelfilename = filepath + ".dimacsflow_labels";
@@ -271,7 +271,7 @@ bool CDLib::write_dimacs_max_flow(graph& g, const string& filepath) {
     } else return 0;
 }
 
-bool CDLib::write_lcc_and_props(graph& base, const string& filepath, bool start_with_one) {
+bool CDLib::write_lcc_and_props(const graph& base, const string& filepath, bool start_with_one) {
     if (base.is_directed() || base.is_weighted()) return 0;
     node_set lcc;
     graph g(0, 0);
