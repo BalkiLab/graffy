@@ -215,6 +215,70 @@ namespace CDLib {
     double bhattacharyya_distance(const vector<double>& distribution1, const vector<double>& distribution2);
     double hellinger_distance(const vector<double>& distribution1, const vector<double>& distribution2);
 
+    template<typename T>
+    class distribution {
+        unordered_map<T, double> _probabilities;
+        double _entropy;
+        double _sum;
+        double _sumsq;
+        id_type _size;
+    public:
+        typedef typename unordered_map<T, double>::const_iterator probability_iterator;
+        distribution() {
+            initialize();
+        }
+
+        void push_back(const T& val) {
+            map_insert_and_increment(_probabilities, val, 1.0);
+            _sum += val;
+            _sumsq += val*val;
+            _size++;
+        }
+
+        inline void initialize() {
+            _probabilities.clear();
+            _entropy = 0;
+            _sum = 0;
+            _sumsq = 0;
+            _size = 0;
+        }
+
+        void finalize() {
+            if (_size) {
+                for (typename unordered_map<T, double>::iterator it = _probabilities.begin(); it != _probabilities.end(); it++) {
+                    it->second /= static_cast<double> (_size);
+                    _entropy -= it->second * log(it->second);
+                }
+            }
+        }
+
+        inline bool empty() const{
+            return _size == 0;
+        }
+
+        inline id_type size() const{
+            return _size;
+        }
+
+        inline double mean() const{
+            return _sum / _size;
+        }
+
+        inline double variance() const{
+            return ((_sumsq / _size) - (mean() * mean())) / _size;
+        }
+
+        inline double entropy() const{
+            return _entropy;
+        }
+        
+        inline probability_iterator probabilities_begin() const{
+            return _probabilities.begin();
+        }
+        inline probability_iterator probabilities_end() const{
+            return _probabilities.end();
+        }
+    };
 };
 
 #endif	/* STATISTICS_H */
