@@ -59,8 +59,8 @@ namespace CDLib {
         return randomize_chain_switching_method(g, 100, (id_type) (fraction / g.get_num_edges()));
     }
     id_type make_quick_assortative(graph& g, id_type degree_cutoff, id_type max_trials, id_type num_rewires, int type);
-    id_type make_quick_assortative(graph& g, id_type degree_cutoff, id_type num_rewires);
-    id_type make_quick_disassortative(graph& g, id_type degree_cutoff, id_type num_rewires);
+    id_type make_quick_assortative(graph& g, id_type degree_cutoff, id_type num_rewires, bool random);
+    id_type make_quick_disassortative(graph& g, id_type degree_cutoff, id_type num_rewires, bool random);
 };
 
 #endif	/* RANDOM_GRAPH_H */

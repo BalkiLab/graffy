@@ -33,6 +33,9 @@ namespace CDLib
     double unbiased_assortativity(const graph& g);
     double regularity(const graph& g);
     double regularity(const graph& g, vector<double>& node_regularity); // Based only on node degree
+    double regularity_configuration_model(const graph& g); // Regularity of the equivalent configuration model
+    double normalized_regularity(const graph& g);
+    double normalized_regularity(const graph& g, vector<double>& node_regularity);
     double get_rich_club_coefficient(const graph& g,id_type start_hub_degree);
     double normalized_rich_club_coefficient(const graph& g,id_type start_hub_degree_def);
     double get_poor_club_coefficient(const graph& g,id_type start_hub_degree);
