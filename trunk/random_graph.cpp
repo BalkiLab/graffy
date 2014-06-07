@@ -913,8 +913,27 @@ id_type CDLib::make_quick_assortative(graph& g, id_type degree_cutoff, id_type m
     return rewires;
 }
 
-id_type CDLib::make_quick_assortative(graph& g, id_type degree_cutoff, id_type num_rewires) {
+bool compare_nodepair_desc_asc(const pair<id_type, id_type>& i, const pair<id_type, id_type>& j) {
+    if (i.first > j.first)
+        return true;
+    else if (i.first < j.first)
+        return false;
+    else
+        return i.second < j.second;
+}
+
+bool compare_nodepair_asc_desc(const pair<id_type, id_type>& i, const pair<id_type, id_type>& j) {
+    if (i.first < j.first)
+        return true;
+    else if (i.first > j.first)
+        return false;
+    else
+        return i.second > j.second;
+}
+
+id_type CDLib::make_quick_assortative(graph& g, id_type degree_cutoff, id_type num_rewires, bool random) {
     /* Returns the number of rewired edges */
+    /* random: true -> use random shuffle, false -> arrange in desc order  */
     if ((g.get_num_nodes() < 3) && (g.get_num_edges() < 2))
         return 0;
     id_type rewires = 0;
@@ -923,7 +942,10 @@ id_type CDLib::make_quick_assortative(graph& g, id_type degree_cutoff, id_type n
         for (adjacent_edges_iterator aeit = g.out_edges_begin(i); aeit != g.out_edges_end(i); aeit++)
             if ((g.get_node_out_degree(i) >= degree_cutoff) && (g.get_node_out_degree(aeit->first) < degree_cutoff))
                 edges.push_back(make_pair(i, aeit->first));
-    random_shuffle(edges.begin(), edges.end());
+    if (random)
+        random_shuffle(edges.begin(), edges.end());
+    else
+        sort(edges.begin(), edges.end(), compare_nodepair_desc_asc);
     id_type change1, change2, other_end1, other_end2;
     while ((rewires < num_rewires) && (edges.size() > 1)) {
         change1 = edges[edges.size() - 1].first;
@@ -943,8 +965,9 @@ id_type CDLib::make_quick_assortative(graph& g, id_type degree_cutoff, id_type n
     return rewires;
 }
 
-id_type CDLib::make_quick_disassortative(graph& g, id_type degree_cutoff, id_type num_rewires) {
+id_type CDLib::make_quick_disassortative(graph& g, id_type degree_cutoff, id_type num_rewires, bool random) {
     /* Returns the number of rewired edges */
+    /* random: true -> use random shuffle, false -> top arranged in desc order, bottom arranged in asc order  */
     if ((g.get_num_nodes() < 3) && (g.get_num_edges() < 2))
         return 0;
     id_type rewires = 0;
@@ -957,8 +980,13 @@ id_type CDLib::make_quick_disassortative(graph& g, id_type degree_cutoff, id_typ
                 edges_down.push_back(make_pair(i, aeit->first));
         }
     }
-    random_shuffle(edges_top.begin(), edges_top.end());
-    random_shuffle(edges_down.begin(), edges_down.end());
+    if (random) {
+        random_shuffle(edges_top.begin(), edges_top.end());
+        random_shuffle(edges_down.begin(), edges_down.end());
+    } else {
+        sort(edges_top.begin(), edges_top.end(), compare_nodepair_desc_asc);
+        sort(edges_top.begin(), edges_top.end(), compare_nodepair_asc_desc);
+    }
     id_type change1, change2, other_end1, other_end2;
     while ((rewires < num_rewires) && (edges_top.size()) && (edges_down.size())) {
         change1 = edges_top.back().first;
