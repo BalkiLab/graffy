@@ -1,7 +1,6 @@
 graffy
 ======
 
-Description
 Graffy is a open source Graph Library written completely in C++ in self contained fashion. Features:
 
 1. Reading and Writing from multiple graph formats.
