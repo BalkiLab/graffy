@@ -1,5 +1,5 @@
-OBJS = datastructures.o random_graph.o centrality.o community_tools.o graph_operations.o paths_and_components.o graphio.o graph.o graph_properties.o statistics.o graph_summary.o community.o
-OBJS_D = datastructures_d.o random_graph_d.o centrality_d.o community_tools_d.o graph_operations_d.o paths_and_components_d.o graphio_d.o graph_d.o graph_properties_d.o statistics_d.o graph_summary_d.o community_d.o
+OBJS = datastructures.o random_graph.o centrality.o community_tools.o graph_operations.o paths_and_components.o graphio.o graph.o graph_properties.o statistics.o graph_summary.o community.o epidemic.o
+OBJS_D = datastructures_d.o random_graph_d.o centrality_d.o community_tools_d.o graph_operations_d.o paths_and_components_d.o graphio_d.o graph_d.o graph_properties_d.o statistics_d.o graph_summary_d.o community_d.o epidemic_d.o
 
 CC = g++
 CFLAGS = -O3 -fPIC -fopenmp -std=c++0x -DNDEBUG -DENABLE_MULTITHREADING
@@ -58,6 +58,10 @@ datastructures.o :
 statistics.o : 
 	$(CC) $(CFLAGS) -o statistics.o -c statistics.cpp $(LIBS)
 	$(CC) $(CFLAGS_D) -o statistics_d.o -c statistics.cpp $(LIBS)
+
+epidemic.o : graph.o datastructures.o
+	$(CC) $(CFLAGS) -o epidemic.o -c epidemic.cpp $(LIBS)
+	$(CC) $(CFLAGS_D) -o epidemic_d.o -c epidemic.cpp $(LIBS)
 
 clean:
 	rm *.o *.so
