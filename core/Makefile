@@ -6,9 +6,9 @@ CFLAGS = -O3 -fPIC -fopenmp -std=c++0x -DNDEBUG -DENABLE_MULTITHREADING
 CFLAGS_D = -g -fPIC -fopenmp -DENABLE_MULTITHREADING -std=c++0x -Wall
 LIBS = -lm -lgomp -lrt -lpthread
 
-libcdlib.so : $(OBJS)
-	$(CC) -std=c++0x -shared -o libcdlib.so $(OBJS) $(LIBS)
-	$(CC) -std=c++0x -shared -o libcdlib_d.so $(OBJS_D) $(LIBS)
+graffy.so : $(OBJS)
+	$(CC) -std=c++0x -shared -o graffy.so $(OBJS) $(LIBS)
+	$(CC) -std=c++0x -shared -o graffy_d.so $(OBJS_D) $(LIBS)
 	
 
 community_tools.o : graph.o graph_operations.o statistics.o paths_and_components.o
