@@ -25,6 +25,7 @@
 #include "graph_properties.h"
 #include "community.h"
 #include "robustness.h"
+#include "epidemic.h"
 
 
 #endif	/* CDLIB_H */
