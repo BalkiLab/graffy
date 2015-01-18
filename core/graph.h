@@ -57,6 +57,8 @@ namespace CDLib {
 
         wt_t get_edge_weight(id_type from_id, id_type to_id) const;
         wt_t get_edge_weight(const string& from_label, const string& to_label) const;
+        
+        vector<struct edge> get_all_edges() const;
 
         node_label_iterator node_labels_begin() const;
         node_label_iterator node_labels_end() const;

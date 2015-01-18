@@ -1060,10 +1060,11 @@ id_type CDLib::random_rewire(graph& g, id_type degree_lower, id_type degree_high
     return rewires;
 }
 
-id_type CDLib::random_rewire(graph& g, id_type num_rewires) {
+id_type CDLib::random_rewire(graph& g, id_type num_rewires, bool seed = 1) {
+//    bool seed = 1;
     if ((g.get_num_nodes() < 3) && (g.get_num_edges() < 2))
         return 0;
-    RandomGenerator<id_type> nodegen(0, g.get_num_nodes() - 1, 1);
+    RandomGenerator<id_type> nodegen(0, g.get_num_nodes() - 1, seed);
     for (id_type i = 0; i < num_rewires; i++) {
         id_type change = 0, change_other_end = 0, present, present_other_end;
         while (change == change_other_end) {
@@ -1071,7 +1072,7 @@ id_type CDLib::random_rewire(graph& g, id_type num_rewires) {
             change_other_end = nodegen.next();
         }
         present = nodegen.next();
-        RandomGenerator<id_type> neighborgen(0, g.get_node_out_degree(present) - 1);
+        RandomGenerator<id_type> neighborgen(0, g.get_node_out_degree(present) - 1, seed);
         adjacent_edges_iterator aeit = g.out_edges_begin(present);
         id_type next = neighborgen.next();
         for (; next > 0; next--, aeit++);
@@ -1102,4 +1103,26 @@ id_type CDLib::random_rewire(graph& g, double fraction_to_rewire) {
         g.add_edge(node1, node2, 1);
     }
     return rewire;
+}
+
+id_type CDLib::random_rewire(graph& g, vector<edge> & all_edges, id_type num_rewires, bool seed = 1) {
+    if (g.get_num_edges() < 2)
+        return 0;
+    
+    id_type performed_rewire = 0;
+    RandomGenerator<id_type> edge_select(0, (all_edges.size() - 1), seed);
+    for (id_type i = 0; i < num_rewires; i++) {
+        id_type index1 = edge_select.next(), index2 = edge_select.next();
+        if (all_edges[index1].to == all_edges[index2].from)
+            continue;
+        g.remove_edge(all_edges[index1].from, all_edges[index1].to);
+        g.remove_edge(all_edges[index2].from, all_edges[index2].to);
+        id_type temp = all_edges[index1].to;
+        all_edges[index1].to = all_edges[index2].from;
+        all_edges[index2].from = temp;
+        g.add_edge(all_edges[index1].from, all_edges[index1].to, all_edges[index1].weight);
+        g.add_edge(all_edges[index2].from, all_edges[index2].to, all_edges[index2].weight);
+        performed_rewire++;
+    }
+    return performed_rewire;
 }

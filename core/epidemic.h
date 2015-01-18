@@ -14,7 +14,8 @@ using namespace std;
 
 namespace CDLib {
     void propagation(const graph& g, id_type seed_node_id, double transition_prob, vector<id_type>& step);
-    void diffusion(const graph& g, double transition_prob, id_type monte_carlo, vector<double>& cover);
+    void diffusion_cover(const graph& g, double transition_prob, id_type monte_carlo, vector<double>& cover);
+    void diffusion_step(const graph& g, double transition_prob, id_type monte_carlo, vector<double>& cover);
 };
 
 #endif	/* EPIDEMIC_H */

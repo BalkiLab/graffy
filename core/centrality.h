@@ -26,6 +26,7 @@ namespace CDLib {
             degrees.push_back((T) g.get_node_out_degree(i));
     }
     void degree_centralities_normalized(const graph& g, vector<double>& degrees);
+    void degree_vector(const graph& g, vector<id_type>& sequence); // List the degree of all the nodes in the network in a vector
     void degree_sequence(const graph& g, vector<id_type>& sequence);
     /*This gives the #nodes of degree indicated as the index of sequence variable in an undirected graph*/
     //    Overoaded Node Clustering Coefficient for single and all nodes.

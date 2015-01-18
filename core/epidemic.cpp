@@ -9,7 +9,7 @@
 
 using namespace CDLib;
 
-void CDLib::diffusion(const graph& g, double transition_prob, id_type monte_carlo, vector<double>& cover) {
+void CDLib::diffusion_step(const graph& g, double transition_prob, id_type monte_carlo, vector<double>& cover) {
     cover.clear();
     if (transition_prob < 0)
         return;
@@ -27,8 +27,19 @@ void CDLib::diffusion(const graph& g, double transition_prob, id_type monte_carl
         for (id_type j = 0; j < step.size(); j++)
             cover[j] += step[j];
     }
-    for (id_type i = 0; i < cover.size(); i++)
-        cover[i] /= monte_carlo;
+    for (id_type i = 0; i < cover.size(); i++) {
+		cover[i] /= (double)monte_carlo; 
+	}
+}
+
+void CDLib::diffusion_cover(const graph& g, double transition_prob, id_type monte_carlo, vector<double>& cover) {
+    cover.clear();
+    diffusion_step(g,transition_prob,monte_carlo,cover);
+    double cummulative = 0;
+    for (id_type i = 0; i < cover.size(); i++) {
+		cummulative += cover[i];
+		cover[i] = cummulative / (double)g.get_num_nodes();
+	}
 }
 
 void CDLib::propagation(const graph& g, id_type seed_node_id, double transition_prob, vector<id_type>& step) {

@@ -381,3 +381,14 @@ double graph::minimum_weight() const {
 double graph::maximum_weight() const {
     return extreme_weight(1);
 }
+
+vector<struct edge> graph::get_all_edges() const {
+    vector<struct edge> all_edges;
+    for (id_type i = 0; i < get_num_nodes(); i++) {
+        for (adjacent_edges_iterator aeit = out_edges_begin(i); aeit != out_edges_end(i); aeit++) {
+            struct edge *each = new edge(i, aeit->first, aeit->second);
+            all_edges.push_back(*each);
+        }
+    }
+    return all_edges;
+}

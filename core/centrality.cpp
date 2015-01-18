@@ -131,6 +131,14 @@ double CDLib::edge_clustering_coefficient(const graph&g, id_type from_id, id_typ
     return (double) numer / denom;
 }
 
+/* List the degree of all the nodes in the network in a vector */
+void CDLib::degree_vector(const graph& g, vector<id_type>& sequence) {
+    sequence.clear();
+    sequence.assign(g.get_num_nodes(), 0);
+    for (id_type i = 0; i < g.get_num_nodes(); i++)
+		sequence[i] = g.get_node_out_degree(i);
+}
+
 /*This gives the #nodes of degree indicated as the index of sequence variable in an undirected graph*/
 void CDLib::degree_sequence(const graph& g, vector<id_type>& sequence) {
     sequence.clear();

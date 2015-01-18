@@ -49,8 +49,9 @@ namespace CDLib {
         return rewire_with_degree_distribution(g, 0, g.get_num_nodes(), max_trials, num_rewires, 0);
     }
     id_type random_rewire(graph& g, id_type degree_lower, id_type degree_higher, id_type max_trials, id_type num_rewires, int type);
-    id_type random_rewire(graph& g, id_type num_rewires);
+    id_type random_rewire(graph& g, id_type num_rewires, bool seed);
     id_type random_rewire(graph& g, double fraction_to_rewire);
+    id_type random_rewire(graph& g, vector<edge> & all_edges, id_type num_rewires, bool seed);
     id_type randomize_chain_switching_method(graph& g, id_type max_trials, id_type num_rewires);
 
     inline id_type randomize_chain_switching_method(graph& g, double fraction) {
